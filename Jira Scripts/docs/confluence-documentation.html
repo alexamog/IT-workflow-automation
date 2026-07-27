@@ -1,0 +1,143 @@
+<!--
+    confluence-documentation.html
+    -----------------------------
+    Copy-paste source for the Confluence page documenting the Jira Service Console.
+
+    To publish in Confluence Cloud: edit a page, then either
+      - type /html and paste this inside the HTML macro, or
+      - use ••• (Insert) > Markup > HTML (converts to native Confluence content).
+    Keep this file in sync with README.md and docs/ARCHITECTURE.md.
+-->
+<h1>Jira Service Console</h1>
+<p>A single-user, menu-driven <strong>PowerShell</strong> console for Jira Service Management (JSM). It runs in a terminal and talks to Jira Cloud's REST APIs over HTTPS. There is no server, database, or build step &mdash; just <code>.ps1</code> files you run directly.</p>
+
+<hr/>
+
+<h2>1. Prerequisites</h2>
+<ul>
+  <li>Windows with PowerShell 5.1 or later.</li>
+  <li>A Jira Cloud account that is an <strong>agent</strong> on the service desk project (required to reply, add notes, assign, and close).</li>
+  <li>A Jira API token &mdash; create one at <a href="https://id.atlassian.com/manage-profile/security/api-tokens">id.atlassian.com/manage-profile/security/api-tokens</a>.</li>
+</ul>
+
+<h2>2. One-time setup</h2>
+<ol>
+  <li>Open PowerShell in the project folder.</li>
+  <li>Store your credentials (the token prompt is hidden while typing; secrets are saved as user environment variables, never written into the scripts):
+    <pre><code>.\Set-JiraCredentials.ps1</code></pre>
+  </li>
+  <li><strong>Close and reopen PowerShell</strong> so the new variables load.</li>
+  <li>If scripts are blocked by execution policy, allow scripts to run. Open PowerShell <strong>as Administrator</strong> and run one of the following (RemoteSigned is recommended and sufficient):
+    <pre><code>Set-ExecutionPolicy RemoteSigned</code></pre>
+    <p>If you still cannot run the scripts, use the more permissive setting:</p>
+    <pre><code>Set-ExecutionPolicy Unrestricted</code></pre>
+    <p>Answer <strong>Y</strong> (Yes) when prompted to confirm. You only need to do this once per machine.</p>
+  </li>
+</ol>
+<p><strong>About these commands:</strong> Windows blocks running <code>.ps1</code> scripts by default. <code>RemoteSigned</code> allows local scripts to run while still requiring downloaded scripts to be signed &mdash; the safer choice. <code>Unrestricted</code> allows any script to run and should only be used if <code>RemoteSigned</code> does not resolve the issue. To scope the change to just your account instead of the whole machine (no admin needed), append <code>-Scope CurrentUser</code>, e.g. <code>Set-ExecutionPolicy RemoteSigned -Scope CurrentUser</code>.</p>
+
+<h2>3. Running it</h2>
+<pre><code>.\Start-JiraConsole.ps1</code></pre>
+<p>On launch it authenticates and prints <em>Signed in as &lt;your name&gt;</em>.</p>
+
+<hr/>
+
+<h2>4. Main menu</h2>
+<table border="1" cellpadding="6" cellspacing="0">
+  <tr><th>Option</th><th>What it does</th></tr>
+  <tr><td>1</td><td>My tickets (all open) &mdash; every open ticket assigned to you, in one list.</td></tr>
+  <tr><td>2</td><td>Unassigned queue &mdash; open tickets no one owns; view details, then pick up.</td></tr>
+  <tr><td>3</td><td>Look up a ticket &mdash; by key (<code>ITSD-5592</code>) or bare number (<code>5592</code>).</td></tr>
+  <tr><td>Q</td><td>Quit.</td></tr>
+</table>
+
+<h2>5. The ticket list</h2>
+<p>Tickets display as an aligned table with columns: <strong>#, Key, Age, Status, Summary, Reporter</strong>.</p>
+<ul>
+  <li><strong>Waiting for support</strong> rows get a loud red highlight so they stand out.</li>
+  <li>The <strong>Age</strong> column is colored by recency: green (&lt; 4 hours), yellow (&lt; 24 hours), red (older) &mdash; so the longest-waiting tickets are obvious at a glance.</li>
+  <li>Long values are truncated with an ellipsis so rows stay aligned.</li>
+  <li>At a list, press <code>R</code> to refresh (re-fetch from Jira), a number to open a ticket, or <code>B</code> to go back.</li>
+</ul>
+
+<h2>6. Viewing a ticket</h2>
+<p>Opening a ticket shows, in order:</p>
+<ol>
+  <li><strong>Header</strong> &mdash; key, summary, status, assignee, and the browse URL.</li>
+  <li><strong>Attachments</strong> &mdash; filenames tagged <code>[image]</code> or <code>[file]</code> (images can't render in a terminal, so open the ticket in a browser to view them).</li>
+  <li><strong>Description</strong> &mdash; the original request text, rendered to clean text.</li>
+  <li><strong>Activity log</strong> &mdash; the comment thread, each line tagged <code>[PUBLIC]</code> (customer-visible) or <code>[INTERNAL]</code> (staff-only), with author and time.</li>
+</ol>
+
+<h2>7. Ticket actions</h2>
+<table border="1" cellpadding="6" cellspacing="0">
+  <tr><th>Key</th><th>Action</th></tr>
+  <tr><td>R</td><td><strong>Reply to customer</strong> &mdash; public comment. Asks for confirmation before sending.</td></tr>
+  <tr><td>I</td><td><strong>Internal note</strong> &mdash; staff-only, the customer cannot see it.</td></tr>
+  <tr><td>A</td><td><strong>Assign to me</strong> &mdash; take ownership of the ticket.</td></tr>
+  <tr><td>C</td><td><strong>Close</strong> &mdash; logs how long it took (required), then transitions to Done/Resolved. Returns you to the list afterward.</td></tr>
+  <tr><td>O</td><td><strong>Open in browser</strong> &mdash; opens the ticket in your default browser.</td></tr>
+  <tr><td>M</td><td><strong>ManageEngine</strong> &mdash; opens the ManageEngine remote-control console in your browser.</td></tr>
+  <tr><td>V</td><td>Refresh the ticket and thread.</td></tr>
+  <tr><td>B</td><td>Back to the list.</td></tr>
+</table>
+<p>When composing a reply or note, type over one or more lines and press <strong>Enter on an empty line</strong> to finish.</p>
+
+<h2>8. Configuration</h2>
+<p>Edit the CONFIG block at the top of <code>lib/Context.ps1</code>:</p>
+<table border="1" cellpadding="6" cellspacing="0">
+  <tr><th>Setting</th><th>Meaning</th></tr>
+  <tr><td><code>$AttentionStatus</code></td><td>The status that gets the loud red highlight (default <code>Waiting for support</code>).</td></tr>
+  <tr><td><code>$ProjectKey</code></td><td>Project scanned for the unassigned queue and bare-number lookups (default <code>ITSD</code>).</td></tr>
+  <tr><td><code>$ManageEngineUrl</code></td><td>The ManageEngine remote-control link opened by the <code>[M]</code> action.</td></tr>
+</table>
+
+<hr/>
+
+<h2>9. Architecture</h2>
+<p>The code is layered; each layer depends only on the ones below it.</p>
+<pre><code>Start-JiraConsole.ps1      entry point + main menu
+  lib/Interaction.ps1      menus &amp; prompts (the glue)
+  lib/Display.ps1          render tickets      lib/Actions.ps1   change tickets
+  lib/Data.ps1             read-only fetching (JQL + issue GET)
+  lib/Helpers.ps1          pure utilities (time, text, columns)
+  lib/Context.ps1          config + authentication</code></pre>
+<p>The entry point <strong>dot-sources</strong> every file in <code>lib/</code>, so all functions and <code>$script:</code> variables share one scope. That is how a data function can use the <code>$script:Headers</code> that authentication set up.</p>
+
+<h2>10. Jira APIs used</h2>
+<table border="1" cellpadding="6" cellspacing="0">
+  <tr><th>Purpose</th><th>Endpoint</th></tr>
+  <tr><td>Who am I</td><td><code>GET /rest/api/3/myself</code></td></tr>
+  <tr><td>Search tickets</td><td><code>GET /rest/api/3/search/jql</code></td></tr>
+  <tr><td>One ticket (+ rendered description)</td><td><code>GET /rest/api/3/issue/{key}?expand=renderedFields</code></td></tr>
+  <tr><td>Read comments</td><td><code>GET /rest/api/3/issue/{key}/comment?expand=renderedBody</code></td></tr>
+  <tr><td>Write comment (public/internal)</td><td><code>POST /rest/servicedeskapi/request/{key}/comment</code></td></tr>
+  <tr><td>Assign</td><td><code>PUT /rest/api/3/issue/{key}/assignee</code></td></tr>
+  <tr><td>Log work</td><td><code>POST /rest/api/3/issue/{key}/worklog</code></td></tr>
+  <tr><td>Transitions (close)</td><td><code>GET/POST /rest/api/3/issue/{key}/transitions</code></td></tr>
+</table>
+<p><em>Note:</em> reading comments uses the core API (clean rendered HTML plus the internal/public flag), while writing comments uses the Service Desk API &mdash; the only one that separates a public reply from an internal note.</p>
+
+<h2>11. Troubleshooting</h2>
+<table border="1" cellpadding="6" cellspacing="0">
+  <tr><th>Symptom</th><th>Cause / fix</th></tr>
+  <tr><td>"Missing credentials" after setup</td><td>You reused the same window. Open a <strong>new</strong> PowerShell window so the environment variables load.</td></tr>
+  <tr><td>401 Unauthorized</td><td>Wrong email or mistyped token. Re-run <code>Set-JiraCredentials.ps1</code>.</td></tr>
+  <tr><td>403 when replying / assigning / closing</td><td>Your account is not an <strong>agent</strong> on the service desk project.</td></tr>
+  <tr><td>Scripts won't run</td><td>Set the execution policy (see step 4): <code>Set-ExecutionPolicy RemoteSigned</code>, or <code>Set-ExecutionPolicy Unrestricted</code> if needed.</td></tr>
+  <tr><td>Unassigned queue is empty</td><td>Expected when everything open is already assigned.</td></tr>
+</table>
+
+<h2>12. Security</h2>
+<ul>
+  <li>Your token lives only in your Windows user environment variables, not in any script file.</li>
+  <li>To rotate the token, run <code>Set-JiraCredentials.ps1</code> again.</li>
+  <li>Manage or revoke tokens at <a href="https://id.atlassian.com/manage-profile/security/api-tokens">id.atlassian.com/manage-profile/security/api-tokens</a>.</li>
+</ul>
+
+<h2>13. For maintainers</h2>
+<ul>
+  <li>Functions use approved PowerShell verbs and carry comment-based help &mdash; <code>Get-Help Complete-Ticket -Full</code> after loading the library.</li>
+  <li>Lint with <code>Invoke-ScriptAnalyzer -Path . -Recurse -ExcludeRule PSAvoidUsingWriteHost</code> (Write-Host is intentional for this interactive UI).</li>
+  <li>See <code>docs/ARCHITECTURE.md</code>.</li>
+</ul>

@@ -1,0 +1,40 @@
+# Files git should ignore.
+#
+# Anything listed here stays on your PC and is never recorded in the project
+# history. Two reasons something lands in this list: it is GENERATED (so there
+# is no point saving it), or it contains REAL data - hostnames, staff names,
+# ticket exports - that should not be copied around.
+
+# --- Generated output --------------------------------------------------------
+# Action logs, remote-session transcripts, audit reports. Created as you use the
+# toolkit. Contains real machine names and staff names, so it stays local.
+/output/
+Jira Scripts/output/
+
+# Local data written by the toolkit itself - e.g. data\UsersOU-Paths.json (a dump
+# of the live AD structure) and "Jira Scripts\data\org-dept-map.json" (built from
+# real ticket history: real site/org names). This is REAL organisation data and
+# must never be committed. Regenerate the AD dump with:
+#   scripts\maintenance\Get-UsersOUPaths.ps1
+/data/
+Jira Scripts/data/
+
+# --- Published editions ------------------------------------------------------
+# Publish-Standalone.ps1 writes these as sibling folders, but ignore them here
+# too in case anyone ever publishes into the project folder by mistake.
+/Standalone Editions/
+/Desk Side Tool - Core/
+
+# The edition-title file only belongs in a generated edition, never in source.
+/toolkit.psd1
+
+# --- Tooling ------------------------------------------------------------------
+# Claude Code's per-machine permission list. Full of absolute paths from one
+# PC, so it is personal to you and not part of the project.
+.claude/settings.local.json
+
+# --- Windows and editor noise ------------------------------------------------
+Thumbs.db
+desktop.ini
+*.swp
+*~
