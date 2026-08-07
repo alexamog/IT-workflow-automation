@@ -197,7 +197,16 @@ if ($NoWait) {
 Write-Host "`nWaiting for results (checked every 60 seconds; cleanups take 5-15 min each)." -ForegroundColor Cyan
 Write-Host "Ctrl+C stops the waiting only - the cleanups keep running on the machines." -ForegroundColor DarkGray
 
-$readCmd  = "if (Test-Path 'C:\ProgramData\DeskSideToolkit\ProfileCleanup.log') { Get-Content 'C:\ProgramData\DeskSideToolkit\ProfileCleanup.log' | Select-String -Pattern 'CLEANUP freed' | Select-Object -Last 1 }"
+# The first line resolves the folder ON THE MACHINE, exactly as the cleanup
+# script did when it WROTE this log. Resolving it here instead would send this
+# operator's path to a machine that never used it.
+# The rest is a single-quoted here-string, so its $ signs stay literal and are
+# evaluated at the far end.
+$readCmd = (Get-DeskSideRemoteProgramDataLine) + @'
+
+$log = Join-Path $DeskSideData 'ProfileCleanup.log'
+if (Test-Path $log) { Get-Content $log | Select-String -Pattern 'CLEANUP freed' | Select-Object -Last 1 }
+'@
 $deadline = (Get-Date).AddMinutes(40)
 $results  = @()
 

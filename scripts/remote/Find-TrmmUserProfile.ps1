@@ -146,7 +146,8 @@ elseif (`$p.Loaded) { 'SKIP-LOADED' }
 else {
     try {
         Remove-CimInstance -InputObject `$p -ErrorAction Stop
-        `$d = 'C:\ProgramData\DeskSideToolkit'; if (-not (Test-Path `$d)) { New-Item -ItemType Directory -Path `$d -Force | Out-Null }
+        $(Get-DeskSideRemoteProgramDataLine)
+        `$d = `$DeskSideData; if (-not (Test-Path `$d)) { New-Item -ItemType Directory -Path `$d -Force | Out-Null }
         Add-Content (Join-Path `$d 'ProfileCleanup.log') ('{0}  [remote-find]  DELETED profile {1}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), `$u)
         'DELETED'
     } catch { 'FAIL ' + `$_.Exception.Message }

@@ -187,12 +187,26 @@ foreach ($ed in $editions) {
         foreach ($f in Get-ItemFile $item) { Copy-Preserving -file $f -dest $dest; $count++ }
     }
 
-    # 2. Shared library, if the edition needs it. Quotes.psd1 rides along so the
-    #    launcher's sign-off (Show-DeskSideSignoff reads it) works in the edition.
+    # 2. Shared library, if the edition needs it.
+    #    Copy the WHOLE lib\ folder rather than naming files one by one. The
+    #    files in there depend on each other - Common.ps1 dot-sources Ui.ps1 and
+    #    Printer.ps1, and Ui.ps1 reads Quotes.psd1 - so shipping a subset builds
+    #    an edition that loads but breaks at first use. A hand-written list did
+    #    exactly that: lib\Printer.ps1 was added to the project and never added
+    #    to the list, so the Tactical RMM edition shipped three printer scripts
+    #    with no printer library. Copying the folder cannot drift.
     if ($ed.NeedsCommon) {
-        Copy-Preserving -file (Get-Item (Join-Path $src 'lib\Common.ps1')) -dest $dest
-        Copy-Preserving -file (Get-Item (Join-Path $src 'lib\Quotes.psd1')) -dest $dest
-        Copy-Preserving -file (Get-Item (Join-Path $src 'lib\Ui.ps1'))      -dest $dest
+        foreach ($f in Get-ChildItem (Join-Path $src 'lib') -Recurse -File) {
+            Copy-Preserving -file $f -dest $dest
+        }
+
+        # Prove the edition can actually start: a missing Common.ps1 or Ui.ps1
+        # is a broken edition, and better caught here than by a technician.
+        foreach ($needed in 'Common.ps1', 'Ui.ps1', 'Quotes.psd1') {
+            if (-not (Test-Path (Join-Path $dest "lib\$needed"))) {
+                throw "lib\$needed did not reach $($ed.FolderName) - the edition would not run."
+            }
+        }
     }
 
     # 3. Setup scripts.

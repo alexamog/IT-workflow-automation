@@ -167,7 +167,8 @@ if (`$p) {
     }
     if (`$removed) { 'DELETED-REG' } else { 'NOTFOUND' }
 }
-`$logd = 'C:\ProgramData\DeskSideToolkit'; if (-not (Test-Path `$logd)) { New-Item -ItemType Directory -Path `$logd -Force | Out-Null }
+$(Get-DeskSideRemoteProgramDataLine)
+`$logd = `$DeskSideData; if (-not (Test-Path `$logd)) { New-Item -ItemType Directory -Path `$logd -Force | Out-Null }
 Add-Content (Join-Path `$logd 'ProfileCleanup.log') ('{0}  [corrupt-scan]  removed corrupt profile {1}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), `$u)
 "@
     try { $res = (Invoke-AgentCmd $d.AgentId $delCmd).Trim() } catch { $res = "ERROR $($_.Exception.Message)" }

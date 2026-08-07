@@ -143,7 +143,7 @@ $repairable = @($rows | Where-Object { $_.Type -eq 'REPAIRABLE' -and $_.HasFolde
 # Explain everything that is NOT repairable, so it is clear why.
 $noData  = @($rows | Where-Object { -not $_.HasFolder })
 $loaded  = @($rows | Where-Object { $_.HasFolder -and $_.Loaded })
-$admin   = @($rows | Where-Object { $_.HasFolder -and -not $_.Loaded -and (& $protected $_.Profile) })
+$admin   = @($rows | Where-Object { $_.HasFolder -and -not $_.Loaded -and (Test-DeskSideProtectedAccount $_.Profile) })
 
 if ($noData.Count) { Write-Host "$($noData.Count) have no folder left (nothing to save) - clear these with Find-TrmmCorruptProfile.ps1: $((@($noData | ForEach-Object { "$($_.Profile)@$($_.Hostname)" })) -join ', ')" -ForegroundColor DarkGray }
 if ($loaded.Count) { Write-Host "$($loaded.Count) are in use right now (user signed in) - repair once they sign out: $((@($loaded | ForEach-Object { "$($_.Profile)@$($_.Hostname)" })) -join ', ')" -ForegroundColor DarkGray }
@@ -186,9 +186,11 @@ foreach ($d in $toRepair) {
 `$ErrorActionPreference = 'Stop'
 `$u = '$safeProfile'
 `$base = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList'
+# Resolved on THIS machine, not the operator's - see the helper's comment.
+$(Get-DeskSideRemoteProgramDataLine)
 
 # 1. Back up the whole ProfileList key before touching anything.
-`$bdir = 'C:\ProgramData\DeskSideToolkit\ProfileListBackups'
+`$bdir = Join-Path `$DeskSideData 'ProfileListBackups'
 if (-not (Test-Path `$bdir)) { New-Item -ItemType Directory -Path `$bdir -Force | Out-Null }
 `$bfile = Join-Path `$bdir ('ProfileList-{0}-{1}.reg' -f `$u, (Get-Date -Format 'yyyyMMdd-HHmmss'))
 & reg.exe export 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList' `$bfile /y | Out-Null
@@ -237,7 +239,7 @@ try {
     New-ItemProperty -Path `$target -Name 'State'    -Value 0 -PropertyType DWord -Force | Out-Null
     New-ItemProperty -Path `$target -Name 'RefCount' -Value 0 -PropertyType DWord -Force | Out-Null
 
-    `$logd = 'C:\ProgramData\DeskSideToolkit'
+    `$logd = `$DeskSideData
     if (-not (Test-Path `$logd)) { New-Item -ItemType Directory -Path `$logd -Force | Out-Null }
     Add-Content (Join-Path `$logd 'ProfileRepair.log') ('{0}  repaired profile {1} ({2}), backup {3}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), `$u, `$mode, `$bfile)
 

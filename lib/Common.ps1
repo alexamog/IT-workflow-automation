@@ -97,6 +97,24 @@ function Get-DeskSideProgramDataDir {
     if ($env:DESKSIDE_PROGRAMDATA) { $env:DESKSIDE_PROGRAMDATA } else { 'C:\ProgramData\DeskSideToolkit' }
 }
 
+# The same rule, but as a LINE OF POWERSHELL TEXT to paste at the top of a
+# command that will run on a remote machine. The remote script then uses
+# $DeskSideData wherever it needs the folder.
+#
+# WHY TEXT RATHER THAN THE VALUE: the folder must be resolved ON THE MACHINE
+# THE COMMAND RUNS ON, not here. scripts\maintenance\Remove-UnlistedProfiles.ps1
+# is uploaded to the agent and resolves DESKSIDE_PROGRAMDATA there when it
+# writes its log; the scripts that read that log back must therefore resolve it
+# there too. Sending this operator's local value would point the reader at a
+# folder the writer never wrote to.
+function Get-DeskSideRemoteProgramDataLine {
+    # A single-quoted here-string, so every $ below is literal text and none of
+    # it is expanded here. This IS the code the far end runs.
+    @'
+$DeskSideData = if ($env:DESKSIDE_PROGRAMDATA) { $env:DESKSIDE_PROGRAMDATA } else { 'C:\ProgramData\DeskSideToolkit' }
+'@
+}
+
 # Accounts that profile cleanup must NEVER delete, whatever a keep/delete list
 # says. Default is the admin-prefix convention "adm-*"; add exact names or
 # wildcards with PROTECTED_ACCOUNTS (semicolon- or comma-separated), e.g.
@@ -531,6 +549,7 @@ function Resolve-ADToolUserByName {
 # the whole library. Load it if it's there (it always is in a normal install).
 $uiPath = Join-Path $PSScriptRoot 'Ui.ps1'
 if (Test-Path $uiPath) { . $uiPath }
+else { Write-Host "WARNING: lib\Ui.ps1 is missing - menus and prompts will not draw correctly." -ForegroundColor DarkYellow }
 
 # The sign-off quote (Show-DeskSideSignoff) lives in Ui.ps1, dot-sourced just
 # above, so both this toolkit and the Jira console share one implementation.
@@ -541,6 +560,13 @@ if (Test-Path $uiPath) { . $uiPath }
 # rather than a module dependency.
 $printerPath = Join-Path $PSScriptRoot 'Printer.ps1'
 if (Test-Path $printerPath) { . $printerPath }
+else {
+    # Say so at load time. Silently skipping meant the printer features failed
+    # later with "Get-CanonPrinterStatus is not recognized", which points at
+    # the wrong thing entirely - the real fault is a lib\ file that was never
+    # copied. If you see this, the copy is incomplete: re-publish it.
+    Write-Host "WARNING: lib\Printer.ps1 is missing - the printer features will not work." -ForegroundColor DarkYellow
+}
 
 # --- Console UI helper -------------------------------------------------------
 # Show a numbered list and return the chosen item (or $null for 0/Cancel).
@@ -653,11 +679,17 @@ function Get-SnipeHardware {
 # Returns the two file paths. Prompts to open the HTML unless -NoPrompt.
 function Write-SnipeAssetReport {
     param(
-        [Parameter(Mandatory)][object[]]$Assets,
+        # AllowEmptyCollection: a search that matched nothing is a perfectly
+        # ordinary result and should produce an empty report. Without this,
+        # PowerShell refuses to bind @() to a mandatory array parameter and the
+        # caller dies with a binding error instead.
+        [Parameter(Mandatory)][AllowEmptyCollection()][object[]]$Assets,
         [string[]]$Criteria = @(),
         [switch]$NoPrompt
     )
-    $flat = $Assets | ForEach-Object {
+    # @(...) so that zero assets stays an empty array rather than collapsing to
+    # $null, which would write "null" into the JSON instead of an empty list.
+    $flat = @($Assets | ForEach-Object {
         [PSCustomObject][ordered]@{
             AssetTag        = $_.asset_tag
             Name            = $_.name
@@ -673,7 +705,7 @@ function Write-SnipeAssetReport {
             WarrantyExpires = (ConvertFrom-SnipeField $_.warranty_expires)
             Notes           = $_.notes
         }
-    }
+    })
 
     $dir = Join-Path (Get-ADToolOutputDir) 'SnipeReports'
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }

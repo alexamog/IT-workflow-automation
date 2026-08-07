@@ -44,8 +44,17 @@ catch {
 }
 
 # Optional: require change at next logon.
+# -ErrorAction Stop matters here: without it Set-ADUser reports a failure
+# without stopping, so the green line and the 'Success' audit row below would
+# both be written for a change that never happened.
 if ((Read-Host "Force the user to change password at next logon? (Y/N)") -match '^[Yy]') {
-    Set-ADUser -Identity $user.SamAccountName -ChangePasswordAtLogon $true
-    Write-Host "User must change password at next logon." -ForegroundColor Green
-    Write-ActionLog -Action 'Force Password Change' -Target $user.SamAccountName
+    try {
+        Set-ADUser -Identity $user.SamAccountName -ChangePasswordAtLogon $true -ErrorAction Stop
+        Write-Host "User must change password at next logon." -ForegroundColor Green
+        Write-ActionLog -Action 'Force Password Change' -Target $user.SamAccountName
+    }
+    catch {
+        Write-Host "Could not set the change-at-next-logon flag: $($_.Exception.Message)" -ForegroundColor Red
+        Write-ActionLog -Action 'Force Password Change' -Target $user.SamAccountName -Result 'Failed' -Details $_.Exception.Message
+    }
 }

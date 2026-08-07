@@ -156,7 +156,14 @@ function Edit-Assignment($a) {
 # reassignment works). Returns the refreshed asset.
 function Set-Assignment($a, $type, $field, $targetId, $targetName) {
     if ($a.assigned_to) {
-        try { Invoke-SnipeRequest -Path "hardware/$($a.id)/checkin" -Method POST -Body '{}' | Out-Null } catch { }
+        # Snipe-IT will not check an asset out to a second person while it is
+        # still out to the first, so check it in first. If THAT fails, say so:
+        # the checkout below will then fail too, and its message ("not
+        # deployable") does not explain that this step is the real cause.
+        try { Invoke-SnipeRequest -Path "hardware/$($a.id)/checkin" -Method POST -Body '{}' | Out-Null }
+        catch {
+            Write-Host "Could not check the asset in from $($a.assigned_to.name) first: $($_.Exception.Message)" -ForegroundColor Yellow
+        }
     }
     $body = @{ checkout_to_type = $type; status_id = $a.status_label.id; $field = $targetId }
     try { $resp = Invoke-SnipeRequest -Path "hardware/$($a.id)/checkout" -Method POST -Body ($body | ConvertTo-Json) }

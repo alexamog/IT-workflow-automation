@@ -313,15 +313,30 @@ if ($cloudTargets.Count -gt 0 -and
         }
 
         # 2. Remove the E1 licence (only if the user actually has it).
+        # "We could not read the licences" is NOT the same as "there is no
+        # licence to remove". This used to swallow the error and print the
+        # reassuring line, which left a leaver still holding a paid licence
+        # with nothing in the audit log to show it.
         if ($e1Sku) {
-            $has = $false
-            try { $has = @(Get-MgUserLicenseDetail -UserId $upn -ErrorAction Stop | Where-Object { $_.SkuId -eq $e1Sku.SkuId }).Count -gt 0 } catch { }
-            if (-not $has) { Write-Host "    No Office 365 E1 licence to remove." -ForegroundColor DarkGray }
-            elseif (Set-M365UserLicense -UserId $upn -SkuId $e1Sku.SkuId -Action Remove) {
-                Write-Host "    Office 365 E1 licence removed." -ForegroundColor Green
-                Write-ActionLog -Action 'Offboard: Remove E1 Licence' -Target $upn
+            $licences   = $null
+            $couldCheck = $true
+            try { $licences = @(Get-MgUserLicenseDetail -UserId $upn -ErrorAction Stop) }
+            catch {
+                $couldCheck = $false
+                Write-Host "    Could not check the licences - the E1 licence has NOT been removed: $($_.Exception.Message)" -ForegroundColor Yellow
+                Write-ActionLog -Action 'Offboard: Remove E1 Licence' -Target $upn -Result 'Failed' -Details "Could not read licences - $($_.Exception.Message)"
             }
-            else { Write-ActionLog -Action 'Offboard: Remove E1 Licence' -Target $upn -Result 'Failed' }
+
+            if ($couldCheck) {
+                if (@($licences | Where-Object { $_.SkuId -eq $e1Sku.SkuId }).Count -eq 0) {
+                    Write-Host "    No Office 365 E1 licence to remove." -ForegroundColor DarkGray
+                }
+                elseif (Set-M365UserLicense -UserId $upn -SkuId $e1Sku.SkuId -Action Remove) {
+                    Write-Host "    Office 365 E1 licence removed." -ForegroundColor Green
+                    Write-ActionLog -Action 'Offboard: Remove E1 Licence' -Target $upn
+                }
+                else { Write-ActionLog -Action 'Offboard: Remove E1 Licence' -Target $upn -Result 'Failed' }
+            }
         }
     }
 }

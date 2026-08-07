@@ -159,6 +159,15 @@ function Remove-MailboxAccess {
     if (-not $kinds) { Write-Host "  Cancelled." -ForegroundColor Yellow; return }
     $people = Split-People (Read-Host "  People to REMOVE (emails, comma-separated)")
     if ($people.Count -eq 0) { Write-Host "  Nobody entered." -ForegroundColor Yellow; return }
+
+    # Taking access away is the one path here that can lock somebody out of a
+    # mailbox they are working in, so show exactly what is about to happen and
+    # make the operator agree to it. Every other remove in the toolkit asks.
+    Write-Host ""
+    Write-Host ("  Remove {0} from {1} <{2}>" -f ($kinds -join ' + '), $mbx.DisplayName, $mbx.PrimarySmtpAddress) -ForegroundColor Cyan
+    Write-Host ("  For: {0}" -f ($people -join ', ')) -ForegroundColor Cyan
+    if ((Read-Host "  Proceed? (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled." -ForegroundColor Yellow; return }
+
     foreach ($k in $kinds) { Set-MailboxPermKind $mbx.PrimarySmtpAddress $k $false $people }
 }
 
@@ -181,7 +190,12 @@ function Remove-MeFromMailbox {
     if (-not $mbx) { return }
     $me = Get-MyAdminUpn
     if (-not $me) { return }
-    Set-MailboxPermKind $mbx.PrimarySmtpAddress 'Full' $false @($me)
+    $addr = $mbx.PrimarySmtpAddress
+    # Mirrors the confirmation in Add-MeToMailbox: say what is about to change
+    # before changing it, so stepping out of the wrong mailbox takes two steps.
+    Write-Host ("  Remove {0}'s Full Access to {1} <{2}>?" -f $me, $mbx.DisplayName, $addr) -ForegroundColor Cyan
+    if ((Read-Host "  (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled." -ForegroundColor Yellow; return }
+    Set-MailboxPermKind $addr 'Full' $false @($me)
 }
 
 # --- List access -------------------------------------------------------------

@@ -396,7 +396,10 @@ if ($Keep) {
         }
     }
 }
-else {
+elseif (-not $DeleteOnly) {
+    # Only say this when NEITHER mode ran. -DeleteOnly does its own deleting in
+    # PART 1b above, so without the -DeleteOnly test this line used to announce
+    # "skipping profile deletion" immediately after profiles had been deleted.
     Write-Host "No -Keep list or -KeepFile given: skipping profile deletion." -ForegroundColor Yellow
 }
 
