@@ -28,6 +28,12 @@ $id = $mbx.PrimarySmtpAddress
 try { $box = Get-Mailbox -Identity $id -ErrorAction Stop }
 catch { Write-Host "Could not read the mailbox: $($_.Exception.Message)" -ForegroundColor Red; return }
 
+# Exchange stores forwarding in TWO different places and a mailbox may use
+# either, so both have to be read to show the truth:
+#   ForwardingSmtpAddress - any address, inside or outside the organisation.
+#                           This is the one this tool writes.
+#   ForwardingAddress     - a recipient that already exists in the directory.
+#                           Set by other tools and by the admin centre.
 $current = if ($box.ForwardingSmtpAddress) { "$($box.ForwardingSmtpAddress)" }
            elseif ($box.ForwardingAddress) { "$($box.ForwardingAddress)" }
            else { '(none)' }
@@ -65,6 +71,8 @@ switch ((Read-Host '  Select').Trim()) {
     '2' {
         if (-not (Confirm-DeskSideAction "Turn forwarding OFF for $id?" -Indent '  ')) { return }
         try {
+            # Clear BOTH properties, not just the one this tool sets. Forwarding
+            # left in the other place would keep working and look like a bug.
             Set-Mailbox -Identity $id -ForwardingSmtpAddress $null -ForwardingAddress $null -DeliverToMailboxAndForward $false -ErrorAction Stop
             Write-Host "  Forwarding removed." -ForegroundColor Green
             Write-ActionLog -Action 'Exchange: Remove Forwarding' -Target $id

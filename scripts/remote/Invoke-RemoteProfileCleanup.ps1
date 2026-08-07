@@ -28,6 +28,11 @@
     .\Invoke-RemoteProfileCleanup.ps1 ITLAPSPARE-11 -Cleanup -HealthCheck
 #>
 
+# NOT ON THE MAIN MENU, and that is deliberate - there is no .tool.psd1
+# manifest beside this file, so the launcher never lists it. It is opened
+# from Start-TrmmConsole.ps1, which collects the answers it needs first.
+# It still runs on its own if you want to use it directly.
+
 [CmdletBinding()]
 param(
     # The remote computer's hostname as it appears in Tactical RMM.

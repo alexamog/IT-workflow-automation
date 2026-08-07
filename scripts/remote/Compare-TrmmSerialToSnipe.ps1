@@ -19,6 +19,11 @@
     .\Compare-TrmmSerialToSnipe.ps1
 #>
 
+# NOT ON THE MAIN MENU, and that is deliberate - there is no .tool.psd1
+# manifest beside this file, so the launcher never lists it. It is opened
+# from Invoke-TrmmSnipeAudit.ps1, which collects the answers it needs first.
+# It still runs on its own if you want to use it directly.
+
 [CmdletBinding()]
 param()
 
@@ -159,15 +164,33 @@ if ($notin.Count -gt 0) {
     # distinctive tokens (optiplex, 5060), not on "dell".
     $stop = 'dell', 'hp', 'hewlett', 'packard', 'lenovo', 'microsoft', 'samsung', 'inc',
             'corporation', 'corp', 'co', 'ltd', 'technologies', 'computer', 'system', 'systems'
+    # Guess which Snipe-IT model an agent's make/model string refers to.
+    #
+    # TRMM reports something like "Dell Inc. OptiPlex 5060", while Snipe-IT has
+    # a tidier model name like "OptiPlex 5060". They rarely match exactly, so
+    # instead of comparing whole strings this counts how many WORDS they share:
+    #
+    #   1. lower-case both, turn punctuation into spaces, split into words
+    #   2. throw away words under 3 letters and the manufacturer/filler words
+    #      listed above, so "dell" and "inc" cannot earn a match on their own
+    #   3. the Snipe model sharing the most remaining words wins
+    #
+    # One shared word is enough to win. That sounds loose, but by this point
+    # only distinctive words are left ("optiplex", "5060"), and the caller shows
+    # every guess on screen for review before anything is created. A machine
+    # with no match at all is reported and skipped, never guessed at.
     function Find-Model ($mk) {
-        $t = @(($mk.ToLower() -replace '[^\w\s]', ' ') -split '\s+' | Where-Object { $_.Length -ge 3 -and $stop -notcontains $_ })
-        $best = $null; $bs = 0
+        $wanted = @(($mk.ToLower() -replace '[^\w\s]', ' ') -split '\s+' |
+                    Where-Object { $_.Length -ge 3 -and $stop -notcontains $_ })
+        $best = $null
+        $bestScore = 0
         foreach ($m in $models) {
-            $nt = @(($m.name.ToLower() -replace '[^\w\s]', ' ') -split '\s+' | Where-Object { $_.Length -ge 3 -and $stop -notcontains $_ })
-            $c = @($t | Where-Object { $nt -contains $_ }).Count
-            if ($c -gt $bs) { $bs = $c; $best = $m }
+            $modelWords = @(($m.name.ToLower() -replace '[^\w\s]', ' ') -split '\s+' |
+                            Where-Object { $_.Length -ge 3 -and $stop -notcontains $_ })
+            $shared = @($wanted | Where-Object { $modelWords -contains $_ }).Count
+            if ($shared -gt $bestScore) { $bestScore = $shared; $best = $m }
         }
-        if ($bs -ge 1) { $best } else { $null }
+        if ($bestScore -ge 1) { $best } else { $null }
     }
 
     $plan = foreach ($p in $notin) {

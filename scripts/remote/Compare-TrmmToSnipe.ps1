@@ -18,6 +18,11 @@
     .\Compare-TrmmToSnipe.ps1
 #>
 
+# NOT ON THE MAIN MENU, and that is deliberate - there is no .tool.psd1
+# manifest beside this file, so the launcher never lists it. It is opened
+# from Invoke-TrmmSnipeAudit.ps1, which collects the answers it needs first.
+# It still runs on its own if you want to use it directly.
+
 [CmdletBinding()]
 param()
 
@@ -29,7 +34,17 @@ if (-not $ADTool.SnipeIT.Token) {
     return
 }
 
-# Is this hostname recorded in Snipe-IT? $true / $false, or $null on a lookup error.
+# Is this hostname recorded in Snipe-IT?
+#   $true   found
+#   $false  genuinely not there - this is a real gap to report
+#   $null   the lookup FAILED, so we do not know either way. The caller keeps
+#           these separate from the misses; reporting "not in Snipe-IT" because
+#           the search timed out would send somebody hunting for nothing.
+#
+# Snipe's search is fuzzy, so a match is confirmed in two passes: first an exact
+# match on name, asset tag or serial, then a looser "the name contains it".
+# Exact wins, so a machine is never mistaken for a similarly-named one when a
+# real match exists.
 function Test-InSnipe ($hostname) {
     # Retry a few times so a transient Snipe-IT hiccup isn't logged as an error.
     $rows = $null

@@ -150,4 +150,5 @@ Edit the CONFIG block at the top of `lib/Context.ps1`:
   which APIs are used, and where to make common changes.
 - Every function has comment-based help: `Get-Help Complete-Ticket -Full` after
   loading the library. Lint with
-  `Invoke-ScriptAnalyzer -Path . -Recurse -ExcludeRule PSAvoidUsingWriteHost`.
+  `Invoke-ScriptAnalyzer -Path . -Recurse -Settings ..\PSScriptAnalyzerSettings.psd1`
+  (use the settings file - it turns off four rules, each for a written reason).

@@ -85,6 +85,11 @@ switch ((Read-Host '  Select').Trim()) {
         Write-ToolMenuItem -Key 2 -Label 'For a set period (turns itself off at the end)'
         Write-Host ''
 
+        # Exchange has two "on" states, and picking the right one is the whole
+        # point of the question below:
+        #   Enabled   - replies until somebody turns it off by hand.
+        #   Scheduled - replies only between StartTime and EndTime, then stops
+        #               on its own. Both times are required in this state.
         $state = 'Enabled'
         $start = $null
         $end   = $null
@@ -111,6 +116,12 @@ switch ((Read-Host '  Select').Trim()) {
         Write-ToolMenuItem -Key 3 -Label 'No external reply'
         Write-Host ''
 
+        # ExternalAudience decides who outside the organisation gets a reply:
+        #   All   - anyone who writes in
+        #   Known - only senders already in the person's contacts
+        #   None  - nobody outside gets a reply at all
+        # "Known" is the quieter choice when a mailbox gets a lot of outside
+        # mail, since it will not answer marketing lists or spam.
         $audience = 'None'
         $external = $null
         switch ((Read-Host '  Select').Trim()) {
