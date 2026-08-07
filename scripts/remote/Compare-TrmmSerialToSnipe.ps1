@@ -38,8 +38,9 @@ function Get-SnipeBySerial ($serial) {
 }
 
 Write-Host "Getting the agent list from Tactical RMM..."
-try { $agents = @(Invoke-TrmmRequest GET 'agents/') }
-catch { Write-Host "TRMM lookup failed: $($_.Exception.Message)" -ForegroundColor Red; return }
+$lookup = Get-TrmmAgent
+if (-not $lookup.Ok) { return }        # the message was already printed
+$agents = $lookup.Agents
 Write-Host "Checking $($agents.Count) serial(s) against Snipe-IT..." -ForegroundColor DarkGray
 
 $problems = @()

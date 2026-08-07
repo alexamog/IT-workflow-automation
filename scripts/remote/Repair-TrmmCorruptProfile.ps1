@@ -54,18 +54,12 @@ param()
 
 if (-not (Test-TrmmConfigured)) { return }
 
-# Thin wrapper over the shared helper: output is compared as text, so it is
-# flattened to a string here rather than at every call.
-function Invoke-AgentCmd ($agentId, $command, [int]$TimeoutSec = 90) {
-    "$(Invoke-TrmmAgentCommand -AgentId $agentId -Command $command -TimeoutSec $TimeoutSec)"
-}
-
 $kw = (Read-Host "Hostname keyword to scan (e.g. ITDESSPARE), a full name, or * for ALL").Trim()
 
 Write-Host "Getting the agent list from Tactical RMM..."
-try { $agents = @(Invoke-TrmmRequest GET 'agents/') }
-catch { Write-Host "TRMM lookup failed: $($_.Exception.Message)" -ForegroundColor Red; return }
-if ($kw -and $kw -ne '*') { $agents = @($agents | Where-Object { $_.hostname -match [regex]::Escape($kw) }) }
+$lookup = Get-TrmmAgent -HostnameLike $kw
+if (-not $lookup.Ok) { return }        # the message was already printed
+$agents = $lookup.Agents
 $targets = @($agents | Where-Object { $_.status -eq 'online' })
 $offline = @($agents).Count - $targets.Count
 Write-Host "Scanning $($targets.Count) online computer(s) ($offline offline skipped)..." -ForegroundColor Cyan
@@ -112,7 +106,7 @@ $i = 0
 foreach ($a in $targets) {
     $i++
     Write-Progress -Activity 'Scanning for corrupt profiles' -Status "$i of $($targets.Count): $($a.hostname)" -PercentComplete (100 * $i / $targets.Count)
-    try { $out = Invoke-AgentCmd $a.agent_id $scanCmd } catch { continue }
+    try { $out = Invoke-TrmmAgentText -AgentId $a.agent_id -Command $scanCmd } catch { continue }
     foreach ($line in ($out -split "`r?`n")) {
         if ($line -notmatch '^PROFILE\|') { continue }
         $p = $line -split '\|'
@@ -246,7 +240,7 @@ try {
 catch { 'FAIL ' + `$_.Exception.Message }
 "@
 
-    try { $res = (Invoke-AgentCmd $d.AgentId $repairCmd -TimeoutSec 120).Trim() }
+    try { $res = (Invoke-TrmmAgentText -AgentId $d.AgentId -Command $repairCmd -TimeoutSec 120).Trim() }
     catch { $res = "ERROR $($_.Exception.Message)" }
 
     $lines  = @($res -split "`r?`n")

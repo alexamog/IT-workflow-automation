@@ -309,8 +309,7 @@ foreach ($t in $targets) {
             Write-Host "    Already in '$GroupName' - left alone." -ForegroundColor DarkGray
         }
         else {
-            Write-Host "    Group add failed: $($_.Exception.Message)" -ForegroundColor Red
-            Write-ActionLog -Action 'Batch Onboard: Group Add' -Target $sam -Result 'Failed' -Details "$GroupName - $($_.Exception.Message)"
+            Write-DeskSideFailure "    Group add failed" 'Batch Onboard: Group Add' $sam $_ -Context "$GroupName"
             $trouble = $true
         }
     }
@@ -324,8 +323,7 @@ foreach ($t in $targets) {
         Write-ActionLog -Action 'Batch Onboard: Reset Password' -Target $sam
     }
     catch {
-        Write-Host "    Password reset failed: $($_.Exception.Message)" -ForegroundColor Red
-        Write-ActionLog -Action 'Batch Onboard: Reset Password' -Target $sam -Result 'Failed' -Details $_.Exception.Message
+        Write-DeskSideFailure "    Password reset failed" 'Batch Onboard: Reset Password' $sam $_
         $trouble = $true
     }
 

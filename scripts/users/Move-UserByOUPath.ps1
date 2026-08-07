@@ -46,6 +46,5 @@ try {
     Write-ActionLog -Action 'Move User' -Target $user.SamAccountName -Details "To $target"
 }
 catch {
-    Write-Host "Move failed: $($_.Exception.Message)" -ForegroundColor Red
-    Write-ActionLog -Action 'Move User' -Target $user.SamAccountName -Result 'Failed' -Details "$target - $($_.Exception.Message)"
+    Write-DeskSideFailure "Move failed" 'Move User' $user.SamAccountName $_ -Context "$target"
 }

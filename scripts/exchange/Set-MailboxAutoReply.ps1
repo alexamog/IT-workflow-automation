@@ -154,8 +154,7 @@ switch ((Read-Host '  Select').Trim()) {
             Write-ActionLog -Action 'Exchange: Set Out of Office' -Target $id -Details "$howLong; external=$audience"
         }
         catch {
-            Write-Host "  Failed: $($_.Exception.Message)" -ForegroundColor Red
-            Write-ActionLog -Action 'Exchange: Set Out of Office' -Target $id -Result 'Failed' -Details $_.Exception.Message
+            Write-DeskSideFailure "  Failed" 'Exchange: Set Out of Office' $id $_
         }
     }
     '2' {
@@ -166,8 +165,7 @@ switch ((Read-Host '  Select').Trim()) {
             Write-ActionLog -Action 'Exchange: Disable Out of Office' -Target $id
         }
         catch {
-            Write-Host "  Failed: $($_.Exception.Message)" -ForegroundColor Red
-            Write-ActionLog -Action 'Exchange: Disable Out of Office' -Target $id -Result 'Failed' -Details $_.Exception.Message
+            Write-DeskSideFailure "  Failed" 'Exchange: Disable Out of Office' $id $_
         }
     }
     default { return }

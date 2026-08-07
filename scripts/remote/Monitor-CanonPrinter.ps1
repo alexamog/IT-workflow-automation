@@ -146,8 +146,7 @@ function Invoke-CancelJob {
 
     try { $r = Stop-CanonPrinterJob -PrinterAddress $PrinterAddress -JobId $job.JobId }
     catch {
-        Write-Host "  Could not reach the printer: $($_.Exception.Message)" -ForegroundColor Red
-        Write-ActionLog -Action 'Printer: Cancel Job' -Target $PrinterAddress -Result 'Failed' -Details "#$($job.JobId) $($job.Name) - $($_.Exception.Message)"
+        Write-DeskSideFailure "  Could not reach the printer" 'Printer: Cancel Job' $PrinterAddress $_ -Context "#$($job.JobId) $($job.Name)"
         return
     }
 

@@ -27,6 +27,9 @@ if (-not (Test-TrmmConfigured)) { return }
 # -AsUser runs it in the logged-in user's session (needed to lock the screen).
 # This script passes whole agent OBJECTS around, so this wrapper pulls the id
 # out of the object for the shared helper.
+# NOT the shared Invoke-TrmmAgentText. This one takes a whole agent object and
+# returns TRMM's RAW response rather than flattening it to text, because the
+# console needs the response as-is. Keep it separate.
 function Invoke-AgentCmd ($agent, $command, [switch]$AsUser, [int]$TimeoutSec = 60) {
     Invoke-TrmmAgentCommand -AgentId $agent.agent_id -Command $command -AsUser:$AsUser -TimeoutSec $TimeoutSec
 }
@@ -123,9 +126,7 @@ Get-ItemProperty $keys -ErrorAction SilentlyContinue |
 
     Write-Host $out
     if (Confirm-DeskSideAction 'Save this list to a file?' -Quiet) {
-        $outputDir = Join-Path -Path $PSScriptRoot -ChildPath '..\..\output'
-        if (-not (Test-Path $outputDir)) { New-Item -ItemType Directory -Path $outputDir -Force | Out-Null }
-        $file = Join-Path $outputDir ("Installed Apps - {0} - {1}.txt" -f $agent.hostname, (Get-Date -Format 'yyyy-MM-dd HHmmss'))
+        $file = Join-Path (Get-ADToolOutputDir) ("Installed Apps - {0} - {1}.txt" -f $agent.hostname, (Get-Date -Format 'yyyy-MM-dd HHmmss'))
         $out | Out-File -FilePath $file -Encoding UTF8
         Write-Host "Saved: $file" -ForegroundColor Green
     }

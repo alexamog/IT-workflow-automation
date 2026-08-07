@@ -59,8 +59,7 @@ switch ((Read-Host '  Select').Trim()) {
             Write-ActionLog -Action 'Exchange: Set Forwarding' -Target $id -Details "-> $dest; keepCopy=$keep"
         }
         catch {
-            Write-Host "  Failed: $($_.Exception.Message)" -ForegroundColor Red
-            Write-ActionLog -Action 'Exchange: Set Forwarding' -Target $id -Result 'Failed' -Details $_.Exception.Message
+            Write-DeskSideFailure "  Failed" 'Exchange: Set Forwarding' $id $_
         }
     }
     '2' {
@@ -71,8 +70,7 @@ switch ((Read-Host '  Select').Trim()) {
             Write-ActionLog -Action 'Exchange: Remove Forwarding' -Target $id
         }
         catch {
-            Write-Host "  Failed: $($_.Exception.Message)" -ForegroundColor Red
-            Write-ActionLog -Action 'Exchange: Remove Forwarding' -Target $id -Result 'Failed' -Details $_.Exception.Message
+            Write-DeskSideFailure "  Failed" 'Exchange: Remove Forwarding' $id $_
         }
     }
     default { return }

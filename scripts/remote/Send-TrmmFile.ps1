@@ -85,17 +85,8 @@ $localHash = (Get-FileHash -Path $file.FullName -Algorithm SHA256).Hash
 Write-Host ("File: {0}  ({1} MB)  ->  {2} on {3}" -f $file.Name, $sizeMB, $Destination, $ComputerName) -ForegroundColor Cyan
 
 # --- Find the agent ----------------------------------------------------------
-$agents = @(Invoke-TrmmRequest GET 'agents/')
-$agent  = @($agents | Where-Object { $_.hostname -eq $ComputerName })
-if ($agent.Count -ne 1) {
-    Write-Host "ERROR: found $($agent.Count) agent(s) named '$ComputerName' (need exactly 1)." -ForegroundColor Red
-    if ($agent.Count -eq 0) {
-        @($agents | Where-Object { $_.hostname -match [regex]::Escape($ComputerName) }) |
-            ForEach-Object { Write-Host "  Did you mean: $($_.hostname)" -ForegroundColor Yellow }
-    }
-    return
-}
-$agent = $agent[0]
+$agent = Find-TrmmAgentByName -Hostname $ComputerName
+if (-not $agent) { return }        # the reason was already printed
 if ($agent.status -ne 'online') {
     Write-Host "'$ComputerName' is $($agent.status) - it must be online." -ForegroundColor Red
     return
@@ -111,8 +102,11 @@ function Write-SendFileLog ($Result, $Details) {
 }
 
 # Run a PowerShell command on the agent and return its output.
+# Kept as a local wrapper - unlike the other scripts' copies, this one carries
+# the agent for you (it is fixed for the whole run) and is called positionally
+# nine times below. It just forwards to the shared helper now.
 function Invoke-AgentCmd ($command, [int]$TimeoutSec = 300) {
-    "$(Invoke-TrmmAgentCommand -AgentId $agent.agent_id -Command $command -TimeoutSec $TimeoutSec)"
+    Invoke-TrmmAgentText -AgentId $agent.agent_id -Command $command -TimeoutSec $TimeoutSec
 }
 
 # Ask the machine for the file's hash so we can prove the copy is intact.

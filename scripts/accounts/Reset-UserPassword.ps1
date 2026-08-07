@@ -38,8 +38,7 @@ try {
     Write-ActionLog -Action 'Reset Password' -Target $user.SamAccountName
 }
 catch {
-    Write-Host "Failed to reset password: $($_.Exception.Message)" -ForegroundColor Red
-    Write-ActionLog -Action 'Reset Password' -Target $user.SamAccountName -Result 'Failed' -Details $_.Exception.Message
+    Write-DeskSideFailure "Failed to reset password" 'Reset Password' $user.SamAccountName $_
     return
 }
 
@@ -54,7 +53,6 @@ if (Confirm-DeskSideAction 'Force the user to change password at next logon?' -Q
         Write-ActionLog -Action 'Force Password Change' -Target $user.SamAccountName
     }
     catch {
-        Write-Host "Could not set the change-at-next-logon flag: $($_.Exception.Message)" -ForegroundColor Red
-        Write-ActionLog -Action 'Force Password Change' -Target $user.SamAccountName -Result 'Failed' -Details $_.Exception.Message
+        Write-DeskSideFailure "Could not set the change-at-next-logon flag" 'Force Password Change' $user.SamAccountName $_
     }
 }

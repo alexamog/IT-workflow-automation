@@ -55,8 +55,7 @@ function Add-Members ($group) {
             $msg = $_.Exception.Message
             if ($msg -match 'already a member') { Write-Host "    $p - already a member." -ForegroundColor DarkGray }
             else {
-                Write-Host "    $p - failed: $msg" -ForegroundColor Red
-                Write-ActionLog -Action 'Exchange: DL Add Member' -Target $group.PrimarySmtpAddress -Result 'Failed' -Details "$p - $msg"
+                Write-DeskSideFailure "    $p - failed" 'Exchange: DL Add Member' $group.PrimarySmtpAddress $_ -Context "$p"
             }
         }
     }
@@ -75,8 +74,7 @@ function Remove-Members ($group) {
             Write-ActionLog -Action 'Exchange: DL Remove Member' -Target $group.PrimarySmtpAddress -Details $p
         }
         catch {
-            Write-Host "    $p - failed: $($_.Exception.Message)" -ForegroundColor Red
-            Write-ActionLog -Action 'Exchange: DL Remove Member' -Target $group.PrimarySmtpAddress -Result 'Failed' -Details "$p - $($_.Exception.Message)"
+            Write-DeskSideFailure "    $p - failed" 'Exchange: DL Remove Member' $group.PrimarySmtpAddress $_ -Context "$p"
         }
     }
 }

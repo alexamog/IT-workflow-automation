@@ -91,8 +91,7 @@ try {
     Write-ActionLog -Action 'Onboard: Group Add' -Target $sam -Details "Added to $GroupName"
 }
 catch {
-    Write-Host "Could not add to '$GroupName': $($_.Exception.Message)" -ForegroundColor Red
-    Write-ActionLog -Action 'Onboard: Group Add' -Target $sam -Result 'Failed' -Details "$GroupName - $($_.Exception.Message)"
+    Write-DeskSideFailure "Could not add to '$GroupName'" 'Onboard: Group Add' $sam $_ -Context "$GroupName"
 }
 }
 
@@ -104,8 +103,7 @@ try {
     Write-ActionLog -Action 'Onboard: Reset Password' -Target $sam
 }
 catch {
-    Write-Host "Password reset failed: $($_.Exception.Message)" -ForegroundColor Red
-    Write-ActionLog -Action 'Onboard: Reset Password' -Target $sam -Result 'Failed' -Details $_.Exception.Message
+    Write-DeskSideFailure "Password reset failed" 'Onboard: Reset Password' $sam $_
 }
 
 # --- 3. Force a password change at next logon --------------------------------

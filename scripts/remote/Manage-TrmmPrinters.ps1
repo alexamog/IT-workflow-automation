@@ -63,19 +63,8 @@ if (-not $ComputerName) { Write-Host "No computer name - cancelled." -Foreground
 $ComputerName = $ComputerName.Trim()
 
 Write-Host "Looking up '$ComputerName' in Tactical RMM..."
-try { $agents = @(Invoke-TrmmRequest GET 'agents/') }
-catch { Write-Host "TRMM lookup failed: $($_.Exception.Message)" -ForegroundColor Red; return }
-
-$agent = @($agents | Where-Object { $_.hostname -eq $ComputerName })
-if ($agent.Count -ne 1) {
-    Write-Host "ERROR: found $($agent.Count) agent(s) named '$ComputerName' (need exactly 1)." -ForegroundColor Red
-    if ($agent.Count -eq 0) {
-        @($agents | Where-Object { $_.hostname -match [regex]::Escape($ComputerName) }) |
-            ForEach-Object { Write-Host "  Did you mean: $($_.hostname)" -ForegroundColor Yellow }
-    }
-    return
-}
-$agent = $agent[0]
+$agent = Find-TrmmAgentByName -Hostname $ComputerName
+if (-not $agent) { return }        # the reason was already printed
 
 if ($agent.status -ne 'online') {
     Write-Host "$($agent.hostname) is $($agent.status). It must be online to change printers." -ForegroundColor Yellow

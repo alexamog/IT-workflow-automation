@@ -131,8 +131,7 @@ function New-Site {
         Write-ActionLog -Action 'SharePoint: Create Site' -Target $url -Details "owner=$owner; template=$template; ${quota}MB"
     }
     catch {
-        Write-Host "  Create failed: $($_.Exception.Message)" -ForegroundColor Red
-        Write-ActionLog -Action 'SharePoint: Create Site' -Target $url -Result 'Failed' -Details $_.Exception.Message
+        Write-DeskSideFailure "  Create failed" 'SharePoint: Create Site' $url $_
     }
 }
 
@@ -153,8 +152,7 @@ function Remove-Site {
         Write-ActionLog -Action 'SharePoint: Remove Site' -Target $site.Url -Details "title=$($site.Title)"
     }
     catch {
-        Write-Host "  Delete failed: $($_.Exception.Message)" -ForegroundColor Red
-        Write-ActionLog -Action 'SharePoint: Remove Site' -Target $site.Url -Result 'Failed' -Details $_.Exception.Message
+        Write-DeskSideFailure "  Delete failed" 'SharePoint: Remove Site' $site.Url $_
     }
 }
 

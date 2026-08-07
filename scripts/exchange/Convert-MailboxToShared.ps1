@@ -56,6 +56,5 @@ try {
     Write-ActionLog -Action 'Exchange: Convert Mailbox to Shared' -Target $id -Details "was $($box.RecipientTypeDetails)"
 }
 catch {
-    Write-Host "  Convert failed: $($_.Exception.Message)" -ForegroundColor Red
-    Write-ActionLog -Action 'Exchange: Convert Mailbox to Shared' -Target $id -Result 'Failed' -Details $_.Exception.Message
+    Write-DeskSideFailure "  Convert failed" 'Exchange: Convert Mailbox to Shared' $id $_
 }

@@ -54,8 +54,7 @@ function New-SharedMailbox {
         Write-ActionLog -Action 'Exchange: Create Shared Mailbox' -Target $addr -Details "name=$name"
     }
     catch {
-        Write-Host "  Create failed: $($_.Exception.Message)" -ForegroundColor Red
-        Write-ActionLog -Action 'Exchange: Create Shared Mailbox' -Target $addr -Result 'Failed' -Details $_.Exception.Message
+        Write-DeskSideFailure "  Create failed" 'Exchange: Create Shared Mailbox' $addr $_
         return
     }
 
@@ -89,8 +88,7 @@ function Set-MailboxPermKind ($Mailbox, $Kind, [bool]$Add, $People) {
             }
         }
         catch {
-            Write-Host "    $p - failed: $($_.Exception.Message)" -ForegroundColor Red
-            Write-ActionLog -Action ("Exchange: {0} {1}" -f $(if ($Add) { 'Grant' } else { 'Remove' }), $label) -Target $Mailbox -Result 'Failed' -Details "$p - $($_.Exception.Message)"
+            Write-DeskSideFailure "    $p - failed" ("Exchange: {0} {1}" -f $(if ($Add) { 'Grant' } else { 'Remove' }), $label) $Mailbox $_ -Context "$p"
         }
     }
 }
