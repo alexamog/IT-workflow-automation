@@ -1272,16 +1272,6 @@ Describe 'Test-DeskSideProtectedAccount (org-agnostic profile protection)' {
     }
 }
 
-Describe 'Get-ADToolDomainDN' {
-
-    It 'returns the configured DN when one is set' {
-        $saved = $ADTool.DomainDN
-        $ADTool.DomainDN = 'DC=test,DC=local'
-        Get-ADToolDomainDN | Should -Be 'DC=test,DC=local'
-        $ADTool.DomainDN = $saved
-    }
-}
-
 Describe 'Source files are plain ASCII' {
 
     # WHY THIS TEST EXISTS - it guards against a failure that looks impossible.

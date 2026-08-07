@@ -41,11 +41,6 @@
 # left unset either auto-detects (the AD domain) or the feature that needs it
 # tells you which variable to set.
 $Global:ADTool = @{
-    # AD domain distinguished name. Empty = auto-detect from the current domain
-    # at run time (Get-ADToolDomainDN), so AD features work with no setup. Pin it
-    # with AD_DOMAIN_DN only if you need a specific value.
-    DomainDN = if ($env:AD_DOMAIN_DN) { $env:AD_DOMAIN_DN } else { '' }
-
     # The OU holding disabled / "unmatched" accounts, for the reports that scan
     # it. Set AD_SOURCE_OU; the reports say so if it is empty.
     SourceOU = if ($env:AD_SOURCE_OU) { $env:AD_SOURCE_OU } else { '' }
@@ -166,13 +161,6 @@ function Test-DeskSidePathExcluded {
     if ($leaf -like '*.tmp')              { return $true }
 
     return $false
-}
-
-# The AD domain DN: the configured value if set, otherwise read it from the
-# current domain so AD features need no configuration to work.
-function Get-ADToolDomainDN {
-    if ($ADTool.DomainDN) { return $ADTool.DomainDN }
-    try { (Get-ADDomain).DistinguishedName } catch { '' }
 }
 
 # --- Domain controller selection ---------------------------------------------

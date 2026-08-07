@@ -27,8 +27,8 @@ param([string]$Identity)
 
 # --- Show which account is running -------------------------------------------
 # Onboarding makes AD changes, so it must run as an account with the right
-# permissions - e.g. via Launch-AdminToolkit.ps1 (runas /savecred). We show the
-# account so you can confirm; if it lacks rights, each step below reports why.
+# permissions. We show the account so you can confirm before anything happens;
+# if it lacks rights, each step below reports why rather than failing silently.
 Write-Host ("Running as: {0}\{1}" -f $env:USERDOMAIN, $env:USERNAME) -ForegroundColor DarkGray
 
 # --- Settings (all configurable - see lib\Common.ps1 / setup\Set-ToolConfig.ps1)

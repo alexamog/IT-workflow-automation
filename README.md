@@ -21,7 +21,7 @@ Examples). Most user scripts take a **SAM** (`alex.amog`) or **UPN**
 
 | Folder | Contents |
 | ------ | -------- |
-| `.\` | `AD-Toolkit.ps1` launcher, `Start-DeskSide.ps1`/`.cmd` (auto-updating launcher), `Launch-AdminToolkit.ps1`, `Publish-ToShare.ps1`, `Build-SharePackage.ps1`, `Publish-Standalone.ps1`, `VERSION` |
+| `.\` | `AD-Toolkit.ps1` launcher, `Start-DeskSide.ps1`/`.cmd` (auto-updating launcher), `Publish-ToShare.ps1`, `Build-SharePackage.ps1`, `Publish-Standalone.ps1`, `VERSION` |
 | `setup\` | `Set-ToolConfig`, `Set-SnipeCredentials`, `Set-TacticalCredentials` |
 | `lib\` | `Common.ps1` - shared config + helpers |
 | `scripts\` | Task scripts, grouped by category (below) |
@@ -383,7 +383,6 @@ to the individual `Set-*` scripts below, so you can still run those directly.
 | `SNIPEIT_TOKEN` | Snipe-IT API token (no "Bearer ") | Yes |
 | `TRMM_URL` | TRMM API URL (the `api.` address, NOT the `rmm.` UI) | No |
 | `TRMM_APIKEY` | TRMM API key (Settings > Global Settings > API Keys) | Yes |
-| `AD_DOMAIN_DN` | AD domain DN. **Blank = auto-detected** from the current domain | No |
 | `AD_SOURCE_OU` | "Unmatched Accounts" OU (for the reports) | No |
 | `AD_REGIONS` | Region OUs, semicolon-separated | No |
 | `ONBOARDING_GROUP` | Group new users join. Blank = skip the group step | No |
@@ -474,8 +473,11 @@ All record timestamp + operator. Failures logged with the error.
 
 ## Admin credentials
 
-`Launch-AdminToolkit.ps1` (and the shortcut) prompt for your AD admin account and
-run the toolkit as it.
+The AD and Microsoft 365 features are tagged `Admin` and only appear when the
+toolkit runs as the local SYSTEM account (see `Test-RunningAsSystem` in
+`AD-Toolkit.ps1`); everything else is available to a normal login. To use the
+AD features, start the toolkit from a session that already has the rights it
+needs. Each step reports plainly if the account lacks permission.
 
 ## Standalone editions and Core
 
