@@ -274,7 +274,10 @@ else {
 # Connect once up front; if it can't connect or the SKU isn't found, the licence
 # step is skipped for everyone (the rest of the onboarding still runs).
 $e1Sku = $null
-if ($targets.Count -gt 0 -and (Read-Host "`nAlso assign the Office 365 E1 licence to each? (Y/n)").Trim().ToUpper() -ne 'N') {
+# -DefaultYes: matches New-UserOnboarding - licensing a new starter is the
+# normal path, so a bare ENTER goes ahead. Type N to skip.
+Write-Host ""
+if ($targets.Count -gt 0 -and (Confirm-DeskSideAction 'Also assign the Office 365 E1 licence to each?' -DefaultYes -Quiet)) {
     if (Connect-MgGraphSession) { $e1Sku = Get-M365LicenseSku }
     if (-not $e1Sku) { Write-Host "Skipping the licence step - onboarding the accounts without it." -ForegroundColor Yellow }
 }

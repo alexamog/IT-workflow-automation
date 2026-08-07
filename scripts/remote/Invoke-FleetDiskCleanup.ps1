@@ -118,11 +118,8 @@ if ($ScanOnly) { return }
 # --- Confirm and dispatch ------------------------------------------------------
 Write-Host "The disk cleanup (temp files, recycle bin, update cache, DISM) can be dispatched"
 Write-Host "to ALL machines listed above. No user profiles are deleted." -ForegroundColor Yellow
-$answer = Read-Host "`nType YES (in capitals) to dispatch the cleanup to these $($low.Count) machine(s), or anything else to stop"
-if ($answer -cne 'YES') {
-    Write-Host "Nothing dispatched." -ForegroundColor Yellow
-    return
-}
+Write-Host ""
+if (-not (Confirm-DeskSideWord "dispatch the cleanup to these $($low.Count) machine(s)" -CancelNote 'nothing dispatched')) { return }
 
 # Make sure the cleanup script is in the TRMM library (same entry the
 # remote profile cleanup uses - created or refreshed from our local copy).

@@ -832,43 +832,18 @@ function Write-SnipeAssetReport {
         assets      = $flat
     } | ConvertTo-Json -Depth 6 | Out-File -FilePath $json -Encoding UTF8
 
-    # Escape every value so notes/names can't break the markup.
-    function Enc($v) { ([string]$v) -replace '&', '&amp;' -replace '<', '&lt;' -replace '>', '&gt;' -replace '"', '&quot;' }
-    $cols = 'AssetTag', 'Name', 'Model', 'Manufacturer', 'Category', 'Status', 'AssignedTo', 'Location', 'RtdLocation', 'Serial', 'PurchaseDate', 'WarrantyExpires', 'Notes'
-    $head = ($cols | ForEach-Object { "<th>$(Enc $_)</th>" }) -join ''
-    $rowsHtml = foreach ($r in $flat) {
-        $cells = ($cols | ForEach-Object { "<td>$(Enc $r.$_)</td>" }) -join ''
-        "<tr>$cells</tr>"
-    }
-    $chips = if (@($Criteria).Count) { ($Criteria | ForEach-Object { "<span>$(Enc $_)</span>" }) -join '' } else { '<span>(all assets)</span>' }
-    $htmlDoc = @"
-<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Snipe-IT Asset Report</title>
-<style>
- body{font-family:Segoe UI,Arial,sans-serif;margin:24px;color:#222}
- h1{font-size:20px;margin:0 0 6px}
- .meta{color:#666;font-size:13px;margin-bottom:6px}
- .kw{margin:0 0 16px}
- .kw span{display:inline-block;background:#eef3f8;border:1px solid #d4e0ea;color:#33506b;
-   border-radius:12px;padding:2px 10px;font-size:12px;margin:2px 4px 2px 0}
- table{border-collapse:collapse;width:100%;font-size:13px}
- th,td{border:1px solid #ddd;padding:6px 8px;text-align:left;vertical-align:top}
- th{background:#f4f6f8;position:sticky;top:0}
- tr:nth-child(even){background:#fafafa}
-</style></head><body>
-<h1>Snipe-IT Asset Report</h1>
-<div class="meta">$count asset(s) &middot; generated $when by $(Enc $env:USERNAME)</div>
-<div class="kw">Filters: $chips</div>
-<table><thead><tr>$head</tr></thead><tbody>
-$($rowsHtml -join "`n")
-</tbody></table></body></html>
-"@
-    $htmlDoc | Out-File -FilePath $html -Encoding UTF8
+    $cols  = 'AssetTag', 'Name', 'Model', 'Manufacturer', 'Category', 'Status', 'AssignedTo', 'Location', 'RtdLocation', 'Serial', 'PurchaseDate', 'WarrantyExpires', 'Notes'
+    $meta  = "$count asset(s) &middot; generated $when by $(ConvertTo-HtmlEncodedText $env:USERNAME)"
+    $chips = if (@($Criteria).Count) {
+        'Filters: ' + (($Criteria | ForEach-Object { "<span>$(ConvertTo-HtmlEncodedText $_)</span>" }) -join '')
+    } else { 'Filters: <span>(all assets)</span>' }
 
     Write-Host "`nReport of $count asset(s) written to:" -ForegroundColor Green
     Write-Host "  $json"
     Write-Host "  $html"
-    if (-not $NoPrompt -and (Read-Host "Open the HTML report now? (y/n)").Trim().ToUpper() -eq 'Y') { Start-Process $html }
+
+    Write-DeskSideHtmlReport -Rows $flat -Columns $cols -Title 'Snipe-IT Asset Report' `
+        -Path $html -MetaHtml $meta -ChipsHtml $chips -NoPrompt:$NoPrompt | Out-Null
 
     [pscustomobject]@{ Json = $json; Html = $html; Count = $count }
 }
@@ -1129,10 +1104,8 @@ function Get-DeskSideAdminUpn {
 # your admin address to skip typing it each time - .\setup\Set-ExchangeAdmin.ps1.
 function Connect-ExoSession {
     if (-not (Get-Module -ListAvailable -Name ExchangeOnlineManagement)) {
-        Write-Host "The ExchangeOnlineManagement module is not installed." -ForegroundColor Red
-        Write-Host "Install it once (no admin rights needed):" -ForegroundColor Yellow
-        Write-Host "    Install-Module ExchangeOnlineManagement -Scope CurrentUser" -ForegroundColor White
-        Write-Host "Then open a new PowerShell window and try again." -ForegroundColor Yellow
+        Write-DeskSideModuleMissing -ModuleName 'ExchangeOnlineManagement' `
+            -Extra 'Then open a new PowerShell window and try again.'
         return $false
     }
     Import-Module ExchangeOnlineManagement -ErrorAction SilentlyContinue
@@ -1191,10 +1164,8 @@ function Connect-MgGraphSession {
                   ((Get-Module -ListAvailable -Name Microsoft.Graph.Users) -and
                    (Get-Module -ListAvailable -Name Microsoft.Graph.Identity.DirectoryManagement))
     if (-not $haveModule) {
-        Write-Host "The Microsoft.Graph module is not installed." -ForegroundColor Red
-        Write-Host "Install it once (no admin rights needed):" -ForegroundColor Yellow
-        Write-Host "    Install-Module Microsoft.Graph -Scope CurrentUser" -ForegroundColor White
-        Write-Host "(or the smaller Microsoft.Graph.Users + Microsoft.Graph.Identity.DirectoryManagement)" -ForegroundColor DarkGray
+        Write-DeskSideModuleMissing -ModuleName 'Microsoft.Graph' `
+            -Extra '(or the smaller Microsoft.Graph.Users + Microsoft.Graph.Identity.DirectoryManagement)'
         return $false
     }
 
@@ -1272,9 +1243,7 @@ function Set-M365UserLicense {
 # Returns $true when ready, $false (with guidance) when not.
 function Connect-SpoSession {
     if (-not (Get-Module -ListAvailable -Name Microsoft.Online.SharePoint.PowerShell)) {
-        Write-Host "The Microsoft.Online.SharePoint.PowerShell module is not installed." -ForegroundColor Red
-        Write-Host "Install it once (no admin rights needed):" -ForegroundColor Yellow
-        Write-Host "    Install-Module Microsoft.Online.SharePoint.PowerShell -Scope CurrentUser" -ForegroundColor White
+        Write-DeskSideModuleMissing -ModuleName 'Microsoft.Online.SharePoint.PowerShell'
         return $false
     }
     if (-not $env:SPO_ADMIN_URL) {

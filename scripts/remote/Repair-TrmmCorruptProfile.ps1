@@ -171,9 +171,7 @@ if ($toRepair.Count -eq 0) { Write-Host "Nothing chosen." -ForegroundColor Yello
 Write-Host ""
 Write-Host "This edits the profile registry on the machine. A backup is saved first." -ForegroundColor Yellow
 Write-Host "The user must sign out and back in for the repair to take effect." -ForegroundColor Yellow
-if ((Read-Host "Type YES to repair $($toRepair.Count) profile(s)").Trim() -cne 'YES') {
-    Write-Host "Cancelled - nothing changed." -ForegroundColor Yellow; return
-}
+if (-not (Confirm-DeskSideWord "repair $($toRepair.Count) profile(s)" -CancelNote 'nothing changed')) { return }
 
 # --- Repair ------------------------------------------------------------------
 foreach ($d in $toRepair) {

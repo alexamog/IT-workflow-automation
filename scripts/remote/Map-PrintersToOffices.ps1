@@ -86,7 +86,8 @@ else {
             Sort-Object LastWriteTime -Descending | Select-Object -First 1
         if ($latest) {
             Write-Host "Newest printer scan: $($latest.Name)" -ForegroundColor Cyan
-            if ((Read-Host "Use it? (Y/n)").Trim().ToUpper() -ne 'N') { $InputFile = $latest.FullName }
+            # -DefaultYes: the most recent scan is nearly always the one wanted.
+            if (Confirm-DeskSideAction 'Use it?' -DefaultYes -Quiet) { $InputFile = $latest.FullName }
         }
     }
     if (-not $InputFile) {

@@ -129,9 +129,7 @@ else {
     else { Write-Host "Cancelled." -ForegroundColor DarkGray; return }
 }
 
-if ((Read-Host "Type YES to permanently delete '$user' on $($toDelete.Count) machine(s)").Trim() -cne 'YES') {
-    Write-Host "Cancelled." -ForegroundColor Yellow; return
-}
+if (-not (Confirm-DeskSideWord "permanently delete '$user' on $($toDelete.Count) machine(s)")) { return }
 
 # Audit log (operator side).
 # Audit rows go through Write-ActionLog in the shared library, so every feature

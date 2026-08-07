@@ -140,9 +140,7 @@ else {
 }
 if ($toDelete.Count -eq 0) { Write-Host "Nothing in that group." -ForegroundColor Yellow; return }
 
-if ((Read-Host "Type YES to permanently remove $($toDelete.Count) profile(s)/entry(ies)").Trim() -cne 'YES') {
-    Write-Host "Cancelled." -ForegroundColor Yellow; return
-}
+if (-not (Confirm-DeskSideWord "permanently remove $($toDelete.Count) profile(s)/entry(ies)")) { return }
 
 $outputDir = Join-Path -Path $PSScriptRoot -ChildPath '..\..\output'
 if (-not (Test-Path $outputDir)) { New-Item -ItemType Directory -Path $outputDir -Force | Out-Null }

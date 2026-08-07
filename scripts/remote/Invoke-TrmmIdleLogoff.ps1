@@ -110,9 +110,7 @@ else {
     else { Write-Host "Cancelled." -ForegroundColor DarkGray; return }
 }
 
-if ((Read-Host "Type YES to sign off $($toLogoff.Count) session(s)").Trim() -cne 'YES') {
-    Write-Host "Cancelled - nobody was signed off." -ForegroundColor Yellow; return
-}
+if (-not (Confirm-DeskSideWord "sign off $($toLogoff.Count) session(s)" -CancelNote 'nobody was signed off')) { return }
 
 $outputDir = Join-Path -Path $PSScriptRoot -ChildPath '..\..\output'
 if (-not (Test-Path $outputDir)) { New-Item -ItemType Directory -Path $outputDir -Force | Out-Null }

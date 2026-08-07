@@ -275,9 +275,8 @@ if ($Keep -or $DeleteOnly) {
     # --- Phase 2: confirm locally, then run for real -------------------------
     # Different confirmation word per mode so they can't be confused.
     $word = if ($DeleteOnly) { 'DELETE LIST' } else { 'YES' }
-    $answer = Read-Host "`nType '$word' (in capitals) to run this FOR REAL on $ComputerName, or anything else to cancel"
-    if ($answer -cne $word) {
-        Write-Host "Cancelled - nothing was changed on $ComputerName." -ForegroundColor Yellow
+    Write-Host ""
+    if (-not (Confirm-DeskSideWord "run this FOR REAL on $ComputerName" -Word $word -CancelNote "nothing was changed on $ComputerName")) {
         Write-RemoteActionLog 'Cancelled' "$optionSummary log=$(Split-Path $runLog -Leaf)"
         return
     }

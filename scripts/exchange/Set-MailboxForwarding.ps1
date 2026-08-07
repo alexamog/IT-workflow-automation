@@ -45,7 +45,9 @@ switch ((Read-Host '  Select').Trim()) {
     '1' {
         $dest = (Read-Host "  Forward to (email address)").Trim()
         if (-not $dest) { Write-Host "  Cancelled." -ForegroundColor Yellow; return }
-        $keep = (Read-Host "  Keep a copy in the original mailbox too? (Y/n)").Trim().ToUpper() -ne 'N'
+        # -DefaultYes: keeping a copy is the safe, usual answer, so a bare ENTER
+        # keeps it. This is choosing a setting, not guarding an action.
+        $keep = Confirm-DeskSideAction 'Keep a copy in the original mailbox too?' -DefaultYes -Quiet -Indent '  '
 
         Write-Host ""
         Write-Host ("  Forward {0}  ->  {1}   (keep copy: {2})" -f $id, $dest, $keep) -ForegroundColor Cyan

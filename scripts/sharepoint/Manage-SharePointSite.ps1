@@ -145,7 +145,7 @@ function Remove-Site {
     Write-Host "  This deletes the site and everything in it:" -ForegroundColor Yellow
     Write-Host ("    {0}   ({1})" -f $site.Url, $site.Title)
     Write-Host "  It goes to the SharePoint recycle bin (recoverable for ~93 days), not gone forever." -ForegroundColor DarkGray
-    if ((Read-Host "  Type YES to delete this site").Trim() -cne 'YES') { Write-Host "  Cancelled - nothing deleted." -ForegroundColor Yellow; return }
+    if (-not (Confirm-DeskSideWord 'delete this site' -CancelNote 'nothing deleted' -Indent '  ')) { return }
 
     try {
         Remove-SPOSite -Identity $site.Url -Confirm:$false -ErrorAction Stop

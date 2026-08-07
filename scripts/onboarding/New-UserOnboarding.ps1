@@ -121,7 +121,10 @@ catch {
 # Licences live in the M365 admin centre (Microsoft Graph), not AD, so this is a
 # separate, optional step. Signs in interactively the first time.
 $upn = $user.UserPrincipalName
-if ($upn -and (Read-Host "`nAssign the Office 365 E1 licence to $upn? (Y/n)").Trim().ToUpper() -ne 'N') {
+# -DefaultYes: assigning the licence is the normal path for a new starter, so a
+# bare ENTER goes ahead with it. Type N to skip.
+Write-Host ""
+if ($upn -and (Confirm-DeskSideAction "Assign the Office 365 E1 licence to $upn?" -DefaultYes -Quiet)) {
     if (Connect-MgGraphSession) {
         $sku = Get-M365LicenseSku
         if ($sku) {

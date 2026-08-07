@@ -47,7 +47,8 @@ if ($box.RecipientTypeDetails -eq 'SharedMailbox') {
 Write-Host "  Converting to a shared mailbox keeps all the mail. The person can no" -ForegroundColor Yellow
 Write-Host "  longer sign in to it directly; the team opens it as a shared mailbox." -ForegroundColor Yellow
 Write-Host "  Disable the AD account (Offboarding) and remove the 365 licence separately." -ForegroundColor DarkGray
-if ((Read-Host "`n  Type YES to convert").Trim() -cne 'YES') { Write-Host "  Cancelled - nothing changed." -ForegroundColor Yellow; return }
+Write-Host ""
+if (-not (Confirm-DeskSideWord 'convert' -CancelNote 'nothing changed' -Indent '  ')) { return }
 
 try {
     Set-Mailbox -Identity $id -Type Shared -ErrorAction Stop

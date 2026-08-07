@@ -166,10 +166,7 @@ function Invoke-Restart {
     Write-Host ""
     Write-Host "  This restarts the printer. Anything mid-print will be interrupted," -ForegroundColor Yellow
     Write-Host "  and it will be unreachable for a minute or two while it comes back up." -ForegroundColor Yellow
-    if ((Read-Host "  Type YES to restart $PrinterAddress").Trim() -cne 'YES') {
-        Write-Host "  Cancelled - nothing done." -ForegroundColor DarkGray
-        return
-    }
+    if (-not (Confirm-DeskSideWord "restart $PrinterAddress" -CancelNote 'nothing done' -Indent '  ')) { return }
 
     Write-Host "  Sending the restart command..." -ForegroundColor DarkGray
     $r = Restart-CanonPrinter -PrinterAddress $PrinterAddress

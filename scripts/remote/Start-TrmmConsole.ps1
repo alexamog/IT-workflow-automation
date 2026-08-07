@@ -87,7 +87,7 @@ function Invoke-TakeControl ($agent) {
 # --- Power actions (confirm first - they interrupt the logged-in user) -------
 function Invoke-Restart ($agent) {
     Write-Host "Restart $($agent.hostname)? Any logged-in user loses unsaved work." -ForegroundColor Yellow
-    if ((Read-Host "Type YES to restart").Trim() -cne 'YES') { Write-Host "Cancelled." -ForegroundColor DarkGray; return }
+    if (-not (Confirm-DeskSideWord 'restart')) { return }
     try { Invoke-TrmmRequest POST "agents/$($agent.agent_id)/reboot/" @{} | Out-Null; Write-Host "Restart sent to $($agent.hostname)." -ForegroundColor Green }
     catch { Write-Host "Restart failed: $($_.Exception.Message)" -ForegroundColor Red }
 }

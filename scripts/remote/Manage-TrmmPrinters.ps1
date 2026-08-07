@@ -274,7 +274,7 @@ function Remove-RemotePrinter ($state) {
     Write-Host "  These printers will be REMOVED from $($agent.hostname):" -ForegroundColor Yellow
     $chosen | ForEach-Object { Write-Host ("    - {0}   (port {1})" -f $_.Name, $_.Port) }
     Write-Host "  Anyone printing to them will need them added back." -ForegroundColor Yellow
-    if ((Read-Host "  Type YES to remove").Trim() -cne 'YES') { Write-Host "  Cancelled - nothing removed." -ForegroundColor DarkGray; return $false }
+    if (-not (Confirm-DeskSideWord 'remove' -CancelNote 'nothing removed' -Indent '  ')) { return $false }
 
     $alsoPort = (Read-Host "  Also remove each printer's port? (y/n)").Trim().ToUpper() -eq 'Y'
 
