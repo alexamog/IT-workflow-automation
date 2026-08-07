@@ -106,37 +106,19 @@ $when  = Get-Date -Format 'yyyy-MM-dd HH:mm'
     problems     = @($problems)
 } | ConvertTo-Json -Depth 6 | Out-File -FilePath $json -Encoding UTF8
 
-function Enc($v) { ([string]$v) -replace '&', '&amp;' -replace '<', '&lt;' -replace '>', '&gt;' -replace '"', '&quot;' }
-$cols = 'Hostname', 'Serial', 'Result', 'MakeModel', 'SnipeTag', 'SnipeName', 'Client', 'Site'
-$head = ($cols | ForEach-Object { "<th>$(Enc $_)</th>" }) -join ''
-$rowsHtml = foreach ($r in $problems) {
-    "<tr>$(($cols | ForEach-Object { "<td>$(Enc $r.$_)</td>" }) -join '')</tr>"
-}
-$htmlDoc = @"
-<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>TRMM serial audit vs Snipe-IT</title>
-<style>
- body{font-family:Segoe UI,Arial,sans-serif;margin:24px;color:#222}
- h1{font-size:20px;margin:0 0 6px}
- .meta{color:#666;font-size:13px;margin-bottom:16px}
- table{border-collapse:collapse;width:100%;font-size:13px}
- th,td{border:1px solid #ddd;padding:6px 8px;text-align:left;vertical-align:top}
- th{background:#f4f6f8;position:sticky;top:0}
- tr:nth-child(even){background:#fafafa}
-</style></head><body>
-<h1>TRMM serial audit vs Snipe-IT</h1>
-<div class="meta">$($problems.Count) problem(s) of $($agents.Count) agent(s) &middot; $ok matched OK &middot; generated $when by $(Enc $env:USERNAME)<br>
-NoSerial = TRMM has no serial &middot; NotInSnipe = serial missing from Snipe-IT &middot; HostnameMismatch = serial found under a different name</div>
-<table><thead><tr>$head</tr></thead><tbody>
-$($rowsHtml -join "`n")
-</tbody></table></body></html>
-"@
-$htmlDoc | Out-File -FilePath $html -Encoding UTF8
+$meta = "$($problems.Count) problem(s) of $($agents.Count) agent(s) &middot; $ok matched OK &middot; " +
+        "generated $when by $(ConvertTo-HtmlEncodedText $env:USERNAME)<br>" +
+        'NoSerial = TRMM has no serial &middot; NotInSnipe = serial missing from Snipe-IT &middot; ' +
+        'HostnameMismatch = serial found under a different name'
 
 Write-Host "Report written to:" -ForegroundColor Green
 Write-Host "  $json"
 Write-Host "  $html"
-if ((Read-Host "Open the HTML report now? (y/n)").Trim().ToUpper() -eq 'Y') { Start-Process $html }
+
+# The page itself (and the offer to open it) comes from the shared writer, so
+# every report in the toolkit looks the same and escapes its values the same.
+Write-DeskSideHtmlReport -Rows $problems -Columns 'Hostname', 'Serial', 'Result', 'MakeModel', 'SnipeTag', 'SnipeName', 'Client', 'Site' `
+    -Title 'TRMM serial audit vs Snipe-IT' -Path $html -MetaHtml $meta | Out-Null
 
 # ============================================================================
 # OPTIONAL FIXES - both confirm first, both log to Snipe-Asset-Changes.json
@@ -150,7 +132,7 @@ if ($mismatch.Count -gt 0) {
     foreach ($p in $mismatch) {
         Write-Host ("  {0}  '{1}' -> '{2}'   (serial {3})" -f $p.SnipeTag, $p.SnipeName, $p.Hostname, $p.Serial) -ForegroundColor Yellow
     }
-    if ((Read-Host "Update these $($mismatch.Count) name(s) in Snipe-IT? (y/n)").Trim().ToUpper() -eq 'Y') {
+    if (Confirm-DeskSideAction "Update these $($mismatch.Count) name(s) in Snipe-IT?" -Quiet) {
         foreach ($p in $mismatch) {
             try { $resp = Invoke-SnipeRequest -Path "hardware/$($p.SnipeId)" -Method PATCH -Body (@{ name = $p.Hostname } | ConvertTo-Json) }
             catch { Write-Host "  FAIL $($p.SnipeTag): $($_.Exception.Message)" -ForegroundColor Red; continue }
@@ -198,7 +180,7 @@ if ($notin.Count -gt 0) {
     Write-Host ("{0} creatable, {1} without a model match (skipped)." -f $creatable.Count, ($plan.Count - $creatable.Count)) -ForegroundColor DarkCyan
 
     if (-not $statusId) { Write-Host "No usable status label found - cannot create." -ForegroundColor Red }
-    elseif ($creatable.Count -gt 0 -and (Read-Host "Create these $($creatable.Count) asset(s) in Snipe-IT? (y/n)").Trim().ToUpper() -eq 'Y') {
+    elseif ($creatable.Count -gt 0 -and (Confirm-DeskSideAction "Create these $($creatable.Count) asset(s) in Snipe-IT?" -Quiet)) {
         foreach ($item in $creatable) {
             $p = $item.P
             $body = @{ model_id = $item.Model.id; status_id = $statusId; name = $p.Hostname; serial = $p.Serial } | ConvertTo-Json

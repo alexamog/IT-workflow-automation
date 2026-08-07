@@ -142,7 +142,7 @@ function Invoke-CancelJob {
     if (-not $job) { Write-Host "  #$n is not in the queue." -ForegroundColor Yellow; return }
 
     Write-Host "`n  About to cancel job #$($job.JobId) ($($job.Name), owner $($job.User))." -ForegroundColor Yellow
-    if ((Read-Host "  Go ahead? (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled - nothing done." -ForegroundColor DarkGray; return }
+    if (-not (Confirm-DeskSideAction 'Go ahead?' -CancelNote 'nothing done' -Indent '  ')) { return }
 
     try { $r = Stop-CanonPrinterJob -PrinterAddress $PrinterAddress -JobId $job.JobId }
     catch {

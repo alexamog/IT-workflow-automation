@@ -74,7 +74,8 @@ Write-Host ("  {0,-34} : {1}" -f 'User logon name (pre-Windows 2000)', $sam)
 Write-Host ("  {0,-34} :" -f 'Member of')
 if ($groups) { $groups | ForEach-Object { Write-Host "      - $_" } } else { Write-Host "      (none)" }
 
-if ((Read-Host "`nDoes this look correct? Proceed with onboarding? (Y/N)") -notmatch '^[Yy]') {
+Write-Host ""
+if (-not (Confirm-DeskSideAction 'Does this look correct? Proceed with onboarding?' -Quiet)) {
     Write-Host "Cancelled - no changes made." -ForegroundColor Yellow
     return
 }

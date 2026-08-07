@@ -140,7 +140,8 @@ if ($isPhone) {
     Write-Host "  IMEI       : $imei"
     Write-Host "  Phone #    : $phoneNumber"
 }
-if ((Read-Host "`nCreate this asset? (Y/N)") -notmatch '^[Yy]') { Write-Host "Cancelled." -ForegroundColor Yellow; return }
+Write-Host ""
+if (-not (Confirm-DeskSideAction 'Create this asset?')) { return }
 
 # --- Create ------------------------------------------------------------------
 $body = @{ model_id = $model.id; status_id = $status.id; name = $name; notes = $notes }

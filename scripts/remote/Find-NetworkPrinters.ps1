@@ -115,7 +115,7 @@ if ($ranges.Count -gt 1) { $ranges | ForEach-Object { Write-Host "  - $_" -Foreg
 if ($addresses.Count -gt 4096) {
     Write-Host "  That's a lot of addresses - this could take a while (roughly 1-2 minutes per 1,000) and is a fair" -ForegroundColor Yellow
     Write-Host "  amount of network noise across however many sites those ranges cover." -ForegroundColor Yellow
-    if ((Read-Host "  Continue? (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled." -ForegroundColor DarkGray; return }
+    if (-not (Confirm-DeskSideAction 'Continue?' -Indent '  ')) { return }
 }
 
 # --- Scan ----------------------------------------------------------------

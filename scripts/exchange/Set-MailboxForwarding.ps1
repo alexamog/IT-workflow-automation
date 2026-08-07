@@ -51,7 +51,7 @@ switch ((Read-Host '  Select').Trim()) {
 
         Write-Host ""
         Write-Host ("  Forward {0}  ->  {1}   (keep copy: {2})" -f $id, $dest, $keep) -ForegroundColor Cyan
-        if ((Read-Host "  Proceed? (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled." -ForegroundColor Yellow; return }
+        if (-not (Confirm-DeskSideAction 'Proceed?' -Indent '  ')) { return }
         try {
             # ForwardingSmtpAddress works for any address (inside or outside the org).
             Set-Mailbox -Identity $id -ForwardingSmtpAddress $dest -DeliverToMailboxAndForward $keep -ErrorAction Stop
@@ -64,7 +64,7 @@ switch ((Read-Host '  Select').Trim()) {
         }
     }
     '2' {
-        if ((Read-Host "  Turn forwarding OFF for $id? (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled." -ForegroundColor Yellow; return }
+        if (-not (Confirm-DeskSideAction "Turn forwarding OFF for $id?" -Indent '  ')) { return }
         try {
             Set-Mailbox -Identity $id -ForwardingSmtpAddress $null -ForwardingAddress $null -DeliverToMailboxAndForward $false -ErrorAction Stop
             Write-Host "  Forwarding removed." -ForegroundColor Green

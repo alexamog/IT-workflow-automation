@@ -20,10 +20,6 @@ param()
 
 if (-not (Connect-ExoSession)) { return }
 
-function Split-People ($text) {
-    @($text -split '[;,\s]+' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
-}
-
 # Pick a distribution list (its own lookup - Find-ExoRecipient is fine too, but
 # Get-DistributionGroup -ANR only returns lists, so there's no wrong pick).
 function Select-DistributionGroup {
@@ -44,11 +40,11 @@ function Show-Members ($group) {
 }
 
 function Add-Members ($group) {
-    $people = Split-People (Read-Host "  People to ADD (emails, comma-separated)")
+    $people = ConvertFrom-PeopleList (Read-Host "  People to ADD (emails, comma-separated)")
     if ($people.Count -eq 0) { Write-Host "  Nobody entered." -ForegroundColor Yellow; return }
     Write-Host "`n  Add to $($group.DisplayName):" -ForegroundColor Cyan
     $people | ForEach-Object { Write-Host "    - $_" }
-    if ((Read-Host "  Proceed? (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled." -ForegroundColor Yellow; return }
+    if (-not (Confirm-DeskSideAction 'Proceed?' -Indent '  ')) { return }
     foreach ($p in $people) {
         try {
             Add-DistributionGroupMember -Identity $group.PrimarySmtpAddress -Member $p -ErrorAction Stop
@@ -67,11 +63,11 @@ function Add-Members ($group) {
 }
 
 function Remove-Members ($group) {
-    $people = Split-People (Read-Host "  People to REMOVE (emails, comma-separated)")
+    $people = ConvertFrom-PeopleList (Read-Host "  People to REMOVE (emails, comma-separated)")
     if ($people.Count -eq 0) { Write-Host "  Nobody entered." -ForegroundColor Yellow; return }
     Write-Host "`n  Remove from $($group.DisplayName):" -ForegroundColor Yellow
     $people | ForEach-Object { Write-Host "    - $_" }
-    if ((Read-Host "  Proceed? (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled." -ForegroundColor Yellow; return }
+    if (-not (Confirm-DeskSideAction 'Proceed?' -Indent '  ')) { return }
     foreach ($p in $people) {
         try {
             Remove-DistributionGroupMember -Identity $group.PrimarySmtpAddress -Member $p -Confirm:$false -ErrorAction Stop

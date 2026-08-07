@@ -230,7 +230,7 @@ if ($stillEnabled.Count -gt 0) {
         $stillEnabled | ForEach-Object { Show-Leaver $_ }
         Write-Host ""
         Write-Host "Disabling an account signs the person out of the domain and blocks new logins." -ForegroundColor Yellow
-        if ((Read-Host "Disable all $($stillEnabled.Count) account(s) listed above? (Y/N)") -match '^[Yy]') {
+        if (Confirm-DeskSideAction "Disable all $($stillEnabled.Count) account(s) listed above?" -Quiet) {
             $approved = $stillEnabled
         }
         else {
@@ -283,7 +283,7 @@ foreach ($p in $approved) {
 # and skips cleanly (no mailbox / not licensed / could not connect).
 $cloudTargets = @(@($alreadyDisabled) + @($justDisabled) | Where-Object { $_.Upn })
 if ($cloudTargets.Count -gt 0 -and
-    (Read-Host "`nAlso convert the mailbox to shared and remove the Office 365 E1 licence for $($cloudTargets.Count) account(s)? (Y/N)").Trim().ToUpper() -eq 'Y') {
+    (Confirm-DeskSideAction "Also convert the mailbox to shared and remove the Office 365 E1 licence for $($cloudTargets.Count) account(s)?" -Quiet)) {
 
     $exoOk   = Connect-ExoSession
     $mgOk    = Connect-MgGraphSession

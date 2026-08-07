@@ -94,13 +94,13 @@ function Invoke-Restart ($agent) {
 
 function Invoke-Lock ($agent) {
     if (-not $agent.logged_username) { Write-Host "No user is logged in - nothing to lock." -ForegroundColor Yellow; return }
-    if ((Read-Host "Lock the screen on $($agent.hostname) (user $($agent.logged_username))? (y/n)").Trim().ToUpper() -ne 'Y') { return }
+    if (-not (Confirm-DeskSideAction "Lock the screen on $($agent.hostname) (user $($agent.logged_username))?" -Quiet)) { return }
     try { Invoke-AgentCmd $agent 'rundll32.exe user32.dll,LockWorkStation' -AsUser | Out-Null; Write-Host "Lock sent." -ForegroundColor Green }
     catch { Write-Host "Lock failed: $($_.Exception.Message)" -ForegroundColor Red }
 }
 
 function Invoke-Sleep ($agent) {
-    if ((Read-Host "Put $($agent.hostname) to sleep? (y/n)").Trim().ToUpper() -ne 'Y') { return }
+    if (-not (Confirm-DeskSideAction "Put $($agent.hostname) to sleep?" -Quiet)) { return }
     # Suspend (S3). If hibernate is enabled the machine hibernates instead.
     try { Invoke-AgentCmd $agent 'rundll32.exe powrprof.dll,SetSuspendState 0,1,0' | Out-Null; Write-Host "Sleep sent to $($agent.hostname)." -ForegroundColor Green }
     catch { Write-Host "Sleep failed: $($_.Exception.Message)" -ForegroundColor Red }
@@ -122,7 +122,7 @@ Get-ItemProperty $keys -ErrorAction SilentlyContinue |
     catch { Write-Host "Failed: $($_.Exception.Message)" -ForegroundColor Red; return }
 
     Write-Host $out
-    if ((Read-Host "Save this list to a file? (y/n)").Trim().ToUpper() -eq 'Y') {
+    if (Confirm-DeskSideAction 'Save this list to a file?' -Quiet) {
         $outputDir = Join-Path -Path $PSScriptRoot -ChildPath '..\..\output'
         if (-not (Test-Path $outputDir)) { New-Item -ItemType Directory -Path $outputDir -Force | Out-Null }
         $file = Join-Path $outputDir ("Installed Apps - {0} - {1}.txt" -f $agent.hostname, (Get-Date -Format 'yyyy-MM-dd HHmmss'))

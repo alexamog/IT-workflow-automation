@@ -122,7 +122,7 @@ function New-Site {
     Write-Host ("    Type     : {0}" -f $(if ($template -eq 'SITEPAGEPUBLISHING#0') { 'Communication' } else { 'Team (classic)' }))
     Write-Host ("    Storage  : {0} MB" -f $quota)
     Write-Host ("    TimeZone : {0}" -f $tz)
-    if ((Read-Host "  Create it? (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled." -ForegroundColor Yellow; return }
+    if (-not (Confirm-DeskSideAction 'Create it?' -Indent '  ')) { return }
 
     try {
         # New-SPOSite is synchronous-ish; the site may take a minute to provision.
@@ -156,26 +156,6 @@ function Remove-Site {
         Write-Host "  Delete failed: $($_.Exception.Message)" -ForegroundColor Red
         Write-ActionLog -Action 'SharePoint: Remove Site' -Target $site.Url -Result 'Failed' -Details $_.Exception.Message
     }
-}
-
-# --- Access: admins, owners, members, visitors -------------------------------
-# Split a typed list of people (commas, semicolons or spaces) into addresses.
-function Split-People ($text) {
-    @($text -split '[;,\s]+' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
-}
-
-# The signed-in admin's email, for "add me". Defaults to EXO_ADMIN_UPN if set,
-# asked once and then remembered for the rest of this run.
-$script:MyAdminUpn = $null
-function Get-MyAdminUpn {
-    if ($script:MyAdminUpn) { return $script:MyAdminUpn }
-    $default = $env:EXO_ADMIN_UPN
-    $prompt  = if ($default) { "  Your admin email (ENTER for $default)" } else { "  Your admin email" }
-    $in = (Read-Host $prompt).Trim()
-    if (-not $in -and $default) { $in = $default }
-    if (-not $in) { Write-Host "  No email given." -ForegroundColor Yellow; return $null }
-    $script:MyAdminUpn = $in
-    $in
 }
 
 # Find the site's Owners / Members / Visitors group. The default associated
@@ -309,24 +289,24 @@ function Edit-SiteAccessFor ($site) {
             '2' {
                 $role = Select-AccessRole
                 if (-not $role) { continue }
-                $people = Split-People (Read-Host "  People to ADD as $role (emails, comma-separated)")
+                $people = ConvertFrom-PeopleList (Read-Host "  People to ADD as $role (emails, comma-separated)")
                 Set-SiteRoleMembers $url $role $true $people
             }
             '3' {
                 $role = Select-AccessRole
                 if (-not $role) { continue }
-                $people = Split-People (Read-Host "  People to REMOVE from $role (emails, comma-separated)")
+                $people = ConvertFrom-PeopleList (Read-Host "  People to REMOVE from $role (emails, comma-separated)")
                 Set-SiteRoleMembers $url $role $false $people
             }
             '4' {
-                $me = Get-MyAdminUpn
+                $me = Get-DeskSideAdminUpn
                 if (-not $me) { continue }
                 Write-Host ("  Grant {0} site collection admin on {1}?" -f $me, $url) -ForegroundColor Cyan
-                if ((Read-Host "  (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled." -ForegroundColor Yellow; continue }
+                if (-not (Confirm-DeskSideAction 'Go ahead?' -Indent '  ')) { continue }
                 Set-SiteRoleMembers $url 'Admins' $true @($me)
             }
             '5' {
-                $me = Get-MyAdminUpn
+                $me = Get-DeskSideAdminUpn
                 if (-not $me) { continue }
                 Set-SiteRoleMembers $url 'Admins' $false @($me)
             }

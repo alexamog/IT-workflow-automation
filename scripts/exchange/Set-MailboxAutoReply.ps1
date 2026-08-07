@@ -133,7 +133,7 @@ switch ((Read-Host '  Select').Trim()) {
         Write-Host ("    Internal : {0}" -f $internal)
         Write-Host ("    External : {0}" -f $(if ($audience -eq 'None') { 'no reply sent outside the organisation' } else { "$audience - $external" }))
         Write-Host ""
-        if ((Read-Host "  Proceed? (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled." -ForegroundColor Yellow; return }
+        if (-not (Confirm-DeskSideAction 'Proceed?' -Indent '  ')) { return }
 
         try {
             $params = @{
@@ -159,7 +159,7 @@ switch ((Read-Host '  Select').Trim()) {
         }
     }
     '2' {
-        if ((Read-Host "  Turn Out of Office OFF for $id? (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled." -ForegroundColor Yellow; return }
+        if (-not (Confirm-DeskSideAction "Turn Out of Office OFF for $id?" -Indent '  ')) { return }
         try {
             Set-MailboxAutoReplyConfiguration -Identity $id -AutoReplyState Disabled -ErrorAction Stop
             Write-Host "  Out of Office is off." -ForegroundColor Green

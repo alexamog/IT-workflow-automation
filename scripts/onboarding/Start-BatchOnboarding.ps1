@@ -264,7 +264,7 @@ else {
     Write-Host ""
     $groupPart = if ($GroupName) { "add to '$GroupName', " } else { '' }
     Write-Host "About to onboard $($targets.Count) account(s): ${groupPart}reset the password, and force a change at next logon." -ForegroundColor Cyan
-    if ((Read-Host "Proceed? (Y/N)") -notmatch '^[Yy]') {
+    if (-not (Confirm-DeskSideAction 'Proceed?' -Quiet)) {
         Write-Host "Cancelled - no changes made." -ForegroundColor Yellow
         $targets = @()
     }

@@ -47,7 +47,7 @@ catch {
 # -ErrorAction Stop matters here: without it Set-ADUser reports a failure
 # without stopping, so the green line and the 'Success' audit row below would
 # both be written for a change that never happened.
-if ((Read-Host "Force the user to change password at next logon? (Y/N)") -match '^[Yy]') {
+if (Confirm-DeskSideAction 'Force the user to change password at next logon?' -Quiet) {
     try {
         Set-ADUser -Identity $user.SamAccountName -ChangePasswordAtLogon $true -ErrorAction Stop
         Write-Host "User must change password at next logon." -ForegroundColor Green

@@ -79,8 +79,8 @@ if (-not $Keep -and -not $KeepFile -and -not $DeleteOnly -and -not $Cleanup -and
         if ($answer) { $DeleteOnly = @($answer -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' }) }
     }
 
-    if ((Read-Host "  Also run disk cleanup? (y/N)") -eq 'y')                         { $Cleanup = $true }
-    if ((Read-Host "  Also run health check (DISM + sfc, 15-30 min)? (y/N)") -eq 'y') { $HealthCheck = $true }
+    if (Confirm-DeskSideAction 'Also run disk cleanup?' -Indent '  ' -Quiet)                         { $Cleanup = $true }
+    if (Confirm-DeskSideAction 'Also run health check (DISM + sfc, 15-30 min)?' -Indent '  ' -Quiet) { $HealthCheck = $true }
 }
 
 # --- Tactical RMM plumbing -------------------------------------------------
@@ -163,8 +163,7 @@ if ($Keep) {
     if ($guessed.Count -gt 0) {
         Write-Host "`n$($guessed.Count) name(s) were GUESSED from 3+ words - verify before continuing:" -ForegroundColor Yellow
         foreach ($g in $guessed) { Write-Host "   $g" -ForegroundColor Yellow }
-        $ok = Read-Host "Are these guessed usernames correct? (y/n)"
-        if ($ok.Trim().ToUpper() -ne 'Y') {
+        if (-not (Confirm-DeskSideAction 'Are these guessed usernames correct?' -Quiet)) {
             Write-Host "Stopped. Fix the exact username(s) in the keep file, then re-run." -ForegroundColor Yellow
             return
         }

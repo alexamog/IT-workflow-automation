@@ -198,7 +198,7 @@ function Add-RemotePrinter ($state) {
     $parsed = [ref]$null
     if (-not [System.Net.IPAddress]::TryParse($ip, $parsed)) {
         Write-Host "  '$ip' is not an IP address. It will be used as a host name instead." -ForegroundColor Yellow
-        if ((Read-Host "  Continue? (y/n)").Trim().ToUpper() -ne 'Y') { return $false }
+        if (-not (Confirm-DeskSideAction 'Continue?' -Indent '  ')) { return $false }
     }
 
     $name = (Read-Host "  Name for the printer (what users will see)").Trim()
@@ -234,7 +234,7 @@ function Add-RemotePrinter ($state) {
     Write-Host ("    printer : {0}" -f $name)
     Write-Host ("    driver  : {0}" -f $driver)
     Write-Host ("    port    : {0}  ->  {1}" -f $portName, $ip)
-    if ((Read-Host "  Go ahead? (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled." -ForegroundColor DarkGray; return $false }
+    if (-not (Confirm-DeskSideAction 'Go ahead?' -Indent '  ')) { return $false }
 
     Write-Host "  Adding..." -ForegroundColor DarkGray
     $r = Add-PrinterOnAgent -Agent $agent -Name $name -Driver $driver -Ip $ip
@@ -276,7 +276,7 @@ function Remove-RemotePrinter ($state) {
     Write-Host "  Anyone printing to them will need them added back." -ForegroundColor Yellow
     if (-not (Confirm-DeskSideWord 'remove' -CancelNote 'nothing removed' -Indent '  ')) { return $false }
 
-    $alsoPort = (Read-Host "  Also remove each printer's port? (y/n)").Trim().ToUpper() -eq 'Y'
+    $alsoPort = Confirm-DeskSideAction "Also remove each printer's port?" -Indent '  ' -Quiet
 
     $any = $false
     foreach ($p in $chosen) {
@@ -396,7 +396,7 @@ function Copy-RemotePrinter ($SourceAgent, $SourceState) {
     Write-Host ""
     Write-Host "  Copying to $($target.hostname):" -ForegroundColor Cyan
     $chosen | ForEach-Object { Write-Host ("    - {0}   driver '{1}'   -> {2}" -f $_.Name, $_.Driver, $_.Ip) }
-    if ((Read-Host "  Go ahead? (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled." -ForegroundColor DarkGray; return $false }
+    if (-not (Confirm-DeskSideAction 'Go ahead?' -Indent '  ')) { return $false }
 
     $any = $false
     foreach ($p in $chosen) {

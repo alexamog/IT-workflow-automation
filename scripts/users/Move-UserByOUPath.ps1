@@ -35,7 +35,7 @@ if (-not $target) { Write-Host "No move performed." -ForegroundColor Yellow; ret
 try { Get-ADOrganizationalUnit -Identity $target -ErrorAction Stop | Out-Null }
 catch { Write-Host "Destination OU not found: $target" -ForegroundColor Red; return }
 
-if ((Read-Host "Move $($user.Name) to this OU? (Y/N)") -notmatch '^[Yy]') {
+if (-not (Confirm-DeskSideAction "Move $($user.Name) to this OU?" -Quiet)) {
     Write-Host "Cancelled." -ForegroundColor Yellow
     return
 }
