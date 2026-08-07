@@ -1446,3 +1446,383 @@ Describe 'Feature manifests (*.tool.psd1)' {
         ($orphans -join ', ') | Should -BeNullOrEmpty
     }
 }
+
+Describe 'Confirm-DeskSideAction' {
+
+    BeforeAll { function Read-Host { param($Prompt) $script:TypedInput } }
+
+    It 'accepts y, Y, yes and YES, and ignores stray spaces' {
+        foreach ($typed in 'y', 'Y', 'yes', 'YES', ' y ', "`tY ") {
+            $script:TypedInput = $typed
+            Confirm-DeskSideAction 'Go?' 6>$null | Should -BeTrue -Because "'$typed' is a yes"
+        }
+    }
+
+    It 'treats a bare ENTER as NO - this is the whole safety property' {
+        $script:TypedInput = ''
+        Confirm-DeskSideAction 'Go?' 6>$null | Should -BeFalse
+    }
+
+    It 'treats anything it does not recognise as no' {
+        foreach ($typed in 'n', 'no', 'maybe', '1', 'yep', 'y e s') {
+            $script:TypedInput = $typed
+            Confirm-DeskSideAction 'Go?' 6>$null | Should -BeFalse -Because "'$typed' is not a clear yes"
+        }
+    }
+
+    It 'treats a bare ENTER as YES only when -DefaultYes is given' {
+        $script:TypedInput = ''
+        Confirm-DeskSideAction 'Go?' -DefaultYes 6>$null | Should -BeTrue
+    }
+
+    It '-DefaultYes still treats n and no as NO' {
+        # The old "-ne 'N'" spelling read the word "no" as a YES, because it
+        # only ever compared against the single letter.
+        foreach ($typed in 'n', 'N', 'no', 'NO') {
+            $script:TypedInput = $typed
+            Confirm-DeskSideAction 'Go?' -DefaultYes 6>$null | Should -BeFalse -Because "'$typed' means no"
+        }
+    }
+
+    It 'prints a cancel line on no, and stays silent with -Quiet' {
+        $script:TypedInput = 'n'
+        (Confirm-DeskSideAction 'Go?' -CancelNote 'nothing changed' 6>&1 | Out-String) |
+            Should -Match 'Cancelled - nothing changed\.'
+        (Confirm-DeskSideAction 'Go?' -Quiet 6>&1 | Out-String) | Should -Not -Match 'Cancelled'
+    }
+
+    It 'shows a suffix that matches what ENTER actually does' {
+        function Read-Host { param($Prompt) $script:Asked = $Prompt; 'n' }
+        Confirm-DeskSideAction 'Go?' 6>$null | Out-Null
+        $script:Asked | Should -Match '\(y/N\)$'
+        Confirm-DeskSideAction 'Go?' -DefaultYes 6>$null | Out-Null
+        $script:Asked | Should -Match '\(Y/n\)$'
+    }
+}
+
+Describe 'Confirm-DeskSideWord' {
+
+    BeforeAll { function Read-Host { param($Prompt) $script:TypedInput } }
+
+    It 'passes only on the exact word in capitals' {
+        $script:TypedInput = 'YES'
+        Confirm-DeskSideWord 'delete 3 profiles' 6>$null | Should -BeTrue
+        $script:TypedInput = ' YES '
+        Confirm-DeskSideWord 'delete 3 profiles' 6>$null | Should -BeTrue
+    }
+
+    It 'refuses the lower-case word - that is the point of this gate' {
+        foreach ($typed in 'yes', 'Yes', 'yEs', 'y', 'Y') {
+            $script:TypedInput = $typed
+            Confirm-DeskSideWord 'delete 3 profiles' 6>$null | Should -BeFalse -Because "'$typed' is not YES"
+        }
+    }
+
+    It 'never passes on a bare ENTER, in any mode' {
+        $script:TypedInput = ''
+        Confirm-DeskSideWord 'delete 3 profiles' 6>$null | Should -BeFalse
+        Confirm-DeskSideWord 'delete the list' -Word 'DELETE LIST' 6>$null | Should -BeFalse
+    }
+
+    It 'honours a multi-word phrase and refuses YES in its place' {
+        $script:TypedInput = 'DELETE LIST'
+        Confirm-DeskSideWord 'wipe it' -Word 'DELETE LIST' 6>$null | Should -BeTrue
+        $script:TypedInput = 'YES'
+        Confirm-DeskSideWord 'wipe it' -Word 'DELETE LIST' 6>$null | Should -BeFalse
+    }
+
+    It 'asks for the same word it accepts' {
+        # The prompt is built from -Word, so the two cannot drift apart.
+        function Read-Host { param($Prompt) $script:Asked = $Prompt; '' }
+        Confirm-DeskSideWord 'wipe it' -Word 'DELETE LIST' 6>$null | Out-Null
+        $script:Asked | Should -Match 'DELETE LIST'
+    }
+
+    It 'has no parameter that could weaken it into a keypress' {
+        # Guards the design, not just the behaviour: if somebody ever adds a
+        # -DefaultYes here, this fails and they have to think about why.
+        (Get-Command Confirm-DeskSideWord).Parameters.Keys | Should -Not -Contain 'DefaultYes'
+    }
+}
+
+Describe 'ConvertFrom-PeopleList' {
+
+    It 'splits on commas, semicolons and spaces' {
+        (ConvertFrom-PeopleList 'a@x.com, b@x.com')  | Should -Be @('a@x.com', 'b@x.com')
+        (ConvertFrom-PeopleList 'a@x.com; b@x.com')  | Should -Be @('a@x.com', 'b@x.com')
+        (ConvertFrom-PeopleList 'a@x.com  b@x.com')  | Should -Be @('a@x.com', 'b@x.com')
+        (ConvertFrom-PeopleList 'a@x.com,b@x.com; c@x.com') | Should -Be @('a@x.com', 'b@x.com', 'c@x.com')
+    }
+
+    It 'ignores empty entries and stray separators' {
+        (ConvertFrom-PeopleList ' , a@x.com ,, ; b@x.com , ') | Should -Be @('a@x.com', 'b@x.com')
+    }
+
+    It 'gives the caller a usable array when wrapped in @(), even for one entry' {
+        # @() is the house rule for list-returning helpers (see Get-SnipeHardware).
+        # Without it PowerShell unwraps the single result to a plain string and
+        # $one[0] would be the letter 's'.
+        $one = @(ConvertFrom-PeopleList 'solo@x.com')
+        $one.Count | Should -Be 1
+        $one[0]    | Should -Be 'solo@x.com'
+    }
+
+    It 'counts correctly even without the @() wrapper' {
+        # Existing callers write "$people.Count -eq 0" on the bare result, so
+        # that has to keep working.
+        (ConvertFrom-PeopleList 'solo@x.com').Count | Should -Be 1
+        (ConvertFrom-PeopleList '').Count           | Should -Be 0
+    }
+
+    It 'copes with empty and null input' {
+        @(ConvertFrom-PeopleList '').Count    | Should -Be 0
+        @(ConvertFrom-PeopleList $null).Count | Should -Be 0
+    }
+}
+
+Describe 'ConvertTo-HtmlEncodedText' {
+
+    It 'escapes the four characters that can break markup' {
+        ConvertTo-HtmlEncodedText '<a href="x">&' | Should -Be '&lt;a href=&quot;x&quot;&gt;&amp;'
+    }
+
+    It 'escapes the ampersand first, or the other escapes get double-escaped' {
+        ConvertTo-HtmlEncodedText '&lt;' | Should -Be '&amp;lt;'
+    }
+
+    It 'turns null into an empty string rather than failing' {
+        ConvertTo-HtmlEncodedText $null | Should -Be ''
+    }
+}
+
+Describe 'Write-DeskSideHtmlReport' {
+
+    BeforeAll {
+        function Read-Host { param($Prompt) 'n' }
+        $script:Report = Join-Path $script:TestOutput 'report.html'
+    }
+
+    It 'writes one row per object, in the column order given' {
+        $rows = @(
+            [pscustomobject]@{ Host = 'PC1'; User = 'ann' }
+            [pscustomobject]@{ Host = 'PC2'; User = 'bob' }
+        )
+        Write-DeskSideHtmlReport -Rows $rows -Columns 'Host', 'User' -Title 'T' -Path $script:Report -NoPrompt | Out-Null
+        $html = Get-Content $script:Report -Raw
+        ([regex]::Matches($html, '<tr>')).Count | Should -Be 3      # header + 2 rows
+        $html | Should -Match '<td>PC1</td><td>ann</td>'
+    }
+
+    It 'escapes every cell, so a hostname of <script> cannot break the page' {
+        $rows = @([pscustomobject]@{ Host = '<script>alert(1)</script>'; User = 'a&b' })
+        Write-DeskSideHtmlReport -Rows $rows -Columns 'Host', 'User' -Title 'T' -Path $script:Report -NoPrompt | Out-Null
+        $html = Get-Content $script:Report -Raw
+        $html | Should -Not -Match '<script>alert'
+        $html | Should -Match '&lt;script&gt;'
+        $html | Should -Match 'a&amp;b'
+    }
+
+    It 'writes a valid, empty table for zero rows' {
+        Write-DeskSideHtmlReport -Rows @() -Columns 'Host' -Title 'T' -Path $script:Report -NoPrompt | Out-Null
+        $html = Get-Content $script:Report -Raw
+        $html | Should -Match '<table>'
+        ([regex]::Matches($html, '<tr>')).Count | Should -Be 1      # header only
+    }
+
+    It 'does not prompt when -NoPrompt is given' {
+        function Read-Host { param($Prompt) throw 'should not have asked' }
+        { Write-DeskSideHtmlReport -Rows @() -Columns 'Host' -Title 'T' -Path $script:Report -NoPrompt } |
+            Should -Not -Throw
+    }
+}
+
+Describe 'Write-DeskSideFailure' {
+
+    It 'prints the message and writes exactly one Failed row' {
+        $err = try { throw 'Access denied' } catch { $_ }
+        Write-DeskSideFailure 'Move failed' 'Move User' 'jsmith' $err -Context 'OU=X' 6>$null
+        $row = Import-Csv (Join-Path $script:TestOutput 'AD-Toolkit-Actions.csv') | Select-Object -Last 1
+        $row.Result  | Should -Be 'Failed'
+        $row.Action  | Should -Be 'Move User'
+        $row.Target  | Should -Be 'jsmith'
+        $row.Details | Should -Be 'OU=X - Access denied'
+    }
+
+    It 'leaves out the context separator when there is no context' {
+        $err = try { throw 'Boom' } catch { $_ }
+        Write-DeskSideFailure 'It failed' 'Some Action' 'target1' $err 6>$null
+        $row = Import-Csv (Join-Path $script:TestOutput 'AD-Toolkit-Actions.csv') | Select-Object -Last 1
+        $row.Details | Should -Be 'Boom'
+    }
+
+    It 'copes with no error record at all' {
+        { Write-DeskSideFailure 'It failed' 'Some Action' 'target2' 6>$null } | Should -Not -Throw
+        $row = Import-Csv (Join-Path $script:TestOutput 'AD-Toolkit-Actions.csv') | Select-Object -Last 1
+        $row.Result | Should -Be 'Failed'
+    }
+
+    It 'shows the reason on screen, not only in the log' {
+        $err = try { throw 'Disk is full' } catch { $_ }
+        (Write-DeskSideFailure 'Copy failed' 'Copy' 't' $err 6>&1 | Out-String) |
+            Should -Match 'Copy failed: Disk is full'
+    }
+}
+
+Describe 'Get-TrmmAgent' {
+
+    BeforeAll {
+        $env:TRMM_APIKEY = 'test-key'
+        $env:TRMM_URL    = 'https://api.example.com'
+        function New-FakeAgent ($hostname, $status) {
+            [pscustomobject]@{ hostname = $hostname; status = $status; agent_id = "id-$hostname" }
+        }
+    }
+    AfterAll { $env:TRMM_APIKEY = $null; $env:TRMM_URL = $null }
+
+    It 'reports Ok = false when the API call fails, so the caller knows to stop' {
+        function Invoke-RestMethod { throw 'connection refused' }
+        $lookup = Get-TrmmAgent 6>$null
+        $lookup.Ok | Should -BeFalse
+        @($lookup.Agents).Count | Should -Be 0
+    }
+
+    It 'reports Ok = true with an empty list when nothing matched' {
+        # "The lookup died" and "nothing matched" mean opposite things to the
+        # caller, so they must never look alike.
+        function Invoke-RestMethod { @((New-FakeAgent 'PC1' 'online')) }
+        $lookup = Get-TrmmAgent -HostnameLike 'NOSUCHHOST' 6>$null
+        $lookup.Ok | Should -BeTrue
+        @($lookup.Agents).Count | Should -Be 0
+    }
+
+    It 'survives being wrapped in @() - the trap a leading comma would create' {
+        # @() is how this codebase reads every list, so it has to be safe here.
+        # A comma-wrapped return would make the count below 1, holding an array.
+        function Invoke-RestMethod { @((New-FakeAgent 'PC1' 'online'), (New-FakeAgent 'PC2' 'offline')) }
+        $lookup = Get-TrmmAgent 6>$null
+        @($lookup.Agents).Count      | Should -Be 2
+        @($lookup.Agents)[0].hostname | Should -Be 'PC1'
+    }
+
+    It 'keeps a single match usable rather than unwrapping it' {
+        function Invoke-RestMethod { @((New-FakeAgent 'PC1' 'online'), (New-FakeAgent 'PC2' 'offline')) }
+        $lookup = Get-TrmmAgent -HostnameLike 'PC1' 6>$null
+        @($lookup.Agents).Count       | Should -Be 1
+        @($lookup.Agents)[0].hostname | Should -Be 'PC1'
+    }
+
+    It 'treats an empty keyword and * as the whole fleet' {
+        function Invoke-RestMethod { @((New-FakeAgent 'PC1' 'online'), (New-FakeAgent 'PC2' 'offline')) }
+        @((Get-TrmmAgent 6>$null).Agents).Count                   | Should -Be 2
+        @((Get-TrmmAgent -HostnameLike '' 6>$null).Agents).Count  | Should -Be 2
+        @((Get-TrmmAgent -HostnameLike '*' 6>$null).Agents).Count | Should -Be 2
+    }
+
+    It 'filters to online machines with -OnlineOnly' {
+        function Invoke-RestMethod { @((New-FakeAgent 'PC1' 'online'), (New-FakeAgent 'PC2' 'offline')) }
+        $lookup = Get-TrmmAgent -OnlineOnly 6>$null
+        @($lookup.Agents).Count       | Should -Be 1
+        @($lookup.Agents)[0].hostname | Should -Be 'PC1'
+    }
+
+    It 'matches a keyword literally, not as a regular expression' {
+        function Invoke-RestMethod { @((New-FakeAgent 'PC-1' 'online'), (New-FakeAgent 'PCX1' 'online')) }
+        # Unescaped, the '.' in 'PC.1' would match any character and so would
+        # match BOTH machines. Escaped, it matches neither.
+        $lookup = Get-TrmmAgent -HostnameLike 'PC.1' 6>$null
+        $lookup.Ok | Should -BeTrue
+        @($lookup.Agents).Count | Should -Be 0
+    }
+}
+
+Describe 'Find-TrmmAgentByName' {
+
+    BeforeAll {
+        $env:TRMM_APIKEY = 'test-key'
+        $env:TRMM_URL    = 'https://api.example.com'
+        function New-FakeAgent ($hostname, $status) {
+            [pscustomobject]@{ hostname = $hostname; status = $status; agent_id = "id-$hostname" }
+        }
+    }
+    AfterAll { $env:TRMM_APIKEY = $null; $env:TRMM_URL = $null }
+
+    It 'returns the one agent on an exact match' {
+        function Invoke-RestMethod { @((New-FakeAgent 'PC1' 'online'), (New-FakeAgent 'PC2' 'online')) }
+        (Find-TrmmAgentByName -Hostname 'PC1' 6>$null).agent_id | Should -Be 'id-PC1'
+    }
+
+    It 'returns nothing and suggests near matches when nothing matches exactly' {
+        function Invoke-RestMethod { @((New-FakeAgent 'PC1' 'online'), (New-FakeAgent 'PC2' 'online')) }
+        Find-TrmmAgentByName -Hostname 'PC' 6>$null | Should -BeNullOrEmpty
+        (Find-TrmmAgentByName -Hostname 'PC' 6>&1 | Out-String) | Should -Match 'Did you mean: PC1'
+    }
+
+    It 'refuses to guess when two machines share the name' {
+        function Invoke-RestMethod { @((New-FakeAgent 'PC1' 'online'), (New-FakeAgent 'PC1' 'offline')) }
+        Find-TrmmAgentByName -Hostname 'PC1' 6>$null | Should -BeNullOrEmpty
+    }
+
+    It 'rejects an offline agent only when -RequireOnline is given' {
+        function Invoke-RestMethod { @((New-FakeAgent 'PC1' 'offline')) }
+        (Find-TrmmAgentByName -Hostname 'PC1' 6>$null).agent_id | Should -Be 'id-PC1'
+        Find-TrmmAgentByName -Hostname 'PC1' -RequireOnline 6>$null | Should -BeNullOrEmpty
+    }
+
+    It 'returns nothing when the lookup itself failed' {
+        function Invoke-RestMethod { throw 'connection refused' }
+        Find-TrmmAgentByName -Hostname 'PC1' 6>$null | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'Get-DeskSideAdminUpn' {
+
+    BeforeEach {
+        $script:DeskSideAdminUpn = $null       # forget any earlier answer
+        $env:EXO_ADMIN_UPN = $null
+        $script:AskCount = 0
+    }
+    AfterAll { $script:DeskSideAdminUpn = $null; $env:EXO_ADMIN_UPN = $null }
+
+    It 'returns what was typed' {
+        function Read-Host { param($Prompt) 'admin.me@contoso.com' }
+        Get-DeskSideAdminUpn 6>$null | Should -Be 'admin.me@contoso.com'
+    }
+
+    It 'asks only once and reuses the answer' {
+        function Read-Host { param($Prompt) $script:AskCount++; 'admin.me@contoso.com' }
+        Get-DeskSideAdminUpn 6>$null | Out-Null
+        Get-DeskSideAdminUpn 6>$null | Out-Null
+        Get-DeskSideAdminUpn 6>$null | Out-Null
+        $script:AskCount | Should -Be 1
+    }
+
+    It 'falls back to EXO_ADMIN_UPN when the operator just presses ENTER' {
+        $env:EXO_ADMIN_UPN = 'preset@contoso.com'
+        function Read-Host { param($Prompt) '' }
+        Get-DeskSideAdminUpn 6>$null | Should -Be 'preset@contoso.com'
+    }
+
+    It 'returns nothing when there is no answer and no default' {
+        function Read-Host { param($Prompt) '' }
+        Get-DeskSideAdminUpn 6>$null | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'Get-DeskSideRemoteProgramDataLine' {
+
+    It 'produces a line that parses as PowerShell and sets $DeskSideData' {
+        $line = Get-DeskSideRemoteProgramDataLine
+        $err = $null
+        [System.Management.Automation.Language.Parser]::ParseInput($line, [ref]$null, [ref]$err) | Out-Null
+        $err | Should -BeNullOrEmpty
+        $line | Should -Match '^\$DeskSideData\s*='
+    }
+
+    It 'leaves the variables unexpanded so the FAR END resolves them' {
+        # If this ever came back with a resolved path, remote scripts would be
+        # told to use the operator's folder rather than their own.
+        $line = Get-DeskSideRemoteProgramDataLine
+        $line | Should -Match '\$env:DESKSIDE_PROGRAMDATA'
+        $line | Should -Match "'C:\\ProgramData\\DeskSideToolkit'"
+    }
+}

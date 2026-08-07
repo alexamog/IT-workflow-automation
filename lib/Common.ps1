@@ -714,6 +714,73 @@ function Get-SnipeHardware {
     $all.ToArray()
 }
 
+# --- HTML reports ------------------------------------------------------------
+
+# Escape a value so a note, name or hostname cannot break the markup - or inject
+# script into a page somebody then opens. Replaces three separate copies of the
+# same four-replace expression that used to sit in the report writers.
+#
+# The ampersand MUST be replaced first. Doing it last would re-escape the
+# ampersands introduced by the other three, turning "<" into "&amp;lt;".
+function ConvertTo-HtmlEncodedText {
+    param([Parameter(Position = 0)][AllowNull()]$Value)
+    ([string]$Value) -replace '&', '&amp;' -replace '<', '&lt;' -replace '>', '&gt;' -replace '"', '&quot;'
+}
+
+# Write one table of results to $Path as a readable HTML page, and return $Path.
+# Every cell is escaped for you; $MetaHtml and $ChipsHtml are the caller's own
+# fragments and must already be escaped.
+#
+# Only the HTML is shared. The JSON half of each report is NOT, because the
+# three callers store genuinely different shapes that people and the Compare-*
+# tools read back - a lowest-common-denominator schema would be a lossy rewrite
+# dressed up as removing duplication.
+function Write-DeskSideHtmlReport {
+    param(
+        [Parameter(Mandatory)][AllowEmptyCollection()][object[]]$Rows,
+        [Parameter(Mandatory)][string[]]$Columns,
+        [Parameter(Mandatory)][string]$Title,
+        [Parameter(Mandatory)][string]$Path,
+        [string]$MetaHtml  = '',
+        [string]$ChipsHtml = '',
+        [switch]$NoPrompt
+    )
+    $head = ($Columns | ForEach-Object { "<th>$(ConvertTo-HtmlEncodedText $_)</th>" }) -join ''
+    $body = foreach ($r in $Rows) {
+        $cells = ($Columns | ForEach-Object { "<td>$(ConvertTo-HtmlEncodedText $r.$_)</td>" }) -join ''
+        "<tr>$cells</tr>"
+    }
+    $chipsDiv = if ($ChipsHtml) { "<div class=`"kw`">$ChipsHtml</div>" } else { '' }
+    $safeTitle = ConvertTo-HtmlEncodedText $Title
+
+    $doc = @"
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>$safeTitle</title>
+<style>
+ body{font-family:Segoe UI,Arial,sans-serif;margin:24px;color:#222}
+ h1{font-size:20px;margin:0 0 6px}
+ .meta{color:#666;font-size:13px;margin-bottom:6px}
+ .kw{margin:0 0 16px}
+ .kw span{display:inline-block;background:#eef3f8;border:1px solid #d4e0ea;color:#33506b;
+   border-radius:12px;padding:2px 10px;font-size:12px;margin:2px 4px 2px 0}
+ table{border-collapse:collapse;width:100%;font-size:13px}
+ th,td{border:1px solid #ddd;padding:6px 8px;text-align:left;vertical-align:top}
+ th{background:#f4f6f8;position:sticky;top:0}
+ tr:nth-child(even){background:#fafafa}
+</style></head><body>
+<h1>$safeTitle</h1>
+<div class="meta">$MetaHtml</div>
+$chipsDiv
+<table><thead><tr>$head</tr></thead><tbody>
+$($body -join "`n")
+</tbody></table></body></html>
+"@
+    $doc | Out-File -FilePath $Path -Encoding UTF8
+
+    if (-not $NoPrompt -and (Confirm-DeskSideAction 'Open the HTML report now?' -Quiet)) { Start-Process $Path }
+    return $Path
+}
+
 # Write a report of a set of Snipe-IT assets to output\SnipeReports as JSON (for
 # later parsing) and HTML (readable). $Criteria is a list of human-readable
 # strings describing what was searched for - keywords, or "status = Ready to
@@ -885,6 +952,104 @@ function Invoke-TrmmAgentCommand {
     }
 }
 
+# Run a command on one agent and return its output AS TEXT, with the newlines
+# flattened. Six scripts each declared their own copy of this - three of them
+# byte-identical - so it lives here now.
+#
+# Note that scripts\remote\Start-TrmmConsole.ps1 keeps its own wrapper on
+# purpose: that one returns the RAW response rather than text, and takes a whole
+# agent object. It is not the same function and should not be folded into this.
+function Invoke-TrmmAgentText {
+    param(
+        [Parameter(Mandatory)][string]$AgentId,
+        [Parameter(Mandatory)][string]$Command,
+        [switch]$AsUser,
+        [int]$TimeoutSec = 90
+    )
+    "$(Invoke-TrmmAgentCommand -AgentId $AgentId -Command $Command -AsUser:$AsUser -TimeoutSec $TimeoutSec)"
+}
+
+# Fetch the agent list, with the "TRMM lookup failed" message that used to be
+# copied byte-for-byte into seven scripts.
+#   $HostnameLike  substring match on the hostname; '' or '*' = the whole fleet
+#   -OnlineOnly    keep only agents TRMM currently reports as online
+#
+# WHAT IT RETURNS: an object with two fields, NOT a bare list.
+#   .Ok      $false means the API call failed. A message has been printed
+#            already, so the caller should just stop.
+#   .Agents  always a real array, possibly empty. Empty means the call worked
+#            and nothing matched - which is a normal result, not a failure.
+#
+#     $lookup = Get-TrmmAgent -HostnameLike $kw
+#     if (-not $lookup.Ok) { return }
+#     $agents = $lookup.Agents
+#
+# WHY AN OBJECT RATHER THAN JUST A LIST: "the lookup died" and "nothing
+# matched" have to be told apart, and a bare list cannot do it. Returning $null
+# for failure does not work either, because PowerShell unwraps an empty array
+# to $null on the way out, so the two arrive looking identical. The usual trick
+# of a leading comma DOES keep them apart, but only if every caller assigns the
+# result to a variable: written the ordinary way, @(Get-TrmmAgent ...) comes
+# back as one item that is itself an array, and the count is silently 1. That
+# is the same trap Get-SnipeHardware above warns about. Reading a property
+# has no such surprise, so this returns an object and the problem disappears.
+function Get-TrmmAgent {
+    param(
+        [string]$HostnameLike,
+        [switch]$OnlineOnly,
+        [switch]$Quiet
+    )
+    try { $agents = @(Invoke-TrmmRequest GET 'agents/') }
+    catch {
+        if (-not $Quiet) { Write-Host "TRMM lookup failed: $($_.Exception.Message)" -ForegroundColor Red }
+        return [pscustomobject]@{ Ok = $false; Agents = @() }
+    }
+    if ($HostnameLike -and $HostnameLike -ne '*') {
+        # Escape the keyword: a hostname filter is a plain substring, not a
+        # regular expression, so a dot or bracket in it must match itself.
+        $agents = @($agents | Where-Object { $_.hostname -match [regex]::Escape($HostnameLike) })
+    }
+    if ($OnlineOnly) { $agents = @($agents | Where-Object { $_.status -eq 'online' }) }
+    return [pscustomobject]@{ Ok = $true; Agents = @($agents) }
+}
+
+# Resolve exactly ONE agent from an exact hostname, listing near matches when
+# that fails. Five scripts had near-identical copies of this.
+#
+# Returns the agent, or $null - and $null ALWAYS means "a message has already
+# been printed, stop now". It never means "carry on with nothing".
+#
+# The parameter is -Hostname rather than -ComputerName because that is the field
+# TRMM itself uses, and because the code checker treats a literal passed to
+# anything called -ComputerName as a hardcoded machine name and fails the build.
+function Find-TrmmAgentByName {
+    param(
+        [Parameter(Mandatory)][string]$Hostname,
+        [switch]$RequireOnline,
+        [string]$Indent = ''
+    )
+    $lookup = Get-TrmmAgent
+    if (-not $lookup.Ok) { return $null }
+    $agents = $lookup.Agents
+
+    $hits = @($agents | Where-Object { $_.hostname -eq $Hostname })
+    if ($hits.Count -ne 1) {
+        Write-Host ("{0}ERROR: found {1} agent(s) named '{2}' (need exactly 1)." -f $Indent, $hits.Count, $Hostname) -ForegroundColor Red
+        if ($hits.Count -eq 0) {
+            # Nothing matched exactly - offer the near misses, which are almost
+            # always a typo or a partial name.
+            @($agents | Where-Object { $_.hostname -match [regex]::Escape($Hostname) }) |
+                ForEach-Object { Write-Host ("{0}  Did you mean: {1}" -f $Indent, $_.hostname) -ForegroundColor Yellow }
+        }
+        return $null
+    }
+    if ($RequireOnline -and $hits[0].status -ne 'online') {
+        Write-Host ("{0}'{1}' is {2} - it must be online." -f $Indent, $Hostname, $hits[0].status) -ForegroundColor Red
+        return $null
+    }
+    return $hits[0]
+}
+
 # Make text safe to drop INSIDE a single-quoted string in a remote command.
 # A value that carries an apostrophe - a name like  caitlin.o'sullivan  or a
 # path like  C:\Users\o'brien\  - would otherwise close the quote early and the
@@ -895,6 +1060,64 @@ function Invoke-TrmmAgentCommand {
 function ConvertTo-RemoteLiteral {
     param([Parameter(Mandatory)][AllowEmptyString()][string]$Text)
     $Text.Replace("'", "''")
+}
+
+# --- Shared prompts and formatting -------------------------------------------
+
+# The "you need to install a module" block, which every Connect-*Session below
+# printed in its own words. The three connect functions themselves are NOT
+# merged: they only look alike. Each probes for an existing session with a
+# different cmdlet and connects with different parameters, so a single generic
+# version would need three scriptblock parameters and read worse than the three
+# plain ones do.
+function Write-DeskSideModuleMissing {
+    param([Parameter(Mandatory)][string]$ModuleName, [string]$Extra = '')
+    Write-Host "The $ModuleName module is not installed." -ForegroundColor Red
+    Write-Host "Install it once (no admin rights needed):" -ForegroundColor Yellow
+    Write-Host "    Install-Module $ModuleName -Scope CurrentUser" -ForegroundColor White
+    if ($Extra) { Write-Host $Extra -ForegroundColor DarkGray }
+}
+
+# Split a typed list of people into individual entries. Accepts commas,
+# semicolons or plain spaces between them, because operators type all three.
+# Replaces three byte-identical copies that were named Split-People - "Split"
+# is not one of PowerShell's approved verbs, which is why this is ConvertFrom-.
+#
+# Wrap the call in @() if you are going to index the result:
+#     $people = @(ConvertFrom-PeopleList $typed)
+# PowerShell unwraps a one-item list on the way out, so without the @() a single
+# address comes back as a plain string and $people[0] would be its first LETTER.
+# Counting and foreach are safe either way. This follows the same rule as
+# Get-SnipeHardware above - no leading comma, the caller wraps.
+function ConvertFrom-PeopleList {
+    param([Parameter(Position = 0)][AllowEmptyString()][AllowNull()][string]$Text)
+    @("$Text" -split '[;,\s]+' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+}
+
+# Ask once for the operator's own admin address and remember it for the rest of
+# the run, so a tool that needs it several times only asks the first time.
+# Defaults to EXO_ADMIN_UPN when that is set. Returns $null if nothing is given,
+# which - as everywhere else in this library - means "stop, a message was shown".
+#
+# $script: not $Global:, matching the per-script variables this replaced. Because
+# lib\Common.ps1 is dot-sourced INTO the feature script, "script scope" here is
+# that feature script's own scope: the answer is remembered for as long as the
+# tool is running and is gone afterwards, which is what you want for something
+# the operator typed.
+function Get-DeskSideAdminUpn {
+    param([string]$Indent = '  ')
+    if ($script:DeskSideAdminUpn) { return $script:DeskSideAdminUpn }
+
+    $default = $env:EXO_ADMIN_UPN
+    $prompt  = if ($default) { "$($Indent)Your admin email (ENTER for $default)" } else { "$($Indent)Your admin email" }
+    $entered = "$(Read-Host $prompt)".Trim()
+    if (-not $entered -and $default) { $entered = $default }
+    if (-not $entered) {
+        Write-Host "$($Indent)No email given." -ForegroundColor Yellow
+        return $null
+    }
+    $script:DeskSideAdminUpn = $entered
+    return $entered
 }
 
 # --- Exchange Online ---------------------------------------------------------
@@ -1101,6 +1324,35 @@ function Write-ActionLog {
         Result    = $Result
         Details   = $Details
     } | Export-Csv -Path $logPath -NoTypeInformation -Encoding UTF8 -Append
+}
+
+# Report a failure the same way everywhere: the red line on screen AND the
+# matching 'Failed' row in the audit log. Those two always belong together, and
+# writing them as separate statements is how they drift - a message on screen
+# that says one thing and a log row that says another, or a red line with no
+# log row at all. Typical use, straight out of a catch block:
+#
+#     catch { Write-DeskSideFailure 'Move failed' 'Move User' $sam $_ -Context $target }
+#
+# prints  "Move failed: <reason>"  and logs  Result=Failed, Details="<target> - <reason>".
+#
+# This deliberately replaces only the CATCH BODY, not the try/catch itself. A
+# helper that took the whole action as a scriptblock would run it in a child
+# scope, so assignments inside it would not reach the caller and a 'return'
+# would leave only the block - breaking about a dozen call sites silently.
+function Write-DeskSideFailure {
+    param(
+        [Parameter(Mandatory, Position = 0)][string]$Message,   # what to show, e.g. 'Move failed'
+        [Parameter(Mandatory, Position = 1)][string]$Action,    # for Write-ActionLog -Action
+        [Parameter(Mandatory, Position = 2)][AllowEmptyString()][string]$Target,
+        [Parameter(Position = 3)]$ErrorRecord,                  # normally $_
+        [string]$Context = '',                                  # extra detail, prefixed in the log
+        [string]$Indent  = ''
+    )
+    $reason = if ($ErrorRecord) { "$($ErrorRecord.Exception.Message)" } else { '' }
+    Write-Host ("{0}{1}: {2}" -f $Indent, $Message, $reason) -ForegroundColor Red
+    $details = if ($Context) { "$Context - $reason" } else { $reason }
+    Write-ActionLog -Action $Action -Target $Target -Result 'Failed' -Details $details
 }
 
 # Append a Snipe-IT asset-change event to output\Snipe-Asset-Changes.json.
