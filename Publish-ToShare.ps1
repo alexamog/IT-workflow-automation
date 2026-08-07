@@ -38,32 +38,9 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $src = $PSScriptRoot
-. "$src\lib\Common.ps1"   # for Test-DeskSidePathExcluded
-
-function New-DeskSideStage {
-    param([string]$SourceRoot, [string]$StageRoot)
-    if (Test-Path $StageRoot) { Remove-Item $StageRoot -Recurse -Force }
-    New-Item -ItemType Directory -Path $StageRoot -Force | Out-Null
-    $count = 0
-    foreach ($f in Get-ChildItem $SourceRoot -Recurse -File) {
-        $rel = $f.FullName.Substring($SourceRoot.Length).TrimStart('\', '/')
-        if (Test-DeskSidePathExcluded -RelativePath $rel) { continue }
-        $target = Join-Path $StageRoot $rel
-        $dir = Split-Path $target -Parent
-        if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
-        Copy-Item -Path $f.FullName -Destination $target -Force
-        $count++
-    }
-    return $count
-}
-
-function Get-DeskSidePrivacyLeak {
-    param([string]$StageRoot)
-    @(Get-ChildItem $StageRoot -Recurse | Where-Object {
-        $rel = $_.FullName.Substring($StageRoot.Length)
-        (($rel -split '[\\/]') -contains 'output') -or ($_.Name -like 'My-Completed-Tickets*')
-    })
-}
+# Staging, the exclusion rule and the privacy gate all live in the library, so
+# this script and Build-SharePackage.ps1 cannot disagree about what to leave out.
+. "$src\lib\Common.ps1"   # New-DeskSideStage / Get-DeskSidePrivacyLeak
 
 # --- Resolve the share -------------------------------------------------------
 if (-not $ShareRoot) { $ShareRoot = [Environment]::GetEnvironmentVariable('DESKSIDE_SHARE', 'User') }

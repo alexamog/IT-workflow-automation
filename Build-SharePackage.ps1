@@ -35,39 +35,9 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $src = $PSScriptRoot
-. "$src\lib\Common.ps1"   # for Test-DeskSidePathExcluded / Get-ADToolOutputDir
-
-# Stage the project into $StageRoot, applying the shared exclusion rule. Returns
-# the number of files copied.
-function New-DeskSideStage {
-    param([string]$SourceRoot, [string]$StageRoot)
-    if (Test-Path $StageRoot) { Remove-Item $StageRoot -Recurse -Force }
-    New-Item -ItemType Directory -Path $StageRoot -Force | Out-Null
-
-    $count = 0
-    # No -Force: Windows marks the .git folder hidden, so it is skipped here and
-    # we never even walk it. Everything else we want is visible.
-    foreach ($f in Get-ChildItem $SourceRoot -Recurse -File) {
-        $rel = $f.FullName.Substring($SourceRoot.Length).TrimStart('\', '/')
-        if (Test-DeskSidePathExcluded -RelativePath $rel) { continue }
-        $target = Join-Path $StageRoot $rel
-        $dir = Split-Path $target -Parent
-        if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
-        Copy-Item -Path $f.FullName -Destination $target -Force
-        $count++
-    }
-    return $count
-}
-
-# Refuse to ship if anything private slipped into staging. Returns the offending
-# items (empty = clean).
-function Get-DeskSidePrivacyLeak {
-    param([string]$StageRoot)
-    @(Get-ChildItem $StageRoot -Recurse | Where-Object {
-        $rel = $_.FullName.Substring($StageRoot.Length)
-        (($rel -split '[\\/]') -contains 'output') -or ($_.Name -like 'My-Completed-Tickets*')
-    })
-}
+# Staging, the exclusion rule and the privacy gate all live in the library, so
+# this script and Publish-ToShare.ps1 cannot disagree about what to leave out.
+. "$src\lib\Common.ps1"   # New-DeskSideStage / Get-DeskSidePrivacyLeak / Get-ADToolOutputDir
 
 # --- Version + destination ---------------------------------------------------
 $version = Get-Content (Join-Path $src 'VERSION') -First 1 -ErrorAction SilentlyContinue

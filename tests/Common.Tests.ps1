@@ -1225,6 +1225,88 @@ Describe 'Test-DeskSidePathExcluded' {
     It 'handles forward slashes too' {
         Test-DeskSidePathExcluded -RelativePath 'output/log.csv'                 | Should -BeTrue
     }
+
+    It 'drops the Jira org-change log (ticket keys, reporters, org names)' {
+        Test-DeskSidePathExcluded -RelativePath 'Jira Scripts\logs\org-changes.json' | Should -BeTrue
+        Test-DeskSidePathExcluded -RelativePath 'Jira Scripts/logs/org-changes.json' | Should -BeTrue
+    }
+
+    It 'drops KB drafts (real organisation name, domain and ticket numbers)' {
+        Test-DeskSidePathExcluded -RelativePath 'KB-Drafts\password-reset.html'  | Should -BeTrue
+    }
+
+    It 'still keeps ordinary files now the new rules are in' {
+        Test-DeskSidePathExcluded -RelativePath 'Jira Scripts\lib\Actions.ps1'   | Should -BeFalse
+        Test-DeskSidePathExcluded -RelativePath 'lib\Printer.ps1'                | Should -BeFalse
+    }
+}
+
+Describe 'New-DeskSideStage / Get-DeskSidePrivacyLeak' {
+
+    # Build a miniature project on disk, stage it, and check what came through.
+    # These two functions are the only thing standing between a shared copy and
+    # somebody's real ticket data, so they are tested against real files rather
+    # than mocks.
+    BeforeAll {
+        $script:FakeSrc = Join-Path $script:TestOutput 'fakeproj'
+        $script:Stage   = Join-Path $script:TestOutput 'stage'
+
+        $files = @(
+            'lib\Common.ps1',                        # ordinary, must survive
+            'VERSION',                               # ordinary, must survive
+            'output\AD-Toolkit-Actions.csv',         # real hostnames / staff names
+            'Jira Scripts\logs\org-changes.json',    # ticket keys / reporter names
+            'Jira Scripts\output\My-Completed-Tickets-2026.json',
+            'KB-Drafts\password-reset.html',         # real org name / domain
+            'data\UsersOU-Paths.json'                # this machine's AD structure
+        )
+        foreach ($f in $files) {
+            $full = Join-Path $script:FakeSrc $f
+            $dir  = Split-Path $full -Parent
+            if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+            Set-Content -Path $full -Value 'x' -Encoding ASCII
+        }
+        $script:Copied = New-DeskSideStage -SourceRoot $script:FakeSrc -StageRoot $script:Stage
+    }
+
+    It 'copies the ordinary files' {
+        Test-Path (Join-Path $script:Stage 'lib\Common.ps1') | Should -BeTrue
+        Test-Path (Join-Path $script:Stage 'VERSION')        | Should -BeTrue
+        $script:Copied | Should -Be 2
+    }
+
+    It 'leaves out every private file' {
+        Test-Path (Join-Path $script:Stage 'output')                    | Should -BeFalse
+        Test-Path (Join-Path $script:Stage 'Jira Scripts\logs')         | Should -BeFalse
+        Test-Path (Join-Path $script:Stage 'Jira Scripts\output')       | Should -BeFalse
+        Test-Path (Join-Path $script:Stage 'KB-Drafts')                 | Should -BeFalse
+        Test-Path (Join-Path $script:Stage 'data')                      | Should -BeFalse
+    }
+
+    It 'reports a clean stage as clean' {
+        @(Get-DeskSidePrivacyLeak -StageRoot $script:Stage).Count | Should -Be 0
+    }
+
+    It 'catches a private file planted into the stage after the copy' {
+        # The gate must not simply trust the exclusion rule - a mistake in that
+        # rule is the exact case it exists to catch.
+        foreach ($planted in 'output\oops.csv', 'Jira Scripts\logs\oops.json', 'KB-Drafts\oops.html') {
+            $full = Join-Path $script:Stage $planted
+            $dir  = Split-Path $full -Parent
+            if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+            Set-Content -Path $full -Value 'x' -Encoding ASCII
+
+            @(Get-DeskSidePrivacyLeak -StageRoot $script:Stage).Count | Should -BeGreaterThan 0
+            Remove-Item (Split-Path $full -Parent) -Recurse -Force
+        }
+    }
+
+    It 'catches a loose ticket export by name, wherever it sits' {
+        $loose = Join-Path $script:Stage 'My-Completed-Tickets-2026.json'
+        Set-Content -Path $loose -Value 'x' -Encoding ASCII
+        @(Get-DeskSidePrivacyLeak -StageRoot $script:Stage).Count | Should -BeGreaterThan 0
+        Remove-Item $loose -Force
+    }
 }
 
 Describe 'Test-DeskSideShareNewer (auto-update version compare)' {
