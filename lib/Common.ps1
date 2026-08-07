@@ -21,6 +21,9 @@
                         Set-M365UserLicense)
       - SharePoint     (Connect-SpoSession, Get-SpoRootUrl)
       - Audit logging  (Write-ActionLog, Write-SnipeAssetLog)
+      - Network printers (lib\Printer.ps1: Get-CanonPrinterStatus,
+                        Get-CanonPrinterJobs, Stop-CanonPrinterJob,
+                        Restart-CanonPrinter - SNMP/IPP direct to the printer)
 #>
 
 # NOTE: this shared library does NOT require the ActiveDirectory module at load
@@ -531,6 +534,13 @@ if (Test-Path $uiPath) { . $uiPath }
 
 # The sign-off quote (Show-DeskSideSignoff) lives in Ui.ps1, dot-sourced just
 # above, so both this toolkit and the Jira console share one implementation.
+
+# --- Network printers (SNMP + IPP) -------------------------------------------
+# Toner/status/job-queue/restart helpers live in their own file - see the
+# header comment in Printer.ps1 for why this is hand-rolled protocol code
+# rather than a module dependency.
+$printerPath = Join-Path $PSScriptRoot 'Printer.ps1'
+if (Test-Path $printerPath) { . $printerPath }
 
 # --- Console UI helper -------------------------------------------------------
 # Show a numbered list and return the chosen item (or $null for 0/Cancel).

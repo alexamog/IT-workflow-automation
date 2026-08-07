@@ -19,6 +19,18 @@ Jira Scripts/output/
 /data/
 Jira Scripts/data/
 
+# The Jira console appends every organisation change it makes to
+# "Jira Scripts\logs\org-changes.json" (written by Jira Scripts\lib\Actions.ps1).
+# Each entry holds real ticket keys, reporter names and organisation names.
+Jira Scripts/logs/
+
+# --- Draft documentation -----------------------------------------------------
+# Hand-written knowledge-base articles waiting to be published to Confluence.
+# They quote the REAL organisation name, the real mail domain and real ticket
+# numbers, so they must never reach this repository or a shared copy of it.
+# They are authored work, not scratch: keep them, just keep them out of git.
+/KB-Drafts/
+
 # --- Published editions ------------------------------------------------------
 # Publish-Standalone.ps1 writes these as sibling folders, but ignore them here
 # too in case anyone ever publishes into the project folder by mistake.
