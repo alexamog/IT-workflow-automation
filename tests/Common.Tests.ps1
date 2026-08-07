@@ -1281,3 +1281,96 @@ Describe 'Get-ADToolDomainDN' {
         $ADTool.DomainDN = $saved
     }
 }
+
+Describe 'Source files are plain ASCII' {
+
+    # WHY THIS TEST EXISTS - it guards against a failure that looks impossible.
+    #
+    # Our .ps1 files are saved as UTF-8 with NO byte-order mark, and Windows
+    # PowerShell 5.1 reads a file with no mark as ANSI (code page 1252), not as
+    # UTF-8. So a single em dash - three bytes in UTF-8 - is read back as three
+    # separate characters, and the last of them is a curly closing quote.
+    # PowerShell treats curly quotes as string delimiters, so that one dash ends
+    # a string early and EVERY string after it in the file is misread. The
+    # script stops parsing entirely, and the error messages point at innocent
+    # lines a long way from the dash.
+    #
+    # It looks perfectly fine in an editor, which is exactly why a person cannot
+    # be trusted to catch it. Write hyphens, not dashes; straight quotes, not
+    # curly ones. This test checks BYTES, so it cannot be fooled.
+    It 'has no byte above 127 in any .ps1 or .psd1 file' {
+        $root = Split-Path $PSScriptRoot -Parent
+
+        # Code page 28591 (Latin-1) maps byte n to character n exactly, for all
+        # 256 values. Reading with it means "look at the raw bytes as text",
+        # so anything above 127 shows up as a character above 127.
+        $latin1 = [Text.Encoding]::GetEncoding(28591)
+
+        $bad = @(Get-ChildItem -Path $root -Recurse -File -ErrorAction SilentlyContinue |
+            Where-Object {
+                $_.Extension -in '.ps1', '.psd1' -and
+                $_.FullName -notmatch '\\(\.git|output)\\'
+            } |
+            Where-Object { [IO.File]::ReadAllText($_.FullName, $latin1) -match '[^\x00-\x7F]' } |
+            ForEach-Object { $_.FullName.Substring($root.Length) })
+
+        # Joined into the message so a failure NAMES the offending files.
+        ($bad -join '; ') | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'Feature manifests (*.tool.psd1)' {
+
+    # Every feature on the menu is declared by a small .tool.psd1 file next to
+    # its script (see AD-Toolkit.ps1). Nothing else validates them, so a typo
+    # here silently changes the menu rather than producing an error.
+    BeforeAll {
+        $root = Split-Path $PSScriptRoot -Parent
+        $script:Manifests = @(
+            Get-ChildItem -Path $root -Recurse -Filter *.tool.psd1 -File |
+                ForEach-Object {
+                    [pscustomobject]@{
+                        Name = $_.Name
+                        Data = (Import-PowerShellDataFile -Path $_.FullName)
+                    }
+                })
+    }
+
+    It 'finds the feature manifests' {
+        $script:Manifests.Count | Should -BeGreaterThan 30
+    }
+
+    It 'gives every feature its own Order (a clash makes the menu order arbitrary)' {
+        $dupes = @($script:Manifests |
+            Group-Object { $_.Data.Order } |
+            Where-Object { $_.Count -gt 1 } |
+            ForEach-Object { "Order $($_.Name): $(($_.Group.Name) -join ', ')" })
+        ($dupes -join ' | ') | Should -BeNullOrEmpty
+    }
+
+    It 'states an Audience on every feature' {
+        # AD-Toolkit.ps1 falls back to 'Both' when Audience is missing, so
+        # forgetting the key quietly offers a feature to everyone. For a
+        # destructive feature that is a security problem, not a cosmetic one.
+        $missing = @($script:Manifests |
+            Where-Object { -not $_.Data.ContainsKey('Audience') } |
+            ForEach-Object { $_.Name })
+        ($missing -join ', ') | Should -BeNullOrEmpty
+    }
+
+    It 'uses only the three Audience values the launcher understands' {
+        foreach ($m in $script:Manifests) {
+            $m.Data.Audience | Should -BeIn @('Admin', 'Standard', 'Both')
+        }
+    }
+
+    It 'names a script that actually exists' {
+        $root = Split-Path $PSScriptRoot -Parent
+        $orphans = @(Get-ChildItem -Path $root -Recurse -Filter *.tool.psd1 -File |
+            Where-Object {
+                $sibling = Join-Path $_.DirectoryName (($_.BaseName -replace '\.tool$', '') + '.ps1')
+                -not (Test-Path $sibling)
+            } | ForEach-Object { $_.Name })
+        ($orphans -join ', ') | Should -BeNullOrEmpty
+    }
+}
