@@ -226,10 +226,10 @@ if (-not $scriptId) {
 Write-Host "Script library entry ready (id $scriptId)." -ForegroundColor Green
 
 # --- Logging -----------------------------------------------------------------
-# One row per action in output\AD-Toolkit-Actions.csv (the toolkit's shared
+# One row per action in output\Logs\AD-Toolkit-Actions.csv (the toolkit's shared
 # audit log) + a full transcript of the remote output for each run.
-$outputDir = Get-ADToolOutputDir
-$runLog    = Join-Path -Path $outputDir -ChildPath ("RemoteCleanup-{0}-{1}.log" -f $ComputerName, (Get-Date -Format 'yyyyMMdd-HHmmss'))
+$outputDir = Get-ADToolOutputDir -Category 'Logs\RemoteSessions'
+$runLog    = Join-Path -Path $outputDir -ChildPath ("RemoteCleanup-{0}-{1}.log" -f $ComputerName, (Get-Date -Format 'yyyy-MM-dd HHmmss'))
 
 # Audit rows go through Write-ActionLog in the shared library, so every feature
 # writes the same columns to the same file. This wrapper just saves repeating

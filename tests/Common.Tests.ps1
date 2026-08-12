@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Automated checks for the shared helpers in lib\Common.ps1.
 
@@ -41,8 +41,17 @@ BeforeAll {
     $script:TestOutput = Join-Path ([IO.Path]::GetTempPath()) "DeskSideTests-$(Get-Random)"
     New-Item -ItemType Directory -Path $script:TestOutput -Force | Out-Null
 
-    # Point the log writers at that scratch folder instead of output\.
-    function Get-ADToolOutputDir { $script:TestOutput }
+    # Point the log writers at that scratch folder instead of output\. This
+    # stand-in must honour -Category the same way the real one does, otherwise
+    # the tests would write everything flat and quietly stop checking that
+    # output lands in the right sub-folder.
+    function Get-ADToolOutputDir {
+        param([string]$Category)
+        $dir = $script:TestOutput
+        if ($Category) { $dir = Join-Path $dir $Category }
+        if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+        $dir
+    }
 }
 
 AfterAll {
@@ -609,6 +618,8 @@ Describe 'Write-SnipeAssetReport' {
         $r.Count | Should -Be 2
         Test-Path $r.Json | Should -BeTrue
         Test-Path $r.Html | Should -BeTrue
+        # Sorted by kind, not dumped in the output root.
+        Split-Path $r.Json -Parent | Should -BeLike '*Audits\SnipeReports'
 
         $parsed = Get-Content $r.Json -Raw | ConvertFrom-Json
         $parsed.count       | Should -Be 2
@@ -635,7 +646,7 @@ Describe 'Write-ActionLog' {
 
     It 'writes one row with the columns the audit file expects' {
         Write-ActionLog -Action 'Reset Password' -Target 'jsmith'
-        $row = Import-Csv (Join-Path $script:TestOutput 'AD-Toolkit-Actions.csv') | Select-Object -Last 1
+        $row = Import-Csv (Join-Path $script:TestOutput 'Logs\AD-Toolkit-Actions.csv') | Select-Object -Last 1
 
         $row.Action   | Should -Be 'Reset Password'
         $row.Target   | Should -Be 'jsmith'
@@ -646,14 +657,14 @@ Describe 'Write-ActionLog' {
 
     It 'records a failure with its explanation' {
         Write-ActionLog -Action 'Reset Password' -Target 'jsmith' -Result 'Failed' -Details 'Access denied'
-        $row = Import-Csv (Join-Path $script:TestOutput 'AD-Toolkit-Actions.csv') | Select-Object -Last 1
+        $row = Import-Csv (Join-Path $script:TestOutput 'Logs\AD-Toolkit-Actions.csv') | Select-Object -Last 1
 
         $row.Result  | Should -Be 'Failed'
         $row.Details | Should -Be 'Access denied'
     }
 
     It 'adds to the file instead of replacing it' {
-        $log = Join-Path $script:TestOutput 'AD-Toolkit-Actions.csv'
+        $log = Join-Path $script:TestOutput 'Logs\AD-Toolkit-Actions.csv'
         $before = @(Import-Csv $log).Count
         Write-ActionLog -Action 'Test' -Target 'x'
         @(Import-Csv $log).Count | Should -Be ($before + 1)
@@ -680,9 +691,9 @@ Describe 'Write-SnipeAssetLog' {
 
     BeforeEach {
         # Start each test from a clean log.
-        Get-ChildItem $script:TestOutput -Filter 'Snipe-Asset-Changes.json*' |
+        Get-ChildItem (Join-Path $script:TestOutput 'Logs') -Filter 'Snipe-Asset-Changes.json*' -ErrorAction SilentlyContinue |
             Remove-Item -Force -ErrorAction SilentlyContinue
-        $script:AssetLog = Join-Path $script:TestOutput 'Snipe-Asset-Changes.json'
+        $script:AssetLog = Join-Path $script:TestOutput 'Logs\Snipe-Asset-Changes.json'
     }
 
     It 'records the old and new value of a change' {
@@ -721,7 +732,7 @@ Describe 'Write-SnipeAssetLog' {
         Write-SnipeAssetLog -Action 'Update' -AssetTag 'A2' -AssetId 2 -WarningAction SilentlyContinue 6>$null
 
         # The damaged file must still exist under a new name...
-        $kept = @(Get-ChildItem $script:TestOutput -Filter 'Snipe-Asset-Changes.json.corrupt-*')
+        $kept = @(Get-ChildItem (Join-Path $script:TestOutput 'Logs') -Filter 'Snipe-Asset-Changes.json.corrupt-*')
         $kept.Count | Should -Be 1
 
         # ...holding the text that could not be read...
@@ -735,7 +746,7 @@ Describe 'Write-SnipeAssetLog' {
 
     It 'leaves no temporary file behind' {
         Write-SnipeAssetLog -Action 'Update' -AssetTag 'A1' -AssetId 1
-        @(Get-ChildItem $script:TestOutput -Filter '*.tmp').Count | Should -Be 0
+        @(Get-ChildItem $script:TestOutput -Filter '*.tmp' -Recurse).Count | Should -Be 0
     }
 }
 
@@ -1281,3 +1292,4 @@ Describe 'Get-ADToolDomainDN' {
         $ADTool.DomainDN = $saved
     }
 }
+

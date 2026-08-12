@@ -144,9 +144,9 @@ if ((Read-Host "Type YES to permanently remove $($toDelete.Count) profile(s)/ent
     Write-Host "Cancelled." -ForegroundColor Yellow; return
 }
 
-$outputDir = Join-Path -Path $PSScriptRoot -ChildPath '..\..\output'
-if (-not (Test-Path $outputDir)) { New-Item -ItemType Directory -Path $outputDir -Force | Out-Null }
-$csv = Join-Path $outputDir 'AD-Toolkit-Actions.csv'
+# Use the shared helper, not a hand-built path: the audit log has one home, and
+# building it here would quietly split it across two files.
+$csv = Join-Path (Get-ADToolOutputDir -Category 'Logs') 'AD-Toolkit-Actions.csv'
 
 foreach ($d in $toDelete) {
     # Double any apostrophe so a name like caitlin.o'sullivan cannot break out of

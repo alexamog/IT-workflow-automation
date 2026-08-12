@@ -279,7 +279,7 @@ $sorted | Group-Object Event | Sort-Object Count -Descending |
 # --- Optional CSV ------------------------------------------------------------
 if ($Csv) {
     $stamp = (Get-Date).ToString('yyyy-MM-dd HHmmss')
-    $file  = Join-Path (Get-ADToolOutputDir) "AD Security Events - $stamp.csv"
+    $file  = Join-Path (Get-ADToolOutputDir -Category 'Reports\AD-Security-Events') "$stamp.csv"
     $sorted | Export-Csv -Path $file -NoTypeInformation -Encoding UTF8
     Write-Host "`n  Saved: $file" -ForegroundColor Green
 }

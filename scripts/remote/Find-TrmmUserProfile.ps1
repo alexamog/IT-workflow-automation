@@ -136,7 +136,7 @@ if ((Read-Host "Type YES to permanently delete '$user' on $($toDelete.Count) mac
 # Audit log (operator side).
 # Audit rows go through Write-ActionLog in the shared library, so every feature
 # writes the same columns to the same file.
-$csv = Join-Path (Get-ADToolOutputDir) 'AD-Toolkit-Actions.csv'
+$csv = Join-Path (Get-ADToolOutputDir -Category 'Logs') 'AD-Toolkit-Actions.csv'
 
 $delCmd = @"
 `$u = '$safeUser'

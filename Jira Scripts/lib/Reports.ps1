@@ -33,10 +33,35 @@ $script:ReportExcludedStatuses = @('Canceled', 'Cancelled', 'Closed')
 # runbook's question is "are we responding to each new ticket within 24 hours".
 $script:FirstResponseTargetHours = 24
 
-# Where generated reports are written (the console's output\ folder, alongside
-# the other exports). Resolved to a clean absolute path rather than one
-# containing "lib\..\", so the paths printed to the operator are readable.
+# Root of the console's output folder. Resolved to a clean absolute path rather
+# than one containing "lib\..\", so the paths printed to the operator are
+# readable. This console also ships as a standalone edition without the main
+# toolkit's lib\, so it keeps its own output root rather than calling
+# Get-ADToolOutputDir - but it uses the same "sort by kind, then date" shape.
 $script:ReportOutputDir = Join-Path (Split-Path $PSScriptRoot -Parent) 'output'
+
+function Get-ReportFolder {
+    <#
+    .SYNOPSIS
+        Returns (creating if needed) the folder for one month's report files.
+    .DESCRIPTION
+        One folder per run, e.g. output\Reports\Monthly\2026-07\. A monthly run
+        produces three files that belong together; keeping them in a dated folder
+        means finding last month's report is one click rather than picking three
+        files out of a long list.
+    .PARAMETER Month
+        A range object from Get-ReportMonth.
+    .OUTPUTS
+        System.String - the absolute folder path.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param([Parameter(Mandatory)]$Month)
+
+    $dir = Join-Path $script:ReportOutputDir (Join-Path 'Reports\Monthly' $Month.Slug)
+    if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+    return $dir
+}
 
 # ===========================================================================
 # SHARED HELPERS
@@ -911,11 +936,12 @@ function Export-MonthlyReport {
     .SYNOPSIS
         Writes the month's reports to CSV and to a pasteable HTML summary.
     .DESCRIPTION
-        Three files land in output\:
-          *-sites.csv   the tickets-per-site table (the pivot table's result)
-          *-tickets.csv every ticket counted, so the numbers can be checked
-          *.html        a formatted summary to paste into the monthly report
+        Three files land in output\Reports\Monthly\<YYYY-MM>\ - one folder per
+        month, so a run's files stay together:
+          Summary.html  a formatted summary to paste into the monthly report
                         or an email to Accounts Payable
+          Sites.csv     the tickets-per-site table (the pivot table's result)
+          Tickets.csv   every ticket counted, so the numbers can be checked
 
         The HTML is deliberately plain with inline styles, because Outlook and
         Word strip stylesheets when you paste into them.
@@ -941,13 +967,10 @@ function Export-MonthlyReport {
         $PhishingReport
     )
 
-    if (-not (Test-Path $script:ReportOutputDir)) {
-        New-Item -ItemType Directory -Path $script:ReportOutputDir -Force | Out-Null
-    }
-    $slug     = $TicketReport.Month.Slug
-    $sitesCsv = Join-Path $script:ReportOutputDir "Monthly-Report-$slug-sites.csv"
-    $tickCsv  = Join-Path $script:ReportOutputDir "Monthly-Report-$slug-tickets.csv"
-    $htmlPath = Join-Path $script:ReportOutputDir "Monthly-Report-$slug.html"
+    $dir      = Get-ReportFolder -Month $TicketReport.Month
+    $sitesCsv = Join-Path $dir 'Sites.csv'
+    $tickCsv  = Join-Path $dir 'Tickets.csv'
+    $htmlPath = Join-Path $dir 'Summary.html'
 
     $TicketReport.Rows   | Export-Csv -Path $sitesCsv -NoTypeInformation -Encoding UTF8
     $TicketReport.Issues | Export-Csv -Path $tickCsv  -NoTypeInformation -Encoding UTF8
@@ -1004,6 +1027,7 @@ function Export-MonthlyReport {
     $sb.ToString() | Out-File -FilePath $htmlPath -Encoding utf8
 
     return [pscustomobject]@{
+        Folder     = $dir
         SitesCsv   = $sitesCsv
         TicketsCsv = $tickCsv
         Html       = $htmlPath
@@ -1072,11 +1096,10 @@ function Invoke-MonthlyReports {
 
                 $out = Export-MonthlyReport -TicketReport $t -CsatReport $c -ResponseReport $f -ResolutionReport $r -PhishingReport $p
                 Write-Host ""
-                Write-Host "  Saved:" -ForegroundColor Green
-                Write-Host "    $($out.SitesCsv)" -ForegroundColor DarkCyan
-                Write-Host "    $($out.TicketsCsv)" -ForegroundColor DarkCyan
-                Write-Host "    $($out.Html)" -ForegroundColor DarkCyan
-                Write-Host "  Open the .html and copy it straight into the monthly report or an email." -ForegroundColor DarkGray
+                Write-Host "  Saved to $($out.Folder)" -ForegroundColor Green
+                Write-Host "    Summary.html   paste this into the monthly report or an email" -ForegroundColor DarkCyan
+                Write-Host "    Sites.csv      tickets per site" -ForegroundColor DarkCyan
+                Write-Host "    Tickets.csv    every ticket counted, to check the numbers" -ForegroundColor DarkCyan
                 Read-Host "`n  Enter to continue" | Out-Null
             }
             "4" {

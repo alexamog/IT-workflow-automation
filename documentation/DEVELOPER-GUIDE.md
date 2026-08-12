@@ -1,4 +1,4 @@
-# Developer Guide
+﻿# Developer Guide
 
 For whoever maintains or extends Desk Side Toolkit. Plain `.ps1`, no build step,
 Windows PowerShell 5.1.
@@ -50,7 +50,8 @@ apostrophe in a name breaks it), `Get-ADToolDC` (PDC unless `-Server`),
 `Select-FromList`, `Invoke-SnipeRequest` (Snipe REST, auth+TLS),
 `Test-TrmmConfigured`/`Invoke-TrmmRequest`/`Invoke-TrmmAgentCommand` (TRMM REST,
 auth+TLS, surfaces the API's real error from `ErrorDetails`),
-`Get-ADToolOutputDir`/`Get-ADToolDataDir`, `Write-ActionLog` (CSV),
+`Get-ADToolOutputDir -Category 'Logs'` (sorts generated files by kind - see
+"Where output goes" below) / `Get-ADToolDataDir`, `Write-ActionLog` (CSV),
 `Write-SnipeAssetLog` (JSON, temp-file swap + keeps a damaged file aside rather
 than overwriting history).
 
@@ -181,7 +182,7 @@ agent list `serial_number` (detail is blank). These make the TRMM standalone nee
 
 Use `Invoke-SnipeRequest`. Snipe returns `{ status='success'|'error' }` even on
 HTTP 200 - check `.status`, not the HTTP code. Multi-result search: **R** writes
-JSON+HTML report to `output\SnipeReports\`.
+JSON+HTML report to `output\Audits\SnipeReports\`.
 
 Shared in `lib\Common.ps1`: `ConvertFrom-SnipeField` (unwrap Snipe date objects),
 `Get-SnipeHardware` (follows the API's limit/offset paging - callers MUST wrap in
@@ -256,9 +257,40 @@ mock the SPO cmdlets.
 
 ## Logging
 
-`output\AD-Toolkit-Actions.csv` (AD + TRMM actions), `Snipe-Asset-Changes.json`,
-`RemoteCleanup-*/RemoteShell-*` transcripts, `SnipeReports\`,
+`output\Logs\AD-Toolkit-Actions.csv` (AD + TRMM actions),
+`output\Logs\Snipe-Asset-Changes.json`,
+`output\Logs\RemoteSessions\RemoteCleanup-*`/`RemoteShell-*` transcripts,
+`output\Audits\SnipeReports\`,
 `C:\ProgramData\DeskSideToolkit\ProfileCleanup.log` (on the cleaned machine).
+
+## Where output goes
+
+Everything generated goes under `output\`, sorted by **what the file is**:
+`Logs\` (appended to forever), `Reports\` (produced, read, sent on), `Audits\`
+(one system compared against another), `Packages\` (built share packages).
+
+Get the folder from the helper - never build the path by hand:
+
+```powershell
+$dir = Get-ADToolOutputDir -Category 'Reports\AD-Security-Events'
+```
+
+It creates the folder on demand and returns the absolute path; called with no
+`-Category` you get the `output\` root, which is what the publish and packaging
+scripts want. When a single run produces several files that belong together
+(onboarding exceptions + messages, the monthly report's three files), give the
+run its own dated sub-folder - `Reports\Onboarding\2026-08-12 0930\` - and
+resolve it lazily, so a run with nothing to report leaves no empty folder.
+
+Two consequences worth knowing:
+
+- **The Jira console keeps its own `Jira Scripts\output\`.** It also ships as a
+  standalone edition without the main `lib\`, so it cannot call
+  `Get-ADToolOutputDir`. It uses the same shape via its own `Get-ReportFolder`.
+- **The exclusion rules still work unchanged.** `Test-DeskSidePathExcluded` drops
+  anything under a folder named `output`, at any depth, so the new sub-folders
+  are covered by the same rule that kept the flat files out of published
+  packages.
 
 ## Standalone editions + Core (Publish-Standalone.ps1)
 
@@ -334,3 +366,5 @@ User-facing steps: `documentation\DEPLOYMENT.md`. Internals:
   `custom_field`, `save_all_output`, `email`, `emailMode`) or 500. Long runs must
   use `output:'forget'` + poll the machine's log (proxy 502s on held waits).
 ```
+
+

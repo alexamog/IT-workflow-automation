@@ -22,7 +22,7 @@ if (-not $ADTool.SourceOU) {
 }
 
 $Server   = Get-ADToolDC -Server $Server
-$jsonPath = Join-Path (Get-ADToolOutputDir) ("Users-ByOffice-{0}.json" -f (Get-Date -Format 'yyyyMMdd-HHmmss'))
+$jsonPath = Join-Path (Get-ADToolOutputDir -Category 'Reports\Users-ByOffice') ("{0}.json" -f (Get-Date -Format 'yyyy-MM-dd HHmmss'))
 Write-Host "Reading from DC: $Server" -ForegroundColor DarkGray
 
 $users = Get-ADUser -Server $Server -SearchBase $ADTool.SourceOU -SearchScope Subtree -Filter * `

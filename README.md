@@ -1,4 +1,4 @@
-# Desk Side Toolkit
+﻿# Desk Side Toolkit
 
 Menu-driven PowerShell tools for AD, Snipe-IT, Jira, and Tactical RMM: password
 resets, lockouts, account state, lookups, OU moves, reporting, asset management,
@@ -26,7 +26,7 @@ Examples). Most user scripts take a **SAM** (`alex.amog`) or **UPN**
 | `lib\` | `Common.ps1` - shared config + helpers |
 | `scripts\` | Task scripts, grouped by category (below) |
 | `data\` | Reference data (e.g. `UsersOU-Paths.json`) |
-| `output\` | Reports, audit logs, `archive\` |
+| `output\` | Everything generated: `Logs\`, `Reports\`, `Audits\`, `Packages\` |
 | `documentation\` | All written material: `DEVELOPER-GUIDE.md`, `DEPLOYMENT.md`, `API-Examples\` (REST/AD skeletons) |
 
 ### scripts\ subfolders
@@ -56,7 +56,7 @@ holds copy-paste REST/AD skeletons for building new scripts.
 ### Assets (Snipe-IT)
 | Option | Script |
 | ------ | ------ |
-| Find asset (view, edit, label; press **R** on a multi-result search for a JSON+HTML report to `output\SnipeReports\`) | `Get-SnipeAsset.ps1` |
+| Find asset (view, edit, label; press **R** on a multi-result search for a JSON+HTML report to `output\Audits\SnipeReports\`) | `Get-SnipeAsset.ps1` |
 | Search assets by filters - keyword + status + location + category + model + company | `Search-SnipeAssets.ps1` |
 | Add asset (clone a model) | `New-SnipeAssetFromClone.ps1` |
 
@@ -137,7 +137,9 @@ A worked example is in [`documentation\sample-staff-list.txt`](documentation/sam
 Neither script changes anything until you have seen the plan and agreed to it.
 People whose name is not in AD, whose name matches more than one account, or
 (onboarding only) whose role disagrees with AD are never handled automatically -
-they go to an exceptions CSV in `output\` for you to do by hand.
+they go to an exceptions CSV for you to do by hand. Each run writes its files
+into its own dated folder: `output\Reports\Onboarding\<date>\Exceptions.csv` (and
+`Messages.txt`), or `output\Reports\Offboarding\<date>\`.
 
 ### How the role check works
 
@@ -306,7 +308,7 @@ folder-permissions kind.
 
 Action scripts also run standalone (`.\scripts\remote\Enter-TrmmShell.ps1 ITLAPSPARE-11`).
 All need `.\setup\Set-TacticalCredentials.ps1` once; the two Snipe-IT audits also
-need `SNIPEIT_TOKEN` (they write JSON+HTML to `output\SnipeAudit\` and log any
+need `SNIPEIT_TOKEN` (they write JSON+HTML to `output\Audits\SnipeAudit\` and log any
 Snipe-IT change to `Snipe-Asset-Changes.json`).
 
 ### Setup / Maintenance
@@ -352,7 +354,7 @@ Snipe-IT change to `Snipe-Asset-Changes.json`).
    press **R** to report all matches.
 3. From an asset: **Edit** (Name/Status/Assigned to/Notes) or **Print label**.
 4. **R** writes JSON + HTML (tag, name, model, status, assignee, location,
-   serial, dates, notes) to `output\SnipeReports\`.
+   serial, dates, notes) to `output\Audits\SnipeReports\`.
 
 ## Configuration (environment variables)
 
@@ -458,19 +460,44 @@ the one-line install command if the PC only has the old built-in version.
 
 ## Audit logs
 
+Everything the toolkit generates is sorted under `output\` by **what the file
+is**, so the folder stays readable as it fills up:
+
+```
+output\
+  Logs\                    appended to forever
+    AD-Toolkit-Actions.csv
+    Snipe-Asset-Changes.json
+    RemoteSessions\        one transcript per remote session
+  Reports\                 things you produce, read, and send on
+    Monthly\2026-07\       (Jira console writes its own under Jira Scripts\output\)
+    Onboarding\<date>\     one folder per run
+    Offboarding\<date>\
+    AD-Security-Events\  Users-ByOffice\  InstalledApps\  AD-Structure\
+  Audits\                  comparisons between two systems
+    SnipeReports\  SnipeAudit\
+  Packages\                built share packages
+```
+
 | File | Contents |
 | ---- | -------- |
-| `output\AD-Toolkit-Actions.csv` | AD changes + TRMM actions (cleanups, transfers) |
-| `output\Snipe-Asset-Changes.json` | Asset create/update/checkout/checkin (old/new) |
-| `output\RemoteCleanup-<pc>-<date>.log` | Remote profile-cleanup console (preview + run) |
-| `output\RemoteShell-<pc>-<date>.log` | Remote PowerShell session transcript |
-| `output\SnipeReports\Asset Report - <date>.json`/`.html` | Snipe asset search reports |
-| `output\SnipeAudit\TRMM-Snipe Audit - <date>.*` / `Serial Audit - <date>.*` | TRMM-vs-Snipe audits (by hostname / by serial) |
-| `output\Installed Apps - <pc> - <date>.txt` | Saved installed-app list from the hub |
+| `output\Logs\AD-Toolkit-Actions.csv` | AD changes + TRMM actions (cleanups, transfers) |
+| `output\Logs\Snipe-Asset-Changes.json` | Asset create/update/checkout/checkin (old/new) |
+| `output\Logs\RemoteSessions\RemoteCleanup-<pc>-<date>.log` | Remote profile-cleanup console (preview + run) |
+| `output\Logs\RemoteSessions\RemoteShell-<pc>-<date>.log` | Remote PowerShell session transcript |
+| `output\Audits\SnipeReports\Asset Report - <date>.json`/`.html` | Snipe asset search reports |
+| `output\Audits\SnipeAudit\TRMM-Snipe Audit - <date>.*` / `Serial Audit - <date>.*` | TRMM-vs-Snipe audits (by hostname / by serial) |
+| `output\Reports\InstalledApps\<pc> - <date>.txt` | Saved installed-app list from the hub |
+| `output\Reports\Onboarding\<date>\` | Per-run onboarding exceptions + messages |
+| `output\Reports\Offboarding\<date>\` | Per-run offboarding exceptions + report |
 | `C:\ProgramData\DeskSideToolkit\ProfileCleanup.log` | On the cleaned machine: profiles deleted, keep-names not found, GB freed, health-check |
-| `output\archive\` | Old dated reports |
 
 All record timestamp + operator. Failures logged with the error.
+
+Scripts never build these paths by hand â€” they call
+`Get-ADToolOutputDir -Category 'Logs'` (or `'Reports\...'`), which creates the
+folder on demand. Adding a new output means picking a category, not inventing a
+new place.
 
 ## Admin credentials
 
@@ -546,3 +573,7 @@ their next launch - no re-sending zips.
 - RSAT ActiveDirectory module (AD features)
 - Rights for the action (password reset, group edit, PDC Security log for lockouts)
 - `SNIPEIT_TOKEN` for asset options; `TRMM_*` for remote
+
+
+
+

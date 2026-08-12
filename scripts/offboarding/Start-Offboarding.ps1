@@ -329,12 +329,15 @@ if ($cloudTargets.Count -gt 0 -and
 # --- 5. Reports --------------------------------------------------------------
 # Only written when working from a list. For one person the console said it all
 # and the audit log has the record - a one-row CSV is just clutter in output\.
-$outputDir = Get-ADToolOutputDir
-$stamp     = Get-Date -Format 'yyyyMMdd-HHmmss'
+# Each run gets its own folder under output\Reports\Offboarding, so the two
+# files from one run stay together instead of interleaving with every other run.
+# The folder is only created if there is something to put in it - resolving it
+# lazily keeps single-person runs from leaving empty folders behind.
+$runFolder = "Reports\Offboarding\{0}" -f (Get-Date -Format 'yyyy-MM-dd HHmmss')
 
 $exceptions = @(@($notFound) + @($ambiguous) | Sort-Object LineNumber)
 if ($exceptions.Count -and $roster.Count -gt 1) {
-    $exPath = Join-Path $outputDir "Offboarding-Exceptions-$stamp.csv"
+    $exPath = Join-Path (Get-ADToolOutputDir -Category $runFolder) "Exceptions.csv"
     $exceptions |
         Select-Object LineNumber, Name, Role,
                       @{ n = 'Status'; e = { $_.Outcome } },
@@ -346,7 +349,7 @@ if ($exceptions.Count -and $roster.Count -gt 1) {
 # Full record of the run, including the ones that needed no action. Only worth
 # writing for a list - for one person the console and the audit log say it all.
 if ($roster.Count -gt 1) {
-    $runPath = Join-Path $outputDir "Offboarding-Report-$stamp.csv"
+    $runPath = Join-Path (Get-ADToolOutputDir -Category $runFolder) "Report.csv"
     $plan |
         Select-Object LineNumber, Name, Role, Outcome,
                       @{ n = 'ADAccount';   e = { $_.Sam } },

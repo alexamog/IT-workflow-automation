@@ -188,6 +188,44 @@ Describe 'ConvertTo-JqlList' {
     }
 }
 
+Describe 'Get-ReportFolder' {
+
+    BeforeAll {
+        # Write into a scratch folder, never the console's real output\.
+        $script:ReportOutputDir = Join-Path ([IO.Path]::GetTempPath()) "DeskSideReportTests-$(Get-Random)"
+    }
+
+    AfterAll {
+        if ($script:ReportOutputDir -and (Test-Path $script:ReportOutputDir)) {
+            Remove-Item $script:ReportOutputDir -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'gives each month its own folder under Reports\Monthly' {
+        $m = Get-ReportMonth
+        $dir = Get-ReportFolder -Month $m
+        $dir | Should -BeLike "*Reports\Monthly\$($m.Slug)"
+    }
+
+    It 'creates the folder so the export can write straight into it' {
+        $dir = Get-ReportFolder -Month (Get-ReportMonth)
+        Test-Path $dir | Should -BeTrue
+    }
+
+    It 'keeps two different months apart' {
+        $a = Get-ReportFolder -Month (Get-ReportMonth -MonthsBack 1)
+        $b = Get-ReportFolder -Month (Get-ReportMonth -MonthsBack 2)
+        $a | Should -Not -Be $b
+    }
+
+    It 'is safe to call twice for the same month' {
+        $m = Get-ReportMonth
+        $first  = Get-ReportFolder -Month $m
+        $second = Get-ReportFolder -Month $m
+        $second | Should -Be $first
+    }
+}
+
 Describe 'Get-JiraFieldId' {
 
     BeforeEach {

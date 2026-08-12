@@ -73,7 +73,7 @@ function Get-DeskSidePrivacyLeak {
 $version = Get-Content (Join-Path $src 'VERSION') -First 1 -ErrorAction SilentlyContinue
 if (-not $version) { $version = [DateTime]::UtcNow.ToString('yyyyMMddHHmmss') }
 
-if (-not $DestinationDir) { $DestinationDir = Get-ADToolOutputDir }
+if (-not $DestinationDir) { $DestinationDir = Get-ADToolOutputDir -Category 'Packages' }
 if (-not (Test-Path $DestinationDir)) { New-Item -ItemType Directory -Path $DestinationDir -Force | Out-Null }
 $zipPath = Join-Path $DestinationDir "DeskSideToolkit-$version.zip"
 

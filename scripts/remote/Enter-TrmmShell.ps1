@@ -66,8 +66,8 @@ if ($agent.status -ne 'online') {
 }
 
 # --- Session log -------------------------------------------------------------
-$outputDir = Get-ADToolOutputDir
-$shellLog = Join-Path -Path $outputDir -ChildPath ("RemoteShell-{0}-{1}.log" -f $ComputerName, (Get-Date -Format 'yyyyMMdd-HHmmss'))
+$outputDir = Get-ADToolOutputDir -Category 'Logs\RemoteSessions'
+$shellLog = Join-Path -Path $outputDir -ChildPath ("RemoteShell-{0}-{1}.log" -f $ComputerName, (Get-Date -Format 'yyyy-MM-dd HHmmss'))
 
 # --- The shell loop ----------------------------------------------------------
 Write-Host ""

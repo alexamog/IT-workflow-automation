@@ -366,15 +366,17 @@ Note: the user will be prompted to change the password on first login.
 }
 
 # --- 6. Reports --------------------------------------------------------------
-$outputDir = Get-ADToolOutputDir
-$stamp     = Get-Date -Format 'yyyyMMdd-HHmmss'
+# Each run gets its own folder under output\Reports\Onboarding, so one run's
+# files stay together. Resolved lazily below so a clean run with nothing to
+# report does not leave an empty folder behind.
+$runFolder = "Reports\Onboarding\{0}" -f (Get-Date -Format 'yyyy-MM-dd HHmmss')
 
 # Exceptions: everyone a human still has to deal with.
 $exceptions = @($notFound) + @($ambiguous) + $(if ($IncludeRoleMismatch) { @() } else { @($roleMismatch) })
 $exceptions = @($exceptions | Sort-Object LineNumber)
 
 if ($exceptions.Count) {
-    $exPath = Join-Path $outputDir "Onboarding-Exceptions-$stamp.csv"
+    $exPath = Join-Path (Get-ADToolOutputDir -Category $runFolder) "Exceptions.csv"
     $exceptions |
         Select-Object LineNumber, Name, Role, Location, Status,
                       @{ n = 'ADAccount'; e = { $_.Sam } },
@@ -385,7 +387,7 @@ if ($exceptions.Count) {
 }
 
 if ($messages.Count) {
-    $msgPath = Join-Path $outputDir "Onboarding-Messages-$stamp.txt"
+    $msgPath = Join-Path (Get-ADToolOutputDir -Category $runFolder) "Messages.txt"
     ($messages -join "`r`n") | Out-File -FilePath $msgPath -Encoding UTF8
     Write-Host "Confirmation details for the requester: $msgPath" -ForegroundColor Cyan
 }

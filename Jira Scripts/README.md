@@ -167,13 +167,15 @@ Two things the manual version could not tell you, printed underneath:
 > most recent month look artificially good while its slow tickets are still open.
 
 ### 3) Full pack
-Runs everything and writes three files into `output\`:
+Runs everything and writes three files into a folder for that month —
+`output\Reports\Monthly\2026-07\` — so each month's report stays together
+instead of the files piling up in one long list:
 
 | File | What it is |
 |------|-----------|
-| `Monthly-Report-YYYY-MM.html` | A formatted summary. **Open it and copy it straight into the monthly report or an email** — it uses inline styling so Outlook and Word keep the formatting when you paste. |
-| `Monthly-Report-YYYY-MM-sites.csv` | The tickets-per-site table on its own. |
-| `Monthly-Report-YYYY-MM-tickets.csv` | Every ticket that was counted, so any number can be checked. |
+| `Summary.html` | A formatted summary. **Open it and copy it straight into the monthly report or an email** — it uses inline styling so Outlook and Word keep the formatting when you paste. |
+| `Sites.csv` | The tickets-per-site table on its own. |
+| `Tickets.csv` | Every ticket that was counted, so any number can be checked. |
 
 ### About the phishing numbers
 

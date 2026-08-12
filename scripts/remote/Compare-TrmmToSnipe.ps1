@@ -81,8 +81,7 @@ Write-Host ("In Snipe-IT: {0}   Missing: {1}   Lookup errors: {2}" -f $found, $m
 if ($missing.Count -eq 0 -and $errors.Count -eq 0) { Write-Host "Every TRMM computer is in Snipe-IT." -ForegroundColor Green; return }
 
 # --- Write JSON + HTML -------------------------------------------------------
-$dir = Join-Path (Get-ADToolOutputDir) 'SnipeAudit'
-if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+$dir = Get-ADToolOutputDir -Category 'Audits\SnipeAudit'
 $stamp = Get-Date -Format 'yyyy-MM-dd HHmmss'
 $json  = Join-Path $dir "TRMM-Snipe Audit - $stamp.json"
 $html  = Join-Path $dir "TRMM-Snipe Audit - $stamp.html"

@@ -90,8 +90,7 @@ Write-Host ("Matched OK: {0}   Problems: {1}   ({2})" -f $ok, $problems.Count, (
 if ($problems.Count -eq 0) { Write-Host "Every TRMM serial is in Snipe-IT under the right hostname." -ForegroundColor Green; return }
 
 # --- Write JSON + HTML -------------------------------------------------------
-$dir = Join-Path (Get-ADToolOutputDir) 'SnipeAudit'
-if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+$dir = Get-ADToolOutputDir -Category 'Audits\SnipeAudit'
 $stamp = Get-Date -Format 'yyyy-MM-dd HHmmss'
 $json  = Join-Path $dir "Serial Audit - $stamp.json"
 $html  = Join-Path $dir "Serial Audit - $stamp.html"

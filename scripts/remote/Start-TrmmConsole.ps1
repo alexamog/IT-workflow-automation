@@ -123,9 +123,10 @@ Get-ItemProperty $keys -ErrorAction SilentlyContinue |
 
     Write-Host $out
     if ((Read-Host "Save this list to a file? (y/n)").Trim().ToUpper() -eq 'Y') {
-        $outputDir = Join-Path -Path $PSScriptRoot -ChildPath '..\..\output'
-        if (-not (Test-Path $outputDir)) { New-Item -ItemType Directory -Path $outputDir -Force | Out-Null }
-        $file = Join-Path $outputDir ("Installed Apps - {0} - {1}.txt" -f $agent.hostname, (Get-Date -Format 'yyyy-MM-dd HHmmss'))
+        # Use the shared helper rather than building the path by hand, so this
+        # lands in the same sorted structure as everything else the toolkit writes.
+        $outputDir = Get-ADToolOutputDir -Category 'Reports\InstalledApps'
+        $file = Join-Path $outputDir ("{0} - {1}.txt" -f $agent.hostname, (Get-Date -Format 'yyyy-MM-dd HHmmss'))
         $out | Out-File -FilePath $file -Encoding UTF8
         Write-Host "Saved: $file" -ForegroundColor Green
     }

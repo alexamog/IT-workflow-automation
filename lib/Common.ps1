@@ -81,9 +81,29 @@ $Global:ADTool = @{
 # Tool root = the parent of this lib folder. Output/Data are created on demand.
 function Get-ADToolRoot { Split-Path $PSScriptRoot -Parent }
 
+# Everything the toolkit generates lands under output\, sorted into folders by
+# what the file IS. Without this the folder became one long list you had to read
+# top to bottom to find last month's report. The shape:
+#
+#   output\
+#     Logs\                  things that are appended to forever
+#       RemoteSessions\      one transcript per remote session
+#     Reports\               things you produce, read, and send on
+#       Monthly\2026-07\     one folder per monthly run
+#       Offboarding\  Onboarding\  AD-Security-Events\  ...
+#     Audits\                comparisons between two systems
+#       SnipeAudit\  SnipeReports\
+#     Packages\              built share/standalone packages
+#
+# Pass the sub-path as -Category; it is created on demand. Called with no
+# arguments you still get the output\ root itself, which is what the publish and
+# packaging scripts want.
 function Get-ADToolOutputDir {
+    param([string]$Category)
+
     $dir = Join-Path (Get-ADToolRoot) 'output'
-    if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir | Out-Null }
+    if ($Category) { $dir = Join-Path $dir $Category }
+    if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
     $dir
 }
 
@@ -636,7 +656,7 @@ function Get-SnipeHardware {
     $all.ToArray()
 }
 
-# Write a report of a set of Snipe-IT assets to output\SnipeReports as JSON (for
+# Write a report of a set of Snipe-IT assets to output\Audits\SnipeReports as JSON (for
 # later parsing) and HTML (readable). $Criteria is a list of human-readable
 # strings describing what was searched for - keywords, or "status = Ready to
 # Deploy" style filters - shown as chips at the top of the report.
@@ -665,8 +685,7 @@ function Write-SnipeAssetReport {
         }
     }
 
-    $dir = Join-Path (Get-ADToolOutputDir) 'SnipeReports'
-    if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+    $dir = Get-ADToolOutputDir -Category 'Audits\SnipeReports'
     $stamp = Get-Date -Format 'yyyy-MM-dd HHmmss'
     $json  = Join-Path $dir "Asset Report - $stamp.json"
     $html  = Join-Path $dir "Asset Report - $stamp.html"
@@ -1000,7 +1019,7 @@ function Get-SpoRootUrl {
 }
 
 # --- Audit logging -----------------------------------------------------------
-# Append one row per change to output\AD-Toolkit-Actions.csv.
+# Append one row per change to output\Logs\AD-Toolkit-Actions.csv.
 function Write-ActionLog {
     param(
         [Parameter(Mandatory)][string]$Action,    # e.g. 'Reset Password'
@@ -1008,7 +1027,7 @@ function Write-ActionLog {
         [string]$Result  = 'Success',             # Success / Failed / Cancelled
         [string]$Details = ''
     )
-    $logPath = Join-Path (Get-ADToolOutputDir) 'AD-Toolkit-Actions.csv'
+    $logPath = Join-Path (Get-ADToolOutputDir -Category 'Logs') 'AD-Toolkit-Actions.csv'
     [PSCustomObject]@{
         Timestamp = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
         Operator  = $env:USERNAME
@@ -1019,7 +1038,7 @@ function Write-ActionLog {
     } | Export-Csv -Path $logPath -NoTypeInformation -Encoding UTF8 -Append
 }
 
-# Append a Snipe-IT asset-change event to output\Snipe-Asset-Changes.json.
+# Append a Snipe-IT asset-change event to output\Logs\Snipe-Asset-Changes.json.
 # The file is kept as a single JSON array so it's easy to read and audit.
 function Write-SnipeAssetLog {
     param(
@@ -1032,7 +1051,7 @@ function Write-SnipeAssetLog {
         [string]$Result  = 'Success',
         [string]$Details  = ''
     )
-    $logPath = Join-Path (Get-ADToolOutputDir) 'Snipe-Asset-Changes.json'
+    $logPath = Join-Path (Get-ADToolOutputDir -Category 'Logs') 'Snipe-Asset-Changes.json'
 
     $entry = [PSCustomObject]@{
         Timestamp = (Get-Date -Format 'o')   # ISO 8601

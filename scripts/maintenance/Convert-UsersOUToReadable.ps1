@@ -11,7 +11,7 @@
 . "$PSScriptRoot\..\..\lib\Common.ps1"
 
 $jsonPath = Join-Path (Get-ADToolDataDir)   'UsersOU-Paths.json'
-$mdPath   = Join-Path (Get-ADToolOutputDir) 'UsersOU-Navigation.md'
+$mdPath   = Join-Path (Get-ADToolOutputDir -Category 'Reports\AD-Structure') 'UsersOU-Navigation.md'
 
 if (-not (Test-Path $jsonPath)) {
     Write-Host "Cannot find $jsonPath - run Get-UsersOUPaths.ps1 first." -ForegroundColor Red
