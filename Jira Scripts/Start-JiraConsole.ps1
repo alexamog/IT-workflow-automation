@@ -25,7 +25,8 @@ $libFiles = @(
     "Data.ps1",         # read-only ticket fetching
     "Display.ps1",      # console rendering
     "Actions.ps1",      # ticket write operations
-    "Interaction.ps1"   # interactive menus
+    "Interaction.ps1",  # interactive menus
+    "Reports.ps1"       # monthly reporting pack (read-only)
 )
 foreach ($file in $libFiles) {
     . (Join-Path $PSScriptRoot "lib\$file")
@@ -55,12 +56,13 @@ Write-Host "Signed in as $script:MyDisplayName" -ForegroundColor Green
         Write-ToolMenuItem -Key 3 -Label 'Find / search tickets' -Note 'key, keyword, reporter, assignee, status...'
         Write-ToolMenuItem -Key 4 -Label 'Fix missing organizations' -Note 'suggest from history / AD department'
         Write-ToolMenuItem -Key 5 -Label 'Undo organization changes' -Note 'from the log'
+        Write-ToolMenuItem -Key 6 -Label 'Monthly reports' -Note 'ticket numbers by site, CSAT, first response'
         Write-ToolMenuItem -Key 'Q' -Label 'Quit'
         Write-Host ''
     }
     else {
         Write-Host "`n=== JIRA SERVICE CONSOLE ===" -ForegroundColor Cyan
-        Write-Host "  1) My tickets   2) Unassigned   3) Search   4) Fix orgs   5) Undo orgs   Q) Quit"
+        Write-Host "  1) My tickets   2) Unassigned   3) Search   4) Fix orgs   5) Undo orgs   6) Monthly reports   Q) Quit"
     }
 
     $choice = (Read-Host "  Select").Trim().ToUpper()
@@ -70,6 +72,7 @@ Write-Host "Signed in as $script:MyDisplayName" -ForegroundColor Green
         "3" { Invoke-TicketSearch }
         "4" { Invoke-FixMissingOrgs }
         "5" { Invoke-RevertOrgChanges }
+        "6" { Invoke-MonthlyReports }
         "Q" { break mainMenu }   # break the loop, not just the switch
         default { Write-Host "Unknown option." -ForegroundColor DarkGray }
     }

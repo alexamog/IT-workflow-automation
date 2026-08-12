@@ -19,6 +19,11 @@ function Get-IssueByJql {
         every page. Returns an empty array on error (after printing the reason).
     .PARAMETER Jql
         A JQL query string, e.g. 'assignee = currentUser() AND statusCategory != Done'.
+    .PARAMETER Fields
+        Comma-separated list of fields to request. Defaults to the standard
+        ticket fields used by the list and detail views. Reports pass their own
+        list so they can pull custom fields (satisfaction, SLA, organizations)
+        without bloating every other query.
     .OUTPUTS
         System.Object[] - the array of issue objects (may be empty).
     .EXAMPLE
@@ -26,14 +31,19 @@ function Get-IssueByJql {
     #>
     [CmdletBinding()]
     [OutputType([object[]])]
-    param([Parameter(Mandatory)][string]$Jql)
+    param(
+        [Parameter(Mandatory)][string]$Jql,
+        [string]$Fields
+    )
+
+    if (-not $Fields) { $Fields = $script:TicketFields }
 
     $issues = @()
     $nextPageToken = $null
     do {
         $uri = "$script:BaseUrl/rest/api/3/search/jql?jql=" +
                [uri]::EscapeDataString($Jql) +
-               "&fields=$script:TicketFields&maxResults=100"
+               "&fields=$Fields&maxResults=100"
         if ($nextPageToken) { $uri += "&nextPageToken=$nextPageToken" }
         try {
             $response = Invoke-RestMethod -Uri $uri -Headers $script:Headers -Method Get

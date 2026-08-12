@@ -17,8 +17,8 @@ change in one place has a predictable blast radius.
 ```
 Start-JiraConsole.ps1        (entry point: loads lib/, shows the main menu)
         |
-   lib/Interaction.ps1       (UI flow: menus, prompts, ties everything together)
-        |            \
+   lib/Interaction.ps1       lib/Reports.ps1   (UI flow / monthly reporting pack)
+        |            \            |
    lib/Display.ps1    lib/Actions.ps1     (render tickets / change tickets)
         |            /
    lib/Data.ps1                            (read-only fetching via JQL + issue GET)
@@ -41,6 +41,30 @@ Start-JiraConsole.ps1        (entry point: loads lib/, shows the main menu)
   `Add-TicketWorklog`, `Complete-Ticket`.
 - **Interaction** — the interactive glue: `Enter-Ticket` (single-ticket menu),
   `Invoke-TicketLookup`, `Invoke-TicketBrowser` (list browser).
+- **Reports** — the monthly reporting pack (`Invoke-MonthlyReports`). Sits beside
+  Interaction rather than under it: it is its own menu, and it only ever reads.
+  Splits into `Get-*Report` functions that return plain objects, `Show-*Report`
+  functions that print them, and `Export-MonthlyReport` which writes the files.
+  Keeping "work out the numbers" separate from "print the numbers" is what lets
+  the tests check the maths without a console or a network.
+
+### Custom fields in the reports
+
+The reports need three fields that are **not** part of core Jira: Organizations,
+Satisfaction, and the Time to first response SLA. Their ids (`customfield_10025`
+and friends) are assigned per Jira site, so they are **never hard-coded**.
+`Initialize-JiraContext` caches the full field list in `$script:AllFields`, and
+`Get-JiraFieldId -Name 'Satisfaction'` looks an id up by the name shown in the
+Jira UI. A site that does not have a field gets `$null` back, and the report
+skips that metric instead of failing.
+
+> **Watch out.** Do not write `$script:AllFields = @(Invoke-RestMethod ...)`.
+> Under PowerShell 5.1 that wraps the `object[]` the call already returns inside
+> a *second* array, so `AllFields` ends up holding one element containing all 170
+> fields. Every lookup then returns every id at once, those get pasted into the
+> `fields=` query string, Jira ignores them, and the report comes back empty with
+> no error anywhere. Assign first, then copy the items across in a loop.
+> `tests\Reports.Tests.ps1` has a test pinning this down.
 
 ## How the files share state
 
@@ -75,6 +99,14 @@ stores once. Secrets are never written into the script files.
 | Assign             | `PUT  /rest/api/3/issue/{key}/assignee`               |
 | Log work           | `POST /rest/api/3/issue/{key}/worklog`                |
 | Transitions        | `GET/POST /rest/api/3/issue/{key}/transitions`        |
+| Field ids by name  | `GET  /rest/api/3/field`                              |
+| Project statuses   | `GET  /rest/api/3/project/{key}/statuses`             |
+| Phishing results   | `GET  https://graph.microsoft.com/beta/security/attackSimulation/simulations` |
+
+The last row is Microsoft Graph, not Jira, and is the only optional one: it needs
+the `Microsoft.Graph` module plus admin consent for `AttackSimulation.Read.All`.
+Without it the phishing section falls back to asking the operator for the two
+percentages. See the README for the one-time setup.
 
 Note the split: **reading** comments uses the core API (clean rendered HTML +
 the `jsdPublic` flag), while **writing** comments uses the Service Desk API
