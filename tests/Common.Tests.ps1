@@ -1283,6 +1283,37 @@ Describe 'Test-DeskSideProtectedAccount (org-agnostic profile protection)' {
     }
 }
 
+Describe 'No @(Invoke-RestMethod ...) anywhere in the source' {
+
+    # Under PowerShell 5.1, Invoke-RestMethod hands back a JSON array as ONE
+    # object, so wrapping the call in @() nests it inside a second array: 20
+    # results become 1 item whose contents are the 20. It fails silently - no
+    # error, just wrong counts - and it has bitten this codebase twice
+    # (Jira field lookup, Jira user search). Capture into a variable first,
+    # then wrap: $r = Invoke-RestMethod ...; @($r).
+    #
+    # A mocked test cannot reproduce this: a PowerShell function stand-in
+    # enumerates its output, so the bug disappears under mocking and the test
+    # would pass either way. Guarding the source text is the honest check.
+
+    It 'never wraps Invoke-RestMethod directly in @()' {
+        $root = Split-Path $PSScriptRoot -Parent
+        $offenders = @(
+            Get-ChildItem -Path $root -Recurse -Filter *.ps1 |
+                Where-Object {
+                    $_.FullName -notlike '*\.git\*' -and
+                    $_.FullName -notlike '*API-Examples*' -and
+                    $_.FullName -notlike "$root\tests\*"   # tests name the pattern to describe it
+                } |
+                Select-String -Pattern '@\(\s*Invoke-RestMethod' |
+                # Comments explaining the trap are not the trap.
+                Where-Object { -not $_.Line.Trim().StartsWith('#') } |
+                ForEach-Object { "$($_.Filename):$($_.LineNumber)" }
+        )
+        $offenders -join ', ' | Should -BeNullOrEmpty
+    }
+}
+
 Describe 'Get-ADToolDomainDN' {
 
     It 'returns the configured DN when one is set' {

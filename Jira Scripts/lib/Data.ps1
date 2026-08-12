@@ -187,8 +187,11 @@ function Find-JiraUser {
     param([Parameter(Mandatory)][string]$Query)
 
     $uri = "$script:BaseUrl/rest/api/3/user/search?query=" + [uri]::EscapeDataString($Query) + "&maxResults=20"
-    try { return @(Invoke-RestMethod -Uri $uri -Headers $script:Headers -Method Get) }
+    # Capture then wrap. @(Invoke-RestMethod ...) nests the returned array inside
+    # another one, so every match collapses into a single item.
+    try { $resp = Invoke-RestMethod -Uri $uri -Headers $script:Headers -Method Get }
     catch { Write-Host "User search failed: $($_.Exception.Message)" -ForegroundColor Red; return @() }
+    return @($resp)
 }
 
 function Get-Ticket {

@@ -314,9 +314,19 @@ if ($cloudTargets.Count -gt 0 -and
 
         # 2. Remove the E1 licence (only if the user actually has it).
         if ($e1Sku) {
+            # If the lookup itself fails, say so. Treating it as "no licence"
+            # would silently leave a leaver licensed and report success.
             $has = $false
-            try { $has = @(Get-MgUserLicenseDetail -UserId $upn -ErrorAction Stop | Where-Object { $_.SkuId -eq $e1Sku.SkuId }).Count -gt 0 } catch { }
-            if (-not $has) { Write-Host "    No Office 365 E1 licence to remove." -ForegroundColor DarkGray }
+            $lookupFailed = $null
+            try { $has = @(Get-MgUserLicenseDetail -UserId $upn -ErrorAction Stop | Where-Object { $_.SkuId -eq $e1Sku.SkuId }).Count -gt 0 }
+            catch { $lookupFailed = $_.Exception.Message }
+
+            if ($lookupFailed) {
+                Write-Host "    Could not check the E1 licence: $lookupFailed" -ForegroundColor Red
+                Write-Host "    Remove it by hand in the M365 admin centre." -ForegroundColor Yellow
+                Write-ActionLog -Action 'Offboard: Remove E1 Licence' -Target $upn -Result 'Failed' -Details "Licence lookup failed: $lookupFailed"
+            }
+            elseif (-not $has) { Write-Host "    No Office 365 E1 licence to remove." -ForegroundColor DarkGray }
             elseif (Set-M365UserLicense -UserId $upn -SkuId $e1Sku.SkuId -Action Remove) {
                 Write-Host "    Office 365 E1 licence removed." -ForegroundColor Green
                 Write-ActionLog -Action 'Offboard: Remove E1 Licence' -Target $upn

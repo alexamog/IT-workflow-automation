@@ -398,7 +398,6 @@ function Copy-RemotePrinter ($SourceAgent, $SourceState) {
     $chosen | ForEach-Object { Write-Host ("    - {0}   driver '{1}'   -> {2}" -f $_.Name, $_.Driver, $_.Ip) }
     if ((Read-Host "  Go ahead? (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled." -ForegroundColor DarkGray; return $false }
 
-    $any = $false
     foreach ($p in $chosen) {
         Write-Host "`n  $($p.Name)..." -ForegroundColor DarkGray
         if ($targetState.Printers | Where-Object { $_.Name -eq $p.Name }) {
@@ -418,7 +417,6 @@ function Copy-RemotePrinter ($SourceAgent, $SourceState) {
             Write-Host "    Copied ($($r.Note))." -ForegroundColor Green
             Write-ActionLog -Action 'Printer: Copy' -Target $target.hostname `
                 -Details "$($p.Name) from $($SourceAgent.hostname) -> $($p.Ip), driver '$($p.Driver)' ($($r.Note))"
-            $any = $true
         }
         else {
             Write-Host "    Did not copy: $($r.Note)" -ForegroundColor Red

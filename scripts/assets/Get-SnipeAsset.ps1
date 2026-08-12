@@ -156,7 +156,8 @@ function Edit-Assignment($a) {
 # reassignment works). Returns the refreshed asset.
 function Set-Assignment($a, $type, $field, $targetId, $targetName) {
     if ($a.assigned_to) {
-        try { Invoke-SnipeRequest -Path "hardware/$($a.id)/checkin" -Method POST -Body '{}' | Out-Null } catch { }
+        try { Invoke-SnipeRequest -Path "hardware/$($a.id)/checkin" -Method POST -Body '{}' | Out-Null }
+        catch { Write-Host "Check-in first failed: $($_.Exception.Message)" -ForegroundColor Yellow }
     }
     $body = @{ checkout_to_type = $type; status_id = $a.status_label.id; $field = $targetId }
     try { $resp = Invoke-SnipeRequest -Path "hardware/$($a.id)/checkout" -Method POST -Body ($body | ConvertTo-Json) }

@@ -86,12 +86,16 @@ function Set-TicketAssignee {
     # Only users who can actually be assigned to this specific issue.
     $uri = "$script:BaseUrl/rest/api/3/user/assignable/search?issueKey=$Key&query=" +
            [uri]::EscapeDataString($query) + "&maxResults=20"
+    # Capture then wrap. @(Invoke-RestMethod ...) nests the returned array inside
+    # another one, which made 20 matches look like a single result and
+    # auto-selected the whole array as the assignee.
     try {
-        $users = @(Invoke-RestMethod -Uri $uri -Headers $script:Headers -Method Get)
+        $resp = Invoke-RestMethod -Uri $uri -Headers $script:Headers -Method Get
     } catch {
         Write-Host "Could not search users: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
+    $users = @($resp)
 
     $users = @($users | Where-Object { $_.active -ne $false })
     if ($users.Count -eq 0) { Write-Host "No assignable users matched '$query'." -ForegroundColor Yellow; return $false }
