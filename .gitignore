@@ -31,6 +31,17 @@ Jira Scripts/logs/
 # They are authored work, not scratch: keep them, just keep them out of git.
 /KB-Drafts/
 
+# --- Profile keep lists ------------------------------------------------------
+# Remove-UnlistedProfiles takes a -KeepFile listing the people whose Windows
+# profile must survive a cleanup, so every one of these files is a list of real
+# staff names. One was committed by mistake; these patterns stop that repeating.
+# Pass the file by path from anywhere - it never needs to live in the project.
+profile_keep.txt
+profile-keep.txt
+profiles_keep.txt
+keep-list.txt
+*keep*.txt
+
 # --- Published editions ------------------------------------------------------
 # Publish-Standalone.ps1 writes these as sibling folders, but ignore them here
 # too in case anyone ever publishes into the project folder by mistake.
