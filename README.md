@@ -4,8 +4,8 @@ Menu-driven PowerShell tools for AD, Snipe-IT, Jira, and Tactical RMM: password
 resets, lockouts, account state, lookups, OU moves, asset management,
 issue tracking, and remote machine maintenance.
 
-> **Taking this over?** Read `documentation\DEVELOPER-GUIDE.md` (how it fits together, how
-> to extend).
+> **Taking this over?** Everything is in this file. Each script also carries its
+> own comment-based help - run `Get-Help .\scripts\<folder>\<Script>.ps1 -Full`.
 
 ## Quick start
 
@@ -21,13 +21,13 @@ Examples). Most user scripts take a **SAM** (`alex.amog`) or **UPN**
 
 | Folder | Contents |
 | ------ | -------- |
-| `.\` | `AD-Toolkit.ps1` launcher, `Start-DeskSide.ps1`/`.cmd` (auto-updating launcher), `Publish-ToShare.ps1`, `Build-SharePackage.ps1`, `Publish-Standalone.ps1`, `VERSION` |
+| `.\` | `AD-Toolkit.ps1` launcher, `Start-DeskSide.ps1`/`.cmd`, `Run-Tests.ps1` |
 | `setup\` | `Set-ToolConfig`, `Set-SnipeCredentials`, `Set-TacticalCredentials` |
 | `lib\` | `Common.ps1` - shared config + helpers |
 | `scripts\` | Task scripts, grouped by category (below) |
 | `data\` | Reference data (e.g. `UsersOU-Paths.json`) |
 | `output\` | Everything generated: `Logs\`, `Reports\`, `Audits\`, `Packages\` |
-| `documentation\` | All written material: `DEVELOPER-GUIDE.md`, `DEPLOYMENT.md`, `API-Examples\` (REST/AD skeletons) |
+| `tests\` | Pester checks, run by `Run-Tests.ps1` |
 
 ### scripts\ subfolders
 
@@ -40,14 +40,12 @@ Examples). Most user scripts take a **SAM** (`alex.amog`) or **UPN**
 | `sharepoint\` | Manage-SharePointSite |
 | `onboarding\` | New-UserOnboarding, Start-BatchOnboarding |
 | `offboarding\` | Start-Offboarding |
-| `maintenance\` | Remove-UnlistedProfiles (run directly or via the Tactical RMM standalone edition) |
+| `maintenance\` | Remove-UnlistedProfiles (run directly; not on the menu) |
 | `remote\` | Start-TrmmConsole (hub), profile + printer + fleet tools, Snipe-IT audits |
 
 Launcher auto-discovers features from `*.tool.psd1` manifests - see
-[`documentation\DEVELOPER-GUIDE.md`](documentation/DEVELOPER-GUIDE.md). **Jira**
-is a self-contained console in `Jira Scripts\` (own launcher, `lib\`, docs); its
-manifest puts it on the menu. **`documentation\API-Examples\`** holds copy-paste
-REST/AD skeletons for building new scripts.
+[Adding a feature](#adding-a-feature). **Jira** is a self-contained console in
+`Jira Scripts\` (own launcher, `lib\`, docs); its manifest puts it on the menu.
 
 ## Menu options
 
@@ -135,7 +133,7 @@ Roles are recognised by shape - `Cas SRW`, `Cas PEER`, position codes like
 so a role line is never mistaken for a person and looked up in AD. A line that
 looks like a role but has no name above it is reported rather than dropped.
 
-A worked example is in [`documentation\sample-staff-list.txt`](documentation/sample-staff-list.txt).
+Both examples above are complete files - copy either shape into a `.txt` and go.
 
 Neither script changes anything until you have seen the plan and agreed to it.
 People whose name is not in AD, whose name matches more than one account, or
@@ -416,11 +414,53 @@ are needed - safe to run any time. Run it after changing `lib\Common.ps1`. Needs
 Pester 5 or newer; the script prints the install command if the PC only has the
 old built-in version.
 
-## Changing the toolkit
+## Adding a feature
 
-Adding a feature, the shared library, conventions, and the PowerShell traps this
-codebase has already hit are all in
-[`documentation\DEVELOPER-GUIDE.md`](documentation/DEVELOPER-GUIDE.md).
+The launcher auto-discovers features, so you never edit `AD-Toolkit.ps1`. Two
+files in the feature's own folder:
+
+1. `scripts\<category>\Verb-Noun.ps1`. If it needs shared helpers, first line:
+   ```powershell
+   . "$PSScriptRoot\..\..\lib\Common.ps1"
+   ```
+   Using AD cmdlets? Add `#Requires -Modules ActiveDirectory`.
+2. `scripts\<category>\Verb-Noun.tool.psd1` beside it:
+   ```powershell
+   @{ Category = 'Lookups & Info'; Label = 'Show stale accounts'; Order = 63 }
+   ```
+
+An existing `Category` adds to that section; a new one makes a section. `Order`
+sets position (lower first). Deleting or renaming a feature means touching only
+those two files. The script still runs directly - the manifest is only read by
+the launcher.
+
+For a new external system, add its settings to `$ADTool` in `lib\Common.ps1`
+(environment variable + default) and a request wrapper next to
+`Invoke-SnipeRequest`.
+
+### Shared library (`lib\Common.ps1`)
+
+- `Resolve-ADToolUser` / `Resolve-ADToolUserByName` - look up by SAM, UPN or full name
+- `ConvertTo-LdapEscapedString` - make typed text safe for an LDAP search
+- `Get-ADToolDC` - PDC emulator unless `-Server` is given
+- `Select-FromList` - numbered picker
+- `Confirm-DeskSideAction` - the standard confirmation prompt
+- `Invoke-SnipeRequest` - Snipe-IT REST wrapper (auth, TLS)
+- `Test-TrmmConfigured` / `Invoke-TrmmRequest` / `Invoke-TrmmAgentCommand` - Tactical RMM
+- `Connect-ExoSession` / `Connect-MgGraphSession` / `Connect-SpoSession` - cloud sign-ins
+- `Get-ADToolOutputDir -Category` / `Get-ADToolDataDir` - file locations
+- `Write-ActionLog` (CSV) / `Write-SnipeAssetLog` (JSON) / `Write-DeskSideFailure`
+- `Write-DeskSideHtmlReport` / `ConvertTo-HtmlEncodedText` - report output
+
+### Two PowerShell 5.1 traps this codebase has already hit
+
+- **`@(Invoke-RestMethod ...)`** nests the array the call already returns inside
+  a second one, so 20 results become 1. Capture first, then wrap:
+  `$r = Invoke-RestMethod ...; @($r)`. A test guards the whole source tree.
+- **A non-ASCII character in a `.ps1`** read as ANSI becomes three characters,
+  the last a curly quote, which silently ends a string and breaks parsing far
+  from the real line. Write hyphens, not dashes. A test checks the raw bytes of
+  every `.ps1`, `.psd1` and `.md`.
 
 ## Audit logs
 
@@ -471,44 +511,14 @@ toolkit runs as the local SYSTEM account (see `Test-RunningAsSystem` in
 AD features, start the toolkit from a session that already has the rights it
 needs. Each step reports plainly if the account lacks permission.
 
-## Standalone editions and Core
+## Sharing the toolkit
 
-Standalone tools live in `..\Standalone Editions\` - self-contained, same
-auto-discovering launcher (`Start-Toolkit.ps1`), only their features + setup.
+Copy the folder. There is no packaging step: give someone the project folder and
+they run `AD-Toolkit.ps1`, or `Start-DeskSide.cmd` if they want the launcher.
 
-**Generated - don't edit by hand.** `Publish-Standalone.ps1` builds them from
-this project (no drift): change a feature here, re-run.
-
-```powershell
-.\Publish-Standalone.ps1                       # all + Core
-.\Publish-Standalone.ps1 -Edition TacticalRMM  # one
-.\Publish-Standalone.ps1 -Edition Core
-```
-
-- `..\Standalone Editions\Snipe-IT Tool\` - assets. No AD.
-- `..\Standalone Editions\Tactical RMM Tool\` - remote cleanup, send, shell, fleet, local cleanup. No AD.
-- `..\Desk Side Tool - Core\` - whole runnable project, docs stripped. One folder.
-
-Edit the `$editions` list (or Core exclude list) atop `Publish-Standalone.ps1` to
-change. **Jira Console** is in the collection too but has its own `lib\` and is
-**not** publisher-generated - sync by hand.
-
-## Sharing and auto-update
-
-Two ways to get the toolkit to other people:
-
-```powershell
-.\Build-SharePackage.ps1                                        # a one-off zip
-.\Publish-ToShare.ps1 -ShareRoot \\server\share\DeskSideToolkit  # shared drive
-```
-
-Both refuse to build if anything private (live `output\`, `data\`, exported Jira
-tickets) would reach the package, so a share can never carry staff names,
-hostnames, or ticket PII. With the shared drive, everyone runs
-`Start-DeskSide.cmd` and picks up the newest version automatically.
-
-Step-by-step walkthrough, written for a non-coder:
-[`documentation\DEPLOYMENT.md`](documentation/DEPLOYMENT.md).
+Before copying, **leave out `output\` and `data\`** - those hold real hostnames,
+staff names and ticket exports from your machine. Everything else is safe to
+share.
 
 ## Requirements
 

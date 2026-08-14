@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Shared library for Desk Side Toolkit.
 
@@ -148,93 +148,6 @@ function Get-ADToolDataDir {
     $dir = Join-Path (Get-ADToolRoot) 'data'
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir | Out-Null }
     $dir
-}
-
-# --- Packaging exclusions ----------------------------------------------------
-# THE single rule for "do not ship this" - used by both Build-SharePackage.ps1
-# (the zip) and Publish-ToShare.ps1 (the shared-drive copy). Keeping it here
-# means the zip and the share can never drift apart on what they leave out.
-#
-# Given a path RELATIVE to the project root, returns $true if it must be left
-# out of a shared/published copy. The two reasons to exclude:
-#   1. REAL DATA (privacy) - output\ and Jira Scripts\output\ hold live
-#      hostnames, staff names, and exported ticket PII; data\ is this machine's
-#      own OU paths. None of that belongs in a copy handed to someone else.
-#   2. LOCAL / DEV noise - .git, .claude, generated standalone editions, temp
-#      and corrupt files: not useful in a running copy.
-function Test-DeskSidePathExcluded {
-    param([Parameter(Mandatory)][string]$RelativePath)
-
-    $parts = @(($RelativePath -replace '/', '\') -split '\\' | Where-Object { $_ })
-    if ($parts.Count -eq 0) { return $false }
-
-    # Names dropped wherever they appear in the path (folder or file).
-    #   'logs'      - "Jira Scripts\logs\org-changes.json" records every
-    #                 organisation change the Jira console makes, including real
-    #                 ticket keys, reporter names and organisation names.
-    #   'KB-Drafts' - knowledge-base articles waiting to be published. They quote
-    #                 the real organisation name, mail domain and ticket numbers.
-    $excludeNames = @('output', 'data', 'logs', 'KB-Drafts', '.git', '.claude',
-        'Standalone Editions', 'Desk Side Tool - Core')
-    foreach ($p in $parts) { if ($excludeNames -contains $p) { return $true } }
-
-    # Leaf-name patterns.
-    $leaf = $parts[-1]
-    if ($leaf -eq 'settings.local.json')  { return $true }
-    if ($leaf -like 'My-Completed-Tickets*') { return $true }  # ticket PII, belt-and-braces
-    if ($leaf -like '*.corrupt-*')        { return $true }
-    if ($leaf -like '*.tmp')              { return $true }
-
-    return $false
-}
-
-# Copy the project into $StageRoot, applying the exclusion rule above. Returns
-# the number of files copied.
-#
-# Lives here, next to the rule it enforces, because both Build-SharePackage.ps1
-# (the zip) and Publish-ToShare.ps1 (the shared-drive copy) need it. They used
-# to hold their own byte-identical copies, which is exactly how the zip and the
-# share drift apart on what they leave out.
-function New-DeskSideStage {
-    param(
-        [Parameter(Mandatory)][string]$SourceRoot,
-        [Parameter(Mandatory)][string]$StageRoot
-    )
-    if (Test-Path $StageRoot) { Remove-Item $StageRoot -Recurse -Force }
-    New-Item -ItemType Directory -Path $StageRoot -Force | Out-Null
-
-    $count = 0
-    # No -Force: Windows marks the .git folder hidden, so it is skipped here and
-    # we never even walk it. Everything else we want is visible.
-    foreach ($f in Get-ChildItem $SourceRoot -Recurse -File) {
-        $rel = $f.FullName.Substring($SourceRoot.Length).TrimStart('\', '/')
-        if (Test-DeskSidePathExcluded -RelativePath $rel) { continue }
-        $target = Join-Path $StageRoot $rel
-        $dir = Split-Path $target -Parent
-        if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
-        Copy-Item -Path $f.FullName -Destination $target -Force
-        $count++
-    }
-    return $count
-}
-
-# The last line of defence: look at what is ACTUALLY staged and refuse to ship
-# if anything private is in it. Deliberately a second, independent check rather
-# than trusting the rule above - a mistake in the rule is precisely the case
-# this needs to catch. Returns the offending items (empty means clean).
-function Get-DeskSidePrivacyLeak {
-    param([Parameter(Mandatory)][string]$StageRoot)
-
-    # The subset of the exclusion list that exists for PRIVACY rather than
-    # tidiness. Shipping .git is untidy; shipping output\ or KB-Drafts\
-    # discloses real data, and only the second is worth refusing to ship over.
-    $privateNames = @('output', 'data', 'logs', 'KB-Drafts')
-
-    @(Get-ChildItem $StageRoot -Recurse | Where-Object {
-        $parts = @(($_.FullName.Substring($StageRoot.Length)) -split '[\\/]' | Where-Object { $_ })
-        (@($parts | Where-Object { $privateNames -contains $_ }).Count -gt 0) -or
-        ($_.Name -like 'My-Completed-Tickets*')
-    })
 }
 
 # --- Domain controller selection ---------------------------------------------
