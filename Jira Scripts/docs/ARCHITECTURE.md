@@ -31,8 +31,10 @@ Start-JiraConsole.ps1        (entry point: loads lib/, shows the main menu)
 - **Context** — configuration (`$script:AttentionStatus`, `$script:ProjectKey`)
   and `Initialize-JiraContext`, which authenticates and stores the shared
   `$script:BaseUrl`, `$script:Headers`, `$script:MyAccountId`.
-- **Helpers** — pure functions with no API calls: `Get-TimeAgo`, `Get-AgeColor`,
-  `Format-Cell`, `Read-MultiLine`, `Convert-HtmlToText`. Easiest place to test.
+- **Helpers** — pure functions with no API calls: `Get-TimeAgo`,
+  `ConvertTo-TicketJql`, `Sort-TicketForDisplay`, `Format-Cell`,
+  `Read-MultiLine`, `Convert-HtmlToText`, `Get-AdfText`,
+  `Get-TicketKeywordOrg`, and the two Jira error readers. Easiest place to test.
 - **Data** — read-only: `Get-IssueByJql`, `Get-MyTicket`, `Get-UnassignedTicket`,
   `Get-Ticket`. Never modifies a ticket.
 - **Display** — console rendering: `Show-TicketList` (the aligned table) and
@@ -131,7 +133,7 @@ the `jsdPublic` flag), while **writing** comments uses the Service Desk API
 Lint with PSScriptAnalyzer before committing:
 
 ```powershell
-Invoke-ScriptAnalyzer -Path . -Recurse -ExcludeRule PSAvoidUsingWriteHost
+Invoke-ScriptAnalyzer -Path . -Recurse -Settings ..\..\PSScriptAnalyzerSettings.psd1
 ```
 
 `PSAvoidUsingWriteHost` is excluded on purpose (see above). The tree should

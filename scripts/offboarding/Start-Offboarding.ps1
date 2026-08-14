@@ -230,7 +230,7 @@ if ($stillEnabled.Count -gt 0) {
         $stillEnabled | ForEach-Object { Show-Leaver $_ }
         Write-Host ""
         Write-Host "Disabling an account signs the person out of the domain and blocks new logins." -ForegroundColor Yellow
-        if ((Read-Host "Disable all $($stillEnabled.Count) account(s) listed above? (Y/N)") -match '^[Yy]') {
+        if (Confirm-DeskSideAction "Disable all $($stillEnabled.Count) account(s) listed above?" -Quiet) {
             $approved = $stillEnabled
         }
         else {
@@ -312,7 +312,7 @@ foreach ($p in $approved) {
 # and skips cleanly (no mailbox / not licensed / could not connect).
 $cloudTargets = @(@($alreadyDisabled) + @($justDisabled) | Where-Object { $_.Upn })
 if ($cloudTargets.Count -gt 0 -and
-    (Read-Host "`nAlso convert the mailbox to shared and remove the Office 365 E1 licence for $($cloudTargets.Count) account(s)? (Y/N)").Trim().ToUpper() -eq 'Y') {
+    (Confirm-DeskSideAction "Also convert the mailbox to shared and remove the Office 365 E1 licence for $($cloudTargets.Count) account(s)?" -Quiet)) {
 
     $exoOk   = Connect-ExoSession
     $mgOk    = Connect-MgGraphSession
@@ -342,25 +342,30 @@ if ($cloudTargets.Count -gt 0 -and
         }
 
         # 2. Remove the E1 licence (only if the user actually has it).
+        # "We could not read the licences" is NOT the same as "there is no
+        # licence to remove". This used to swallow the error and print the
+        # reassuring line, which left a leaver still holding a paid licence
+        # with nothing in the audit log to show it.
         if ($e1Sku) {
-            # If the lookup itself fails, say so. Treating it as "no licence"
-            # would silently leave a leaver licensed and report success.
-            $has = $false
-            $lookupFailed = $null
-            try { $has = @(Get-MgUserLicenseDetail -UserId $upn -ErrorAction Stop | Where-Object { $_.SkuId -eq $e1Sku.SkuId }).Count -gt 0 }
-            catch { $lookupFailed = $_.Exception.Message }
+            $licences   = $null
+            $couldCheck = $true
+            try { $licences = @(Get-MgUserLicenseDetail -UserId $upn -ErrorAction Stop) }
+            catch {
+                $couldCheck = $false
+                Write-Host "    Could not check the licences - the E1 licence has NOT been removed: $($_.Exception.Message)" -ForegroundColor Yellow
+                Write-ActionLog -Action 'Offboard: Remove E1 Licence' -Target $upn -Result 'Failed' -Details "Could not read licences - $($_.Exception.Message)"
+            }
 
-            if ($lookupFailed) {
-                Write-Host "    Could not check the E1 licence: $lookupFailed" -ForegroundColor Red
-                Write-Host "    Remove it by hand in the M365 admin centre." -ForegroundColor Yellow
-                Write-ActionLog -Action 'Offboard: Remove E1 Licence' -Target $upn -Result 'Failed' -Details "Licence lookup failed: $lookupFailed"
+            if ($couldCheck) {
+                if (@($licences | Where-Object { $_.SkuId -eq $e1Sku.SkuId }).Count -eq 0) {
+                    Write-Host "    No Office 365 E1 licence to remove." -ForegroundColor DarkGray
+                }
+                elseif (Set-M365UserLicense -UserId $upn -SkuId $e1Sku.SkuId -Action Remove) {
+                    Write-Host "    Office 365 E1 licence removed." -ForegroundColor Green
+                    Write-ActionLog -Action 'Offboard: Remove E1 Licence' -Target $upn
+                }
+                else { Write-ActionLog -Action 'Offboard: Remove E1 Licence' -Target $upn -Result 'Failed' }
             }
-            elseif (-not $has) { Write-Host "    No Office 365 E1 licence to remove." -ForegroundColor DarkGray }
-            elseif (Set-M365UserLicense -UserId $upn -SkuId $e1Sku.SkuId -Action Remove) {
-                Write-Host "    Office 365 E1 licence removed." -ForegroundColor Green
-                Write-ActionLog -Action 'Offboard: Remove E1 Licence' -Target $upn
-            }
-            else { Write-ActionLog -Action 'Offboard: Remove E1 Licence' -Target $upn -Result 'Failed' }
         }
     }
 }

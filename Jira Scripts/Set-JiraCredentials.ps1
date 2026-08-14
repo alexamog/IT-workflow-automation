@@ -6,7 +6,7 @@
     plain text anywhere in this folder.
 
     After running it, CLOSE and REOPEN PowerShell so the new variables load,
-    then run Get-MyJiraTickets.ps1.
+    then run Start-JiraConsole.ps1.
 #>
 
 Write-Host "Setting up Jira credentials (stored as user environment variables)..." -ForegroundColor Cyan
@@ -29,4 +29,4 @@ $baseUrl = $baseUrl.TrimEnd('/')
 [System.Environment]::SetEnvironmentVariable('JIRA_API_TOKEN', $token, 'User')
 
 Write-Host ""
-Write-Host "Saved. Close and reopen PowerShell, then run Get-MyJiraTickets.ps1" -ForegroundColor Green
+Write-Host "Saved. Close and reopen PowerShell, then run Start-JiraConsole.ps1" -ForegroundColor Green

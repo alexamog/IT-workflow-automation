@@ -10,9 +10,8 @@
 
     Settings handled here (all non-secret):
       SNIPEIT_URL        - Snipe-IT API base URL
-      AD_DOMAIN_DN  - AD domain DN (blank = auto-detected from the domain)
-      AD_SOURCE_OU  - the "Unmatched Accounts" OU (for the reports)
-      AD_REGIONS    - semicolon-separated list of region OUs
+      AD_SOURCE_OU       - the "Unmatched Accounts" OU (for the reports)
+      AD_REGIONS         - semicolon-separated list of region OUs
       ONBOARDING_GROUP   - group new users are added to (blank = skip that step)
       EMAIL_DOMAIN       - email domain for the onboarding message (blank = from UPN)
       SPO_TIMEZONE       - SharePoint site time-zone id (e.g. 13 = Pacific)
@@ -31,9 +30,8 @@
 # value and never writes the example).
 $settings = [ordered]@{
     'SNIPEIT_URL'       = @{ Desc = 'Snipe-IT API base URL';                Default = 'https://assets.contoso.com/api/v1' }
-    'AD_DOMAIN_DN' = @{ Desc = 'AD domain DN (blank = auto-detect)';   Default = 'DC=contoso,DC=local' }
-    'AD_SOURCE_OU' = @{ Desc = 'Unmatched Accounts OU';               Default = 'OU=Unmatched,OU=NewUsers,DC=contoso,DC=local' }
-    'AD_REGIONS'   = @{ Desc = 'Region OUs (separate with ;)';         Default = 'OU=Region A,DC=contoso,DC=local;OU=Region B,DC=contoso,DC=local' }
+    'AD_SOURCE_OU'      = @{ Desc = 'Unmatched Accounts OU';                Default = 'OU=Unmatched,OU=NewUsers,DC=contoso,DC=local' }
+    'AD_REGIONS'        = @{ Desc = 'Region OUs (separate with ;)';         Default = 'OU=Region A,DC=contoso,DC=local;OU=Region B,DC=contoso,DC=local' }
     'ONBOARDING_GROUP'  = @{ Desc = 'Group new users join (blank = skip)';  Default = 'All Staff Distribution' }
     'EMAIL_DOMAIN'      = @{ Desc = 'Email domain (blank = from the UPN)';  Default = 'contoso.com' }
     'SPO_TIMEZONE'      = @{ Desc = 'SharePoint site time-zone id';         Default = '13' }

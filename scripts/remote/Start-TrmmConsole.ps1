@@ -27,6 +27,9 @@ if (-not (Test-TrmmConfigured)) { return }
 # -AsUser runs it in the logged-in user's session (needed to lock the screen).
 # This script passes whole agent OBJECTS around, so this wrapper pulls the id
 # out of the object for the shared helper.
+# NOT the shared Invoke-TrmmAgentText. This one takes a whole agent object and
+# returns TRMM's RAW response rather than flattening it to text, because the
+# console needs the response as-is. Keep it separate.
 function Invoke-AgentCmd ($agent, $command, [switch]$AsUser, [int]$TimeoutSec = 60) {
     Invoke-TrmmAgentCommand -AgentId $agent.agent_id -Command $command -AsUser:$AsUser -TimeoutSec $TimeoutSec
 }
@@ -87,20 +90,20 @@ function Invoke-TakeControl ($agent) {
 # --- Power actions (confirm first - they interrupt the logged-in user) -------
 function Invoke-Restart ($agent) {
     Write-Host "Restart $($agent.hostname)? Any logged-in user loses unsaved work." -ForegroundColor Yellow
-    if ((Read-Host "Type YES to restart").Trim() -cne 'YES') { Write-Host "Cancelled." -ForegroundColor DarkGray; return }
+    if (-not (Confirm-DeskSideWord 'restart')) { return }
     try { Invoke-TrmmRequest POST "agents/$($agent.agent_id)/reboot/" @{} | Out-Null; Write-Host "Restart sent to $($agent.hostname)." -ForegroundColor Green }
     catch { Write-Host "Restart failed: $($_.Exception.Message)" -ForegroundColor Red }
 }
 
 function Invoke-Lock ($agent) {
     if (-not $agent.logged_username) { Write-Host "No user is logged in - nothing to lock." -ForegroundColor Yellow; return }
-    if ((Read-Host "Lock the screen on $($agent.hostname) (user $($agent.logged_username))? (y/n)").Trim().ToUpper() -ne 'Y') { return }
+    if (-not (Confirm-DeskSideAction "Lock the screen on $($agent.hostname) (user $($agent.logged_username))?" -Quiet)) { return }
     try { Invoke-AgentCmd $agent 'rundll32.exe user32.dll,LockWorkStation' -AsUser | Out-Null; Write-Host "Lock sent." -ForegroundColor Green }
     catch { Write-Host "Lock failed: $($_.Exception.Message)" -ForegroundColor Red }
 }
 
 function Invoke-Sleep ($agent) {
-    if ((Read-Host "Put $($agent.hostname) to sleep? (y/n)").Trim().ToUpper() -ne 'Y') { return }
+    if (-not (Confirm-DeskSideAction "Put $($agent.hostname) to sleep?" -Quiet)) { return }
     # Suspend (S3). If hibernate is enabled the machine hibernates instead.
     try { Invoke-AgentCmd $agent 'rundll32.exe powrprof.dll,SetSuspendState 0,1,0' | Out-Null; Write-Host "Sleep sent to $($agent.hostname)." -ForegroundColor Green }
     catch { Write-Host "Sleep failed: $($_.Exception.Message)" -ForegroundColor Red }
@@ -122,9 +125,7 @@ Get-ItemProperty $keys -ErrorAction SilentlyContinue |
     catch { Write-Host "Failed: $($_.Exception.Message)" -ForegroundColor Red; return }
 
     Write-Host $out
-    if ((Read-Host "Save this list to a file? (y/n)").Trim().ToUpper() -eq 'Y') {
-        # Use the shared helper rather than building the path by hand, so this
-        # lands in the same sorted structure as everything else the toolkit writes.
+    if (Confirm-DeskSideAction 'Save this list to a file?' -Quiet) {
         $outputDir = Get-ADToolOutputDir -Category 'Reports\InstalledApps'
         $file = Join-Path $outputDir ("{0} - {1}.txt" -f $agent.hostname, (Get-Date -Format 'yyyy-MM-dd HHmmss'))
         $out | Out-File -FilePath $file -Encoding UTF8

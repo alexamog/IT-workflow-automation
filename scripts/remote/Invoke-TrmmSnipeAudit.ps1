@@ -24,7 +24,11 @@ if (-not (Test-TrmmConfigured)) { return }
 
 $here = $PSScriptRoot
 
-while ($true) {
+# The :menu label lets the default branch below skip the "press ENTER" pause.
+# A bare 'continue' inside a switch does NOT do that - it leaves the switch and
+# carries straight on, so a mistyped option used to print "Unknown option." and
+# then still make you press ENTER for a menu you never left.
+:menu while ($true) {
     Write-ToolHeader 'TRMM vs Snipe-IT audit'
     Write-ToolMenuItem -Key 1 -Label 'Computers in TRMM missing from Snipe-IT'
     Write-ToolMenuItem -Key 2 -Label 'Match serials to Snipe-IT' -Note 'hostname check; can fix'
@@ -35,7 +39,7 @@ while ($true) {
         '1'     { & (Join-Path $here 'Compare-TrmmToSnipe.ps1') }
         '2'     { & (Join-Path $here 'Compare-TrmmSerialToSnipe.ps1') }
         '0'     { return }
-        default { Write-Host 'Unknown option.' -ForegroundColor DarkGray; continue }
+        default { Write-Host 'Unknown option.' -ForegroundColor DarkGray; continue menu }
     }
     Write-Host ''
     Read-Host '  Press ENTER to return to the audit menu' | Out-Null

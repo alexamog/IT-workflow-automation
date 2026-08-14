@@ -47,6 +47,11 @@
     .\Repair-TrmmCorruptProfile.ps1
 #>
 
+# NOT ON THE MAIN MENU, and that is deliberate - there is no .tool.psd1
+# manifest beside this file, so the launcher never lists it. It is opened
+# from Manage-TrmmProfiles.ps1, which collects the answers it needs first.
+# It still runs on its own if you want to use it directly.
+
 [CmdletBinding()]
 param()
 
@@ -54,18 +59,12 @@ param()
 
 if (-not (Test-TrmmConfigured)) { return }
 
-# Thin wrapper over the shared helper: output is compared as text, so it is
-# flattened to a string here rather than at every call.
-function Invoke-AgentCmd ($agentId, $command, [int]$TimeoutSec = 90) {
-    "$(Invoke-TrmmAgentCommand -AgentId $agentId -Command $command -TimeoutSec $TimeoutSec)"
-}
-
 $kw = (Read-Host "Hostname keyword to scan (e.g. ITDESSPARE), a full name, or * for ALL").Trim()
 
 Write-Host "Getting the agent list from Tactical RMM..."
-try { $agents = @(Invoke-TrmmRequest GET 'agents/') }
-catch { Write-Host "TRMM lookup failed: $($_.Exception.Message)" -ForegroundColor Red; return }
-if ($kw -and $kw -ne '*') { $agents = @($agents | Where-Object { $_.hostname -match [regex]::Escape($kw) }) }
+$lookup = Get-TrmmAgent -HostnameLike $kw
+if (-not $lookup.Ok) { return }        # the message was already printed
+$agents = $lookup.Agents
 $targets = @($agents | Where-Object { $_.status -eq 'online' })
 $offline = @($agents).Count - $targets.Count
 Write-Host "Scanning $($targets.Count) online computer(s) ($offline offline skipped)..." -ForegroundColor Cyan
@@ -112,7 +111,7 @@ $i = 0
 foreach ($a in $targets) {
     $i++
     Write-Progress -Activity 'Scanning for corrupt profiles' -Status "$i of $($targets.Count): $($a.hostname)" -PercentComplete (100 * $i / $targets.Count)
-    try { $out = Invoke-AgentCmd $a.agent_id $scanCmd } catch { continue }
+    try { $out = Invoke-TrmmAgentText -AgentId $a.agent_id -Command $scanCmd } catch { continue }
     foreach ($line in ($out -split "`r?`n")) {
         if ($line -notmatch '^PROFILE\|') { continue }
         $p = $line -split '\|'
@@ -143,7 +142,7 @@ $repairable = @($rows | Where-Object { $_.Type -eq 'REPAIRABLE' -and $_.HasFolde
 # Explain everything that is NOT repairable, so it is clear why.
 $noData  = @($rows | Where-Object { -not $_.HasFolder })
 $loaded  = @($rows | Where-Object { $_.HasFolder -and $_.Loaded })
-$admin   = @($rows | Where-Object { $_.HasFolder -and -not $_.Loaded -and (& $protected $_.Profile) })
+$admin   = @($rows | Where-Object { $_.HasFolder -and -not $_.Loaded -and (Test-DeskSideProtectedAccount $_.Profile) })
 
 if ($noData.Count) { Write-Host "$($noData.Count) have no folder left (nothing to save) - clear these with Find-TrmmCorruptProfile.ps1: $((@($noData | ForEach-Object { "$($_.Profile)@$($_.Hostname)" })) -join ', ')" -ForegroundColor DarkGray }
 if ($loaded.Count) { Write-Host "$($loaded.Count) are in use right now (user signed in) - repair once they sign out: $((@($loaded | ForEach-Object { "$($_.Profile)@$($_.Hostname)" })) -join ', ')" -ForegroundColor DarkGray }
@@ -171,9 +170,7 @@ if ($toRepair.Count -eq 0) { Write-Host "Nothing chosen." -ForegroundColor Yello
 Write-Host ""
 Write-Host "This edits the profile registry on the machine. A backup is saved first." -ForegroundColor Yellow
 Write-Host "The user must sign out and back in for the repair to take effect." -ForegroundColor Yellow
-if ((Read-Host "Type YES to repair $($toRepair.Count) profile(s)").Trim() -cne 'YES') {
-    Write-Host "Cancelled - nothing changed." -ForegroundColor Yellow; return
-}
+if (-not (Confirm-DeskSideWord "repair $($toRepair.Count) profile(s)" -CancelNote 'nothing changed')) { return }
 
 # --- Repair ------------------------------------------------------------------
 foreach ($d in $toRepair) {
@@ -186,9 +183,11 @@ foreach ($d in $toRepair) {
 `$ErrorActionPreference = 'Stop'
 `$u = '$safeProfile'
 `$base = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList'
+# Resolved on THIS machine, not the operator's - see the helper's comment.
+$(Get-DeskSideRemoteProgramDataLine)
 
 # 1. Back up the whole ProfileList key before touching anything.
-`$bdir = 'C:\ProgramData\DeskSideToolkit\ProfileListBackups'
+`$bdir = Join-Path `$DeskSideData 'ProfileListBackups'
 if (-not (Test-Path `$bdir)) { New-Item -ItemType Directory -Path `$bdir -Force | Out-Null }
 `$bfile = Join-Path `$bdir ('ProfileList-{0}-{1}.reg' -f `$u, (Get-Date -Format 'yyyyMMdd-HHmmss'))
 & reg.exe export 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList' `$bfile /y | Out-Null
@@ -237,7 +236,7 @@ try {
     New-ItemProperty -Path `$target -Name 'State'    -Value 0 -PropertyType DWord -Force | Out-Null
     New-ItemProperty -Path `$target -Name 'RefCount' -Value 0 -PropertyType DWord -Force | Out-Null
 
-    `$logd = 'C:\ProgramData\DeskSideToolkit'
+    `$logd = `$DeskSideData
     if (-not (Test-Path `$logd)) { New-Item -ItemType Directory -Path `$logd -Force | Out-Null }
     Add-Content (Join-Path `$logd 'ProfileRepair.log') ('{0}  repaired profile {1} ({2}), backup {3}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), `$u, `$mode, `$bfile)
 
@@ -246,7 +245,7 @@ try {
 catch { 'FAIL ' + `$_.Exception.Message }
 "@
 
-    try { $res = (Invoke-AgentCmd $d.AgentId $repairCmd -TimeoutSec 120).Trim() }
+    try { $res = (Invoke-TrmmAgentText -AgentId $d.AgentId -Command $repairCmd -TimeoutSec 120).Trim() }
     catch { $res = "ERROR $($_.Exception.Message)" }
 
     $lines  = @($res -split "`r?`n")

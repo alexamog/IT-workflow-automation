@@ -25,19 +25,17 @@
     .\Find-TrmmUserProfile.ps1
 #>
 
+# NOT ON THE MAIN MENU, and that is deliberate - there is no .tool.psd1
+# manifest beside this file, so the launcher never lists it. It is opened
+# from Manage-TrmmProfiles.ps1, which collects the answers it needs first.
+# It still runs on its own if you want to use it directly.
+
 [CmdletBinding()]
 param()
 
 . "$PSScriptRoot\..\..\lib\Common.ps1"
 
 if (-not (Test-TrmmConfigured)) { return }
-
-# Run a PowerShell command on an agent (as SYSTEM) and return its output text.
-# The shared helper returns TRMM's raw response; this script compares output as
-# text, so it is flattened to a string once here instead of at every call.
-function Invoke-AgentCmd ($agentId, $command, [int]$TimeoutSec = 90) {
-    "$(Invoke-TrmmAgentCommand -AgentId $agentId -Command $command -TimeoutSec $TimeoutSec)"
-}
 
 # --- Inputs ------------------------------------------------------------------
 $user = (Read-Host "Username whose profile to find (e.g. alex.amog)").Trim()
@@ -55,10 +53,10 @@ $safeUser = ConvertTo-RemoteLiteral $user
 $kw = (Read-Host "Hostname keyword to search (e.g. ITDESSPARE), or * for ALL computers").Trim()
 
 Write-Host "Getting the agent list from Tactical RMM..."
-try { $agents = @(Invoke-TrmmRequest GET 'agents/') }
-catch { Write-Host "TRMM lookup failed: $($_.Exception.Message)" -ForegroundColor Red; return }
+$lookup = Get-TrmmAgent -HostnameLike $kw
+if (-not $lookup.Ok) { return }        # the message was already printed
+$agents = $lookup.Agents
 
-if ($kw -and $kw -ne '*') { $agents = @($agents | Where-Object { $_.hostname -match [regex]::Escape($kw) }) }
 $offline = @($agents | Where-Object { $_.status -ne 'online' })
 $targets = @($agents | Where-Object { $_.status -eq 'online' })
 
@@ -83,7 +81,7 @@ $i = 0
 foreach ($a in $targets) {
     $i++
     Write-Progress -Activity "Searching for '$user'" -Status "$i of $($targets.Count): $($a.hostname)" -PercentComplete (100 * $i / $targets.Count)
-    try { $out = (Invoke-AgentCmd $a.agent_id $checkCmd).Trim() } catch { continue }
+    try { $out = (Invoke-TrmmAgentText -AgentId $a.agent_id -Command $checkCmd).Trim() } catch { continue }
     if ($out -match '^FOUND') {
         $found += [PSCustomObject]@{
             Hostname = $a.hostname
@@ -129,9 +127,7 @@ else {
     else { Write-Host "Cancelled." -ForegroundColor DarkGray; return }
 }
 
-if ((Read-Host "Type YES to permanently delete '$user' on $($toDelete.Count) machine(s)").Trim() -cne 'YES') {
-    Write-Host "Cancelled." -ForegroundColor Yellow; return
-}
+if (-not (Confirm-DeskSideWord "permanently delete '$user' on $($toDelete.Count) machine(s)")) { return }
 
 # Audit log (operator side).
 # Audit rows go through Write-ActionLog in the shared library, so every feature
@@ -146,7 +142,8 @@ elseif (`$p.Loaded) { 'SKIP-LOADED' }
 else {
     try {
         Remove-CimInstance -InputObject `$p -ErrorAction Stop
-        `$d = 'C:\ProgramData\DeskSideToolkit'; if (-not (Test-Path `$d)) { New-Item -ItemType Directory -Path `$d -Force | Out-Null }
+        $(Get-DeskSideRemoteProgramDataLine)
+        `$d = `$DeskSideData; if (-not (Test-Path `$d)) { New-Item -ItemType Directory -Path `$d -Force | Out-Null }
         Add-Content (Join-Path `$d 'ProfileCleanup.log') ('{0}  [remote-find]  DELETED profile {1}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), `$u)
         'DELETED'
     } catch { 'FAIL ' + `$_.Exception.Message }
@@ -154,7 +151,7 @@ else {
 "@
 
 foreach ($m in $toDelete) {
-    try { $res = (Invoke-AgentCmd $m.AgentId $delCmd).Trim() } catch { $res = "ERROR $($_.Exception.Message)" }
+    try { $res = (Invoke-TrmmAgentText -AgentId $m.AgentId -Command $delCmd).Trim() } catch { $res = "ERROR $($_.Exception.Message)" }
     $colour = if ($res -eq 'DELETED') { 'Green' } else { 'Red' }
     Write-Host ("  {0}: {1}" -f $m.Hostname, $res) -ForegroundColor $colour
     $result = if ($res -eq 'DELETED') { 'Success' } else { 'Failed' }

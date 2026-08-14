@@ -52,6 +52,5 @@ try {
     Write-ActionLog -Action $action.Label -Target $sam
 }
 catch {
-    Write-Host "Failed: $($_.Exception.Message)" -ForegroundColor Red
-    Write-ActionLog -Action $action.Label -Target $sam -Result 'Failed' -Details $_.Exception.Message
+    Write-DeskSideFailure "Failed" $action.Label $sam $_
 }

@@ -45,8 +45,7 @@ switch (Read-Host "Choose an action") {
             Write-ActionLog -Action 'Group Add' -Target $sam -Details "Added to $($group.Name)"
         }
         catch {
-            Write-Host "Failed: $($_.Exception.Message)" -ForegroundColor Red
-            Write-ActionLog -Action 'Group Add' -Target $sam -Result 'Failed' -Details "$($group.Name) - $($_.Exception.Message)"
+            Write-DeskSideFailure "Failed" 'Group Add' $sam $_ -Context "$($group.Name)"
         }
     }
 
@@ -62,8 +61,7 @@ switch (Read-Host "Choose an action") {
             Write-ActionLog -Action 'Group Remove' -Target $sam -Details "Removed from $($group.Name)"
         }
         catch {
-            Write-Host "Failed: $($_.Exception.Message)" -ForegroundColor Red
-            Write-ActionLog -Action 'Group Remove' -Target $sam -Result 'Failed' -Details "$($group.Name) - $($_.Exception.Message)"
+            Write-DeskSideFailure "Failed" 'Group Remove' $sam $_ -Context "$($group.Name)"
         }
     }
 

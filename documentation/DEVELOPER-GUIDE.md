@@ -9,10 +9,24 @@ Windows PowerShell 5.1.
 AD-Toolkit.ps1            auto-discovering launcher (scans *.tool.psd1, builds menu)
    scripts\<cat>\*.ps1    one feature per script + a *.tool.psd1 manifest beside it
    lib\Common.ps1         shared config ($ADTool) + helpers, dot-sourced by scripts
+   lib\Ui.ps1             console look-and-feel: banners, menu rows, the colour
+                          theme, and the confirmation prompts. Loaded BY
+                          Common.ps1, and separately by the Jira console - so it
+                          must never depend on anything in Common.ps1.
+   lib\Printer.ps1        hand-rolled SNMP + IPP clients for network printers.
+                          Loaded by Common.ps1. See its header for why this is
+                          protocol code rather than a module dependency.
+   lib\Quotes.psd1        the sign-off quotes, read at run time by Ui.ps1
 Jira Scripts\             self-contained console, own layered lib\ (separate stack)
 setup\                    credential/config setters (env vars)
+tests\                    Pester tests: Common.Tests.ps1 covers lib\Common.ps1 and
+                          lib\Ui.ps1; Printer.Tests.ps1 covers lib\Printer.ps1
 Publish-Standalone.ps1    generates standalone editions + Core from this project
 ```
+
+`lib\` travels as a unit - Common.ps1 dot-sources Ui.ps1 and Printer.ps1, and
+Ui.ps1 reads Quotes.psd1 - so anything that copies the library copies the whole
+folder. Shipping a subset produces an edition that loads but fails at first use.
 
 Each feature is independent: its own script (runnable alone) + a manifest that
 places it on the menu. No central list to edit.
@@ -343,8 +357,18 @@ User-facing steps: `documentation\DEPLOYMENT.md`. Internals:
 - `Write-Host` is intentional (interactive colored UI); data funcs still emit
   objects.
 - Confirm destructive/outward actions.
-- Quality gate: `Invoke-ScriptAnalyzer -Path . -Recurse -ExcludeRule PSAvoidUsingWriteHost`
-  should come back clean.
+- Quality gate: run `.\Run-Tests.ps1`, which runs Pester **and** PSScriptAnalyzer
+  with the project's own settings and should come back "All good." To run just
+  the code check: `Invoke-ScriptAnalyzer -Path . -Recurse -Settings
+  PSScriptAnalyzerSettings.psd1`. Use the settings file rather than naming rules
+  by hand - it turns off four rules, each with a written reason, and a bare
+  `-ExcludeRule PSAvoidUsingWriteHost` will report three kinds of false failure.
+- Don't add to that exclusion list to silence a new warning. A warning is
+  usually telling you something true.
+- Every `.ps1` and `.psd1` must be **plain ASCII**. The files have no
+  byte-order mark, so PowerShell 5.1 reads them as ANSI and a single em dash
+  becomes a curly quote that ends a string early - the file then stops parsing,
+  with errors pointing far away from the real cause. A test enforces this.
 
 ## PS 5.1 gotchas (hit these already)
 

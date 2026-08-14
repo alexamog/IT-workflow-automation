@@ -21,6 +21,9 @@
                         Set-M365UserLicense)
       - SharePoint     (Connect-SpoSession, Get-SpoRootUrl)
       - Audit logging  (Write-ActionLog, Write-SnipeAssetLog)
+      - Network printers (lib\Printer.ps1: Get-CanonPrinterStatus,
+                        Get-CanonPrinterJobs, Stop-CanonPrinterJob,
+                        Restart-CanonPrinter - SNMP/IPP direct to the printer)
 #>
 
 # NOTE: this shared library does NOT require the ActiveDirectory module at load
@@ -38,11 +41,6 @@
 # left unset either auto-detects (the AD domain) or the feature that needs it
 # tells you which variable to set.
 $Global:ADTool = @{
-    # AD domain distinguished name. Empty = auto-detect from the current domain
-    # at run time (Get-ADToolDomainDN), so AD features work with no setup. Pin it
-    # with AD_DOMAIN_DN only if you need a specific value.
-    DomainDN = if ($env:AD_DOMAIN_DN) { $env:AD_DOMAIN_DN } else { '' }
-
     # The OU holding disabled / "unmatched" accounts, for the reports that scan
     # it. Set AD_SOURCE_OU; the reports say so if it is empty.
     SourceOU = if ($env:AD_SOURCE_OU) { $env:AD_SOURCE_OU } else { '' }
@@ -114,6 +112,24 @@ function Get-DeskSideProgramDataDir {
     if ($env:DESKSIDE_PROGRAMDATA) { $env:DESKSIDE_PROGRAMDATA } else { 'C:\ProgramData\DeskSideToolkit' }
 }
 
+# The same rule, but as a LINE OF POWERSHELL TEXT to paste at the top of a
+# command that will run on a remote machine. The remote script then uses
+# $DeskSideData wherever it needs the folder.
+#
+# WHY TEXT RATHER THAN THE VALUE: the folder must be resolved ON THE MACHINE
+# THE COMMAND RUNS ON, not here. scripts\maintenance\Remove-UnlistedProfiles.ps1
+# is uploaded to the agent and resolves DESKSIDE_PROGRAMDATA there when it
+# writes its log; the scripts that read that log back must therefore resolve it
+# there too. Sending this operator's local value would point the reader at a
+# folder the writer never wrote to.
+function Get-DeskSideRemoteProgramDataLine {
+    # A single-quoted here-string, so every $ below is literal text and none of
+    # it is expanded here. This IS the code the far end runs.
+    @'
+$DeskSideData = if ($env:DESKSIDE_PROGRAMDATA) { $env:DESKSIDE_PROGRAMDATA } else { 'C:\ProgramData\DeskSideToolkit' }
+'@
+}
+
 # Accounts that profile cleanup must NEVER delete, whatever a keep/delete list
 # says. Default is the admin-prefix convention "adm-*"; add exact names or
 # wildcards with PROTECTED_ACCOUNTS (semicolon- or comma-separated), e.g.
@@ -153,7 +169,12 @@ function Test-DeskSidePathExcluded {
     if ($parts.Count -eq 0) { return $false }
 
     # Names dropped wherever they appear in the path (folder or file).
-    $excludeNames = @('output', 'data', '.git', '.claude',
+    #   'logs'      - "Jira Scripts\logs\org-changes.json" records every
+    #                 organisation change the Jira console makes, including real
+    #                 ticket keys, reporter names and organisation names.
+    #   'KB-Drafts' - knowledge-base articles waiting to be published. They quote
+    #                 the real organisation name, mail domain and ticket numbers.
+    $excludeNames = @('output', 'data', 'logs', 'KB-Drafts', '.git', '.claude',
         'Standalone Editions', 'Desk Side Tool - Core')
     foreach ($p in $parts) { if ($excludeNames -contains $p) { return $true } }
 
@@ -167,11 +188,53 @@ function Test-DeskSidePathExcluded {
     return $false
 }
 
-# The AD domain DN: the configured value if set, otherwise read it from the
-# current domain so AD features need no configuration to work.
-function Get-ADToolDomainDN {
-    if ($ADTool.DomainDN) { return $ADTool.DomainDN }
-    try { (Get-ADDomain).DistinguishedName } catch { '' }
+# Copy the project into $StageRoot, applying the exclusion rule above. Returns
+# the number of files copied.
+#
+# Lives here, next to the rule it enforces, because both Build-SharePackage.ps1
+# (the zip) and Publish-ToShare.ps1 (the shared-drive copy) need it. They used
+# to hold their own byte-identical copies, which is exactly how the zip and the
+# share drift apart on what they leave out.
+function New-DeskSideStage {
+    param(
+        [Parameter(Mandatory)][string]$SourceRoot,
+        [Parameter(Mandatory)][string]$StageRoot
+    )
+    if (Test-Path $StageRoot) { Remove-Item $StageRoot -Recurse -Force }
+    New-Item -ItemType Directory -Path $StageRoot -Force | Out-Null
+
+    $count = 0
+    # No -Force: Windows marks the .git folder hidden, so it is skipped here and
+    # we never even walk it. Everything else we want is visible.
+    foreach ($f in Get-ChildItem $SourceRoot -Recurse -File) {
+        $rel = $f.FullName.Substring($SourceRoot.Length).TrimStart('\', '/')
+        if (Test-DeskSidePathExcluded -RelativePath $rel) { continue }
+        $target = Join-Path $StageRoot $rel
+        $dir = Split-Path $target -Parent
+        if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+        Copy-Item -Path $f.FullName -Destination $target -Force
+        $count++
+    }
+    return $count
+}
+
+# The last line of defence: look at what is ACTUALLY staged and refuse to ship
+# if anything private is in it. Deliberately a second, independent check rather
+# than trusting the rule above - a mistake in the rule is precisely the case
+# this needs to catch. Returns the offending items (empty means clean).
+function Get-DeskSidePrivacyLeak {
+    param([Parameter(Mandatory)][string]$StageRoot)
+
+    # The subset of the exclusion list that exists for PRIVACY rather than
+    # tidiness. Shipping .git is untidy; shipping output\ or KB-Drafts\
+    # discloses real data, and only the second is worth refusing to ship over.
+    $privateNames = @('output', 'data', 'logs', 'KB-Drafts')
+
+    @(Get-ChildItem $StageRoot -Recurse | Where-Object {
+        $parts = @(($_.FullName.Substring($StageRoot.Length)) -split '[\\/]' | Where-Object { $_ })
+        (@($parts | Where-Object { $privateNames -contains $_ }).Count -gt 0) -or
+        ($_.Name -like 'My-Completed-Tickets*')
+    })
 }
 
 # --- Domain controller selection ---------------------------------------------
@@ -548,9 +611,24 @@ function Resolve-ADToolUserByName {
 # the whole library. Load it if it's there (it always is in a normal install).
 $uiPath = Join-Path $PSScriptRoot 'Ui.ps1'
 if (Test-Path $uiPath) { . $uiPath }
+else { Write-Host "WARNING: lib\Ui.ps1 is missing - menus and prompts will not draw correctly." -ForegroundColor DarkYellow }
 
 # The sign-off quote (Show-DeskSideSignoff) lives in Ui.ps1, dot-sourced just
 # above, so both this toolkit and the Jira console share one implementation.
+
+# --- Network printers (SNMP + IPP) -------------------------------------------
+# Toner/status/job-queue/restart helpers live in their own file - see the
+# header comment in Printer.ps1 for why this is hand-rolled protocol code
+# rather than a module dependency.
+$printerPath = Join-Path $PSScriptRoot 'Printer.ps1'
+if (Test-Path $printerPath) { . $printerPath }
+else {
+    # Say so at load time. Silently skipping meant the printer features failed
+    # later with "Get-CanonPrinterStatus is not recognized", which points at
+    # the wrong thing entirely - the real fault is a lib\ file that was never
+    # copied. If you see this, the copy is incomplete: re-publish it.
+    Write-Host "WARNING: lib\Printer.ps1 is missing - the printer features will not work." -ForegroundColor DarkYellow
+}
 
 # --- Console UI helper -------------------------------------------------------
 # Show a numbered list and return the chosen item (or $null for 0/Cancel).
@@ -656,6 +734,73 @@ function Get-SnipeHardware {
     $all.ToArray()
 }
 
+# --- HTML reports ------------------------------------------------------------
+
+# Escape a value so a note, name or hostname cannot break the markup - or inject
+# script into a page somebody then opens. Replaces three separate copies of the
+# same four-replace expression that used to sit in the report writers.
+#
+# The ampersand MUST be replaced first. Doing it last would re-escape the
+# ampersands introduced by the other three, turning "<" into "&amp;lt;".
+function ConvertTo-HtmlEncodedText {
+    param([Parameter(Position = 0)][AllowNull()]$Value)
+    ([string]$Value) -replace '&', '&amp;' -replace '<', '&lt;' -replace '>', '&gt;' -replace '"', '&quot;'
+}
+
+# Write one table of results to $Path as a readable HTML page, and return $Path.
+# Every cell is escaped for you; $MetaHtml and $ChipsHtml are the caller's own
+# fragments and must already be escaped.
+#
+# Only the HTML is shared. The JSON half of each report is NOT, because the
+# three callers store genuinely different shapes that people and the Compare-*
+# tools read back - a lowest-common-denominator schema would be a lossy rewrite
+# dressed up as removing duplication.
+function Write-DeskSideHtmlReport {
+    param(
+        [Parameter(Mandatory)][AllowEmptyCollection()][object[]]$Rows,
+        [Parameter(Mandatory)][string[]]$Columns,
+        [Parameter(Mandatory)][string]$Title,
+        [Parameter(Mandatory)][string]$Path,
+        [string]$MetaHtml  = '',
+        [string]$ChipsHtml = '',
+        [switch]$NoPrompt
+    )
+    $head = ($Columns | ForEach-Object { "<th>$(ConvertTo-HtmlEncodedText $_)</th>" }) -join ''
+    $body = foreach ($r in $Rows) {
+        $cells = ($Columns | ForEach-Object { "<td>$(ConvertTo-HtmlEncodedText $r.$_)</td>" }) -join ''
+        "<tr>$cells</tr>"
+    }
+    $chipsDiv = if ($ChipsHtml) { "<div class=`"kw`">$ChipsHtml</div>" } else { '' }
+    $safeTitle = ConvertTo-HtmlEncodedText $Title
+
+    $doc = @"
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>$safeTitle</title>
+<style>
+ body{font-family:Segoe UI,Arial,sans-serif;margin:24px;color:#222}
+ h1{font-size:20px;margin:0 0 6px}
+ .meta{color:#666;font-size:13px;margin-bottom:6px}
+ .kw{margin:0 0 16px}
+ .kw span{display:inline-block;background:#eef3f8;border:1px solid #d4e0ea;color:#33506b;
+   border-radius:12px;padding:2px 10px;font-size:12px;margin:2px 4px 2px 0}
+ table{border-collapse:collapse;width:100%;font-size:13px}
+ th,td{border:1px solid #ddd;padding:6px 8px;text-align:left;vertical-align:top}
+ th{background:#f4f6f8;position:sticky;top:0}
+ tr:nth-child(even){background:#fafafa}
+</style></head><body>
+<h1>$safeTitle</h1>
+<div class="meta">$MetaHtml</div>
+$chipsDiv
+<table><thead><tr>$head</tr></thead><tbody>
+$($body -join "`n")
+</tbody></table></body></html>
+"@
+    $doc | Out-File -FilePath $Path -Encoding UTF8
+
+    if (-not $NoPrompt -and (Confirm-DeskSideAction 'Open the HTML report now?' -Quiet)) { Start-Process $Path }
+    return $Path
+}
+
 # Write a report of a set of Snipe-IT assets to output\Audits\SnipeReports as JSON (for
 # later parsing) and HTML (readable). $Criteria is a list of human-readable
 # strings describing what was searched for - keywords, or "status = Ready to
@@ -663,11 +808,17 @@ function Get-SnipeHardware {
 # Returns the two file paths. Prompts to open the HTML unless -NoPrompt.
 function Write-SnipeAssetReport {
     param(
-        [Parameter(Mandatory)][object[]]$Assets,
+        # AllowEmptyCollection: a search that matched nothing is a perfectly
+        # ordinary result and should produce an empty report. Without this,
+        # PowerShell refuses to bind @() to a mandatory array parameter and the
+        # caller dies with a binding error instead.
+        [Parameter(Mandatory)][AllowEmptyCollection()][object[]]$Assets,
         [string[]]$Criteria = @(),
         [switch]$NoPrompt
     )
-    $flat = $Assets | ForEach-Object {
+    # @(...) so that zero assets stays an empty array rather than collapsing to
+    # $null, which would write "null" into the JSON instead of an empty list.
+    $flat = @($Assets | ForEach-Object {
         [PSCustomObject][ordered]@{
             AssetTag        = $_.asset_tag
             Name            = $_.name
@@ -683,7 +834,7 @@ function Write-SnipeAssetReport {
             WarrantyExpires = (ConvertFrom-SnipeField $_.warranty_expires)
             Notes           = $_.notes
         }
-    }
+    })
 
     $dir = Get-ADToolOutputDir -Category 'Audits\SnipeReports'
     $stamp = Get-Date -Format 'yyyy-MM-dd HHmmss'
@@ -700,43 +851,18 @@ function Write-SnipeAssetReport {
         assets      = $flat
     } | ConvertTo-Json -Depth 6 | Out-File -FilePath $json -Encoding UTF8
 
-    # Escape every value so notes/names can't break the markup.
-    function Enc($v) { ([string]$v) -replace '&', '&amp;' -replace '<', '&lt;' -replace '>', '&gt;' -replace '"', '&quot;' }
-    $cols = 'AssetTag', 'Name', 'Model', 'Manufacturer', 'Category', 'Status', 'AssignedTo', 'Location', 'RtdLocation', 'Serial', 'PurchaseDate', 'WarrantyExpires', 'Notes'
-    $head = ($cols | ForEach-Object { "<th>$(Enc $_)</th>" }) -join ''
-    $rowsHtml = foreach ($r in $flat) {
-        $cells = ($cols | ForEach-Object { "<td>$(Enc $r.$_)</td>" }) -join ''
-        "<tr>$cells</tr>"
-    }
-    $chips = if (@($Criteria).Count) { ($Criteria | ForEach-Object { "<span>$(Enc $_)</span>" }) -join '' } else { '<span>(all assets)</span>' }
-    $htmlDoc = @"
-<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Snipe-IT Asset Report</title>
-<style>
- body{font-family:Segoe UI,Arial,sans-serif;margin:24px;color:#222}
- h1{font-size:20px;margin:0 0 6px}
- .meta{color:#666;font-size:13px;margin-bottom:6px}
- .kw{margin:0 0 16px}
- .kw span{display:inline-block;background:#eef3f8;border:1px solid #d4e0ea;color:#33506b;
-   border-radius:12px;padding:2px 10px;font-size:12px;margin:2px 4px 2px 0}
- table{border-collapse:collapse;width:100%;font-size:13px}
- th,td{border:1px solid #ddd;padding:6px 8px;text-align:left;vertical-align:top}
- th{background:#f4f6f8;position:sticky;top:0}
- tr:nth-child(even){background:#fafafa}
-</style></head><body>
-<h1>Snipe-IT Asset Report</h1>
-<div class="meta">$count asset(s) &middot; generated $when by $(Enc $env:USERNAME)</div>
-<div class="kw">Filters: $chips</div>
-<table><thead><tr>$head</tr></thead><tbody>
-$($rowsHtml -join "`n")
-</tbody></table></body></html>
-"@
-    $htmlDoc | Out-File -FilePath $html -Encoding UTF8
+    $cols  = 'AssetTag', 'Name', 'Model', 'Manufacturer', 'Category', 'Status', 'AssignedTo', 'Location', 'RtdLocation', 'Serial', 'PurchaseDate', 'WarrantyExpires', 'Notes'
+    $meta  = "$count asset(s) &middot; generated $when by $(ConvertTo-HtmlEncodedText $env:USERNAME)"
+    $chips = if (@($Criteria).Count) {
+        'Filters: ' + (($Criteria | ForEach-Object { "<span>$(ConvertTo-HtmlEncodedText $_)</span>" }) -join '')
+    } else { 'Filters: <span>(all assets)</span>' }
 
     Write-Host "`nReport of $count asset(s) written to:" -ForegroundColor Green
     Write-Host "  $json"
     Write-Host "  $html"
-    if (-not $NoPrompt -and (Read-Host "Open the HTML report now? (y/n)").Trim().ToUpper() -eq 'Y') { Start-Process $html }
+
+    Write-DeskSideHtmlReport -Rows $flat -Columns $cols -Title 'Snipe-IT Asset Report' `
+        -Path $html -MetaHtml $meta -ChipsHtml $chips -NoPrompt:$NoPrompt | Out-Null
 
     [pscustomobject]@{ Json = $json; Html = $html; Count = $count }
 }
@@ -820,6 +946,104 @@ function Invoke-TrmmAgentCommand {
     }
 }
 
+# Run a command on one agent and return its output AS TEXT, with the newlines
+# flattened. Six scripts each declared their own copy of this - three of them
+# byte-identical - so it lives here now.
+#
+# Note that scripts\remote\Start-TrmmConsole.ps1 keeps its own wrapper on
+# purpose: that one returns the RAW response rather than text, and takes a whole
+# agent object. It is not the same function and should not be folded into this.
+function Invoke-TrmmAgentText {
+    param(
+        [Parameter(Mandatory)][string]$AgentId,
+        [Parameter(Mandatory)][string]$Command,
+        [switch]$AsUser,
+        [int]$TimeoutSec = 90
+    )
+    "$(Invoke-TrmmAgentCommand -AgentId $AgentId -Command $Command -AsUser:$AsUser -TimeoutSec $TimeoutSec)"
+}
+
+# Fetch the agent list, with the "TRMM lookup failed" message that used to be
+# copied byte-for-byte into seven scripts.
+#   $HostnameLike  substring match on the hostname; '' or '*' = the whole fleet
+#   -OnlineOnly    keep only agents TRMM currently reports as online
+#
+# WHAT IT RETURNS: an object with two fields, NOT a bare list.
+#   .Ok      $false means the API call failed. A message has been printed
+#            already, so the caller should just stop.
+#   .Agents  always a real array, possibly empty. Empty means the call worked
+#            and nothing matched - which is a normal result, not a failure.
+#
+#     $lookup = Get-TrmmAgent -HostnameLike $kw
+#     if (-not $lookup.Ok) { return }
+#     $agents = $lookup.Agents
+#
+# WHY AN OBJECT RATHER THAN JUST A LIST: "the lookup died" and "nothing
+# matched" have to be told apart, and a bare list cannot do it. Returning $null
+# for failure does not work either, because PowerShell unwraps an empty array
+# to $null on the way out, so the two arrive looking identical. The usual trick
+# of a leading comma DOES keep them apart, but only if every caller assigns the
+# result to a variable: written the ordinary way, @(Get-TrmmAgent ...) comes
+# back as one item that is itself an array, and the count is silently 1. That
+# is the same trap Get-SnipeHardware above warns about. Reading a property
+# has no such surprise, so this returns an object and the problem disappears.
+function Get-TrmmAgent {
+    param(
+        [string]$HostnameLike,
+        [switch]$OnlineOnly,
+        [switch]$Quiet
+    )
+    try { $agents = @(Invoke-TrmmRequest GET 'agents/') }
+    catch {
+        if (-not $Quiet) { Write-Host "TRMM lookup failed: $($_.Exception.Message)" -ForegroundColor Red }
+        return [pscustomobject]@{ Ok = $false; Agents = @() }
+    }
+    if ($HostnameLike -and $HostnameLike -ne '*') {
+        # Escape the keyword: a hostname filter is a plain substring, not a
+        # regular expression, so a dot or bracket in it must match itself.
+        $agents = @($agents | Where-Object { $_.hostname -match [regex]::Escape($HostnameLike) })
+    }
+    if ($OnlineOnly) { $agents = @($agents | Where-Object { $_.status -eq 'online' }) }
+    return [pscustomobject]@{ Ok = $true; Agents = @($agents) }
+}
+
+# Resolve exactly ONE agent from an exact hostname, listing near matches when
+# that fails. Five scripts had near-identical copies of this.
+#
+# Returns the agent, or $null - and $null ALWAYS means "a message has already
+# been printed, stop now". It never means "carry on with nothing".
+#
+# The parameter is -Hostname rather than -ComputerName because that is the field
+# TRMM itself uses, and because the code checker treats a literal passed to
+# anything called -ComputerName as a hardcoded machine name and fails the build.
+function Find-TrmmAgentByName {
+    param(
+        [Parameter(Mandatory)][string]$Hostname,
+        [switch]$RequireOnline,
+        [string]$Indent = ''
+    )
+    $lookup = Get-TrmmAgent
+    if (-not $lookup.Ok) { return $null }
+    $agents = $lookup.Agents
+
+    $hits = @($agents | Where-Object { $_.hostname -eq $Hostname })
+    if ($hits.Count -ne 1) {
+        Write-Host ("{0}ERROR: found {1} agent(s) named '{2}' (need exactly 1)." -f $Indent, $hits.Count, $Hostname) -ForegroundColor Red
+        if ($hits.Count -eq 0) {
+            # Nothing matched exactly - offer the near misses, which are almost
+            # always a typo or a partial name.
+            @($agents | Where-Object { $_.hostname -match [regex]::Escape($Hostname) }) |
+                ForEach-Object { Write-Host ("{0}  Did you mean: {1}" -f $Indent, $_.hostname) -ForegroundColor Yellow }
+        }
+        return $null
+    }
+    if ($RequireOnline -and $hits[0].status -ne 'online') {
+        Write-Host ("{0}'{1}' is {2} - it must be online." -f $Indent, $Hostname, $hits[0].status) -ForegroundColor Red
+        return $null
+    }
+    return $hits[0]
+}
+
 # Make text safe to drop INSIDE a single-quoted string in a remote command.
 # A value that carries an apostrophe - a name like  caitlin.o'sullivan  or a
 # path like  C:\Users\o'brien\  - would otherwise close the quote early and the
@@ -832,6 +1056,64 @@ function ConvertTo-RemoteLiteral {
     $Text.Replace("'", "''")
 }
 
+# --- Shared prompts and formatting -------------------------------------------
+
+# The "you need to install a module" block, which every Connect-*Session below
+# printed in its own words. The three connect functions themselves are NOT
+# merged: they only look alike. Each probes for an existing session with a
+# different cmdlet and connects with different parameters, so a single generic
+# version would need three scriptblock parameters and read worse than the three
+# plain ones do.
+function Write-DeskSideModuleMissing {
+    param([Parameter(Mandatory)][string]$ModuleName, [string]$Extra = '')
+    Write-Host "The $ModuleName module is not installed." -ForegroundColor Red
+    Write-Host "Install it once (no admin rights needed):" -ForegroundColor Yellow
+    Write-Host "    Install-Module $ModuleName -Scope CurrentUser" -ForegroundColor White
+    if ($Extra) { Write-Host $Extra -ForegroundColor DarkGray }
+}
+
+# Split a typed list of people into individual entries. Accepts commas,
+# semicolons or plain spaces between them, because operators type all three.
+# Replaces three byte-identical copies that were named Split-People - "Split"
+# is not one of PowerShell's approved verbs, which is why this is ConvertFrom-.
+#
+# Wrap the call in @() if you are going to index the result:
+#     $people = @(ConvertFrom-PeopleList $typed)
+# PowerShell unwraps a one-item list on the way out, so without the @() a single
+# address comes back as a plain string and $people[0] would be its first LETTER.
+# Counting and foreach are safe either way. This follows the same rule as
+# Get-SnipeHardware above - no leading comma, the caller wraps.
+function ConvertFrom-PeopleList {
+    param([Parameter(Position = 0)][AllowEmptyString()][AllowNull()][string]$Text)
+    @("$Text" -split '[;,\s]+' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+}
+
+# Ask once for the operator's own admin address and remember it for the rest of
+# the run, so a tool that needs it several times only asks the first time.
+# Defaults to EXO_ADMIN_UPN when that is set. Returns $null if nothing is given,
+# which - as everywhere else in this library - means "stop, a message was shown".
+#
+# $script: not $Global:, matching the per-script variables this replaced. Because
+# lib\Common.ps1 is dot-sourced INTO the feature script, "script scope" here is
+# that feature script's own scope: the answer is remembered for as long as the
+# tool is running and is gone afterwards, which is what you want for something
+# the operator typed.
+function Get-DeskSideAdminUpn {
+    param([string]$Indent = '  ')
+    if ($script:DeskSideAdminUpn) { return $script:DeskSideAdminUpn }
+
+    $default = $env:EXO_ADMIN_UPN
+    $prompt  = if ($default) { "$($Indent)Your admin email (ENTER for $default)" } else { "$($Indent)Your admin email" }
+    $entered = "$(Read-Host $prompt)".Trim()
+    if (-not $entered -and $default) { $entered = $default }
+    if (-not $entered) {
+        Write-Host "$($Indent)No email given." -ForegroundColor Yellow
+        return $null
+    }
+    $script:DeskSideAdminUpn = $entered
+    return $entered
+}
+
 # --- Exchange Online ---------------------------------------------------------
 # Make sure the ExchangeOnlineManagement module is present and a session is open,
 # reusing an existing connection so you are not signed in over and over. Returns
@@ -841,10 +1123,8 @@ function ConvertTo-RemoteLiteral {
 # your admin address to skip typing it each time - .\setup\Set-ExchangeAdmin.ps1.
 function Connect-ExoSession {
     if (-not (Get-Module -ListAvailable -Name ExchangeOnlineManagement)) {
-        Write-Host "The ExchangeOnlineManagement module is not installed." -ForegroundColor Red
-        Write-Host "Install it once (no admin rights needed):" -ForegroundColor Yellow
-        Write-Host "    Install-Module ExchangeOnlineManagement -Scope CurrentUser" -ForegroundColor White
-        Write-Host "Then open a new PowerShell window and try again." -ForegroundColor Yellow
+        Write-DeskSideModuleMissing -ModuleName 'ExchangeOnlineManagement' `
+            -Extra 'Then open a new PowerShell window and try again.'
         return $false
     }
     Import-Module ExchangeOnlineManagement -ErrorAction SilentlyContinue
@@ -986,9 +1266,7 @@ function Set-M365UserLicense {
 # Returns $true when ready, $false (with guidance) when not.
 function Connect-SpoSession {
     if (-not (Get-Module -ListAvailable -Name Microsoft.Online.SharePoint.PowerShell)) {
-        Write-Host "The Microsoft.Online.SharePoint.PowerShell module is not installed." -ForegroundColor Red
-        Write-Host "Install it once (no admin rights needed):" -ForegroundColor Yellow
-        Write-Host "    Install-Module Microsoft.Online.SharePoint.PowerShell -Scope CurrentUser" -ForegroundColor White
+        Write-DeskSideModuleMissing -ModuleName 'Microsoft.Online.SharePoint.PowerShell'
         return $false
     }
     if (-not $env:SPO_ADMIN_URL) {
@@ -1038,6 +1316,35 @@ function Write-ActionLog {
         Result    = $Result
         Details   = $Details
     } | Export-Csv -Path $logPath -NoTypeInformation -Encoding UTF8 -Append
+}
+
+# Report a failure the same way everywhere: the red line on screen AND the
+# matching 'Failed' row in the audit log. Those two always belong together, and
+# writing them as separate statements is how they drift - a message on screen
+# that says one thing and a log row that says another, or a red line with no
+# log row at all. Typical use, straight out of a catch block:
+#
+#     catch { Write-DeskSideFailure 'Move failed' 'Move User' $sam $_ -Context $target }
+#
+# prints  "Move failed: <reason>"  and logs  Result=Failed, Details="<target> - <reason>".
+#
+# This deliberately replaces only the CATCH BODY, not the try/catch itself. A
+# helper that took the whole action as a scriptblock would run it in a child
+# scope, so assignments inside it would not reach the caller and a 'return'
+# would leave only the block - breaking about a dozen call sites silently.
+function Write-DeskSideFailure {
+    param(
+        [Parameter(Mandatory, Position = 0)][string]$Message,   # what to show, e.g. 'Move failed'
+        [Parameter(Mandatory, Position = 1)][string]$Action,    # for Write-ActionLog -Action
+        [Parameter(Mandatory, Position = 2)][AllowEmptyString()][string]$Target,
+        [Parameter(Position = 3)]$ErrorRecord,                  # normally $_
+        [string]$Context = '',                                  # extra detail, prefixed in the log
+        [string]$Indent  = ''
+    )
+    $reason = if ($ErrorRecord) { "$($ErrorRecord.Exception.Message)" } else { '' }
+    Write-Host ("{0}{1}: {2}" -f $Indent, $Message, $reason) -ForegroundColor Red
+    $details = if ($Context) { "$Context - $reason" } else { $reason }
+    Write-ActionLog -Action $Action -Target $Target -Result 'Failed' -Details $details
 }
 
 # Append a Snipe-IT asset-change event to output\Logs\Snipe-Asset-Changes.json.

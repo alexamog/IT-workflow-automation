@@ -18,6 +18,11 @@
     .\Compare-TrmmToSnipe.ps1
 #>
 
+# NOT ON THE MAIN MENU, and that is deliberate - there is no .tool.psd1
+# manifest beside this file, so the launcher never lists it. It is opened
+# from Invoke-TrmmSnipeAudit.ps1, which collects the answers it needs first.
+# It still runs on its own if you want to use it directly.
+
 [CmdletBinding()]
 param()
 
@@ -29,7 +34,17 @@ if (-not $ADTool.SnipeIT.Token) {
     return
 }
 
-# Is this hostname recorded in Snipe-IT? $true / $false, or $null on a lookup error.
+# Is this hostname recorded in Snipe-IT?
+#   $true   found
+#   $false  genuinely not there - this is a real gap to report
+#   $null   the lookup FAILED, so we do not know either way. The caller keeps
+#           these separate from the misses; reporting "not in Snipe-IT" because
+#           the search timed out would send somebody hunting for nothing.
+#
+# Snipe's search is fuzzy, so a match is confirmed in two passes: first an exact
+# match on name, asset tag or serial, then a looser "the name contains it".
+# Exact wins, so a machine is never mistaken for a similarly-named one when a
+# real match exists.
 function Test-InSnipe ($hostname) {
     # Retry a few times so a transient Snipe-IT hiccup isn't logged as an error.
     $rows = $null
@@ -49,8 +64,9 @@ function Test-InSnipe ($hostname) {
 }
 
 Write-Host "Getting the agent list from Tactical RMM..."
-try { $agents = @(Invoke-TrmmRequest GET 'agents/') }
-catch { Write-Host "TRMM lookup failed: $($_.Exception.Message)" -ForegroundColor Red; return }
+$lookup = Get-TrmmAgent
+if (-not $lookup.Ok) { return }        # the message was already printed
+$agents = $lookup.Agents
 Write-Host "Checking $($agents.Count) agent(s) against Snipe-IT (one search each)..." -ForegroundColor DarkGray
 
 $missing = @()
@@ -97,33 +113,14 @@ $when  = Get-Date -Format 'yyyy-MM-dd HH:mm'
     missing       = @($missing)
 } | ConvertTo-Json -Depth 6 | Out-File -FilePath $json -Encoding UTF8
 
-function Enc($v) { ([string]$v) -replace '&', '&amp;' -replace '<', '&lt;' -replace '>', '&gt;' -replace '"', '&quot;' }
-$cols = 'Hostname', 'Client', 'Site', 'Status', 'LastSeen', 'User'
-$head = ($cols | ForEach-Object { "<th>$(Enc $_)</th>" }) -join ''
-$body = foreach ($r in $missing) {
-    "<tr>$(($cols | ForEach-Object { "<td>$(Enc $r.$_)</td>" }) -join '')</tr>"
-}
-$htmlDoc = @"
-<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>TRMM computers not in Snipe-IT</title>
-<style>
- body{font-family:Segoe UI,Arial,sans-serif;margin:24px;color:#222}
- h1{font-size:20px;margin:0 0 6px}
- .meta{color:#666;font-size:13px;margin-bottom:16px}
- table{border-collapse:collapse;width:100%;font-size:13px}
- th,td{border:1px solid #ddd;padding:6px 8px;text-align:left;vertical-align:top}
- th{background:#f4f6f8;position:sticky;top:0}
- tr:nth-child(even){background:#fafafa}
-</style></head><body>
-<h1>TRMM computers not in Snipe-IT</h1>
-<div class="meta">$($missing.Count) missing of $($agents.Count) agent(s) &middot; $found in Snipe-IT &middot; $($errors.Count) lookup error(s) &middot; generated $when by $(Enc $env:USERNAME)</div>
-<table><thead><tr>$head</tr></thead><tbody>
-$($body -join "`n")
-</tbody></table></body></html>
-"@
-$htmlDoc | Out-File -FilePath $html -Encoding UTF8
+$meta = "$($missing.Count) missing of $($agents.Count) agent(s) &middot; $found in Snipe-IT &middot; " +
+        "$($errors.Count) lookup error(s) &middot; generated $when by $(ConvertTo-HtmlEncodedText $env:USERNAME)"
 
 Write-Host "Report written to:" -ForegroundColor Green
 Write-Host "  $json"
 Write-Host "  $html"
-if ((Read-Host "Open the HTML report now? (y/n)").Trim().ToUpper() -eq 'Y') { Start-Process $html }
+
+# The page itself (and the offer to open it) comes from the shared writer, so
+# every report in the toolkit looks the same and escapes its values the same.
+Write-DeskSideHtmlReport -Rows $missing -Columns 'Hostname', 'Client', 'Site', 'Status', 'LastSeen', 'User' `
+    -Title 'TRMM computers not in Snipe-IT' -Path $html -MetaHtml $meta | Out-Null

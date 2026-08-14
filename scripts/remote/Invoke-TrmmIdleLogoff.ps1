@@ -30,18 +30,12 @@ param([double]$IdleHours = 8)
 
 if (-not (Test-TrmmConfigured)) { return }
 
-# Thin wrapper over the shared helper: output is compared as text here, so it
-# is flattened to a string once rather than at every call.
-function Invoke-AgentCmd ($agentId, $command, [int]$TimeoutSec = 60) {
-    "$(Invoke-TrmmAgentCommand -AgentId $agentId -Command $command -TimeoutSec $TimeoutSec)"
-}
-
 $kw = (Read-Host "Hostname keyword (e.g. ITDESSPARE), a full computer name, or * for ALL").Trim()
 
 Write-Host "Getting the agent list from Tactical RMM..."
-try { $agents = @(Invoke-TrmmRequest GET 'agents/') }
-catch { Write-Host "TRMM lookup failed: $($_.Exception.Message)" -ForegroundColor Red; return }
-if ($kw -and $kw -ne '*') { $agents = @($agents | Where-Object { $_.hostname -match [regex]::Escape($kw) }) }
+$lookup = Get-TrmmAgent -HostnameLike $kw
+if (-not $lookup.Ok) { return }        # the message was already printed
+$agents = $lookup.Agents
 $targets = @($agents | Where-Object { $_.status -eq 'online' })
 Write-Host "Checking sessions on $($targets.Count) online computer(s) (idle >= $IdleHours h)..." -ForegroundColor Cyan
 if ($targets.Count -eq 0) { Write-Host "Nothing online to check." -ForegroundColor Yellow; return }
@@ -72,7 +66,10 @@ $i = 0
 foreach ($a in $targets) {
     $i++
     Write-Progress -Activity 'Checking idle sessions' -Status "$i of $($targets.Count): $($a.hostname)" -PercentComplete (100 * $i / $targets.Count)
-    try { $out = Invoke-AgentCmd $a.agent_id $scanCmd } catch { continue }
+    # -TimeoutSec 60 is passed explicitly: this script's own wrapper defaulted to
+    # 60, while the shared helper defaults to 90. Dropping it would quietly give
+    # every session scan half a minute longer than it used to have.
+    try { $out = Invoke-TrmmAgentText -AgentId $a.agent_id -Command $scanCmd -TimeoutSec 60 } catch { continue }
     foreach ($line in ($out -split "`r?`n")) {
         if ($line -notmatch '^\S+\|\d+\|') { continue }
         $p = $line -split '\|'
@@ -110,24 +107,21 @@ else {
     else { Write-Host "Cancelled." -ForegroundColor DarkGray; return }
 }
 
-if ((Read-Host "Type YES to sign off $($toLogoff.Count) session(s)").Trim() -cne 'YES') {
-    Write-Host "Cancelled - nobody was signed off." -ForegroundColor Yellow; return
-}
+if (-not (Confirm-DeskSideWord "sign off $($toLogoff.Count) session(s)" -CancelNote 'nobody was signed off')) { return }
 
 # Use the shared helper, not a hand-built path: the audit log has one home, and
 # building it here would quietly split it across two files.
 $csv = Join-Path (Get-ADToolOutputDir -Category 'Logs') 'AD-Toolkit-Actions.csv'
 
 foreach ($s in $toLogoff) {
-    try { $res = (Invoke-AgentCmd $s.AgentId "logoff $($s.SessionId); 'LOGGEDOFF'").Trim() }
+    try { $res = (Invoke-TrmmAgentText -AgentId $s.AgentId -Command "logoff $($s.SessionId); 'LOGGEDOFF'" -TimeoutSec 60).Trim() }
     catch { $res = "ERROR $($_.Exception.Message)" }
     $ok = $res -match 'LOGGEDOFF'
     Write-Host ("  {0} @ {1}: {2}" -f $s.User, $s.Hostname, $(if ($ok) { 'signed off' } else { $res })) -ForegroundColor $(if ($ok) { 'Green' } else { 'Red' })
-    [PSCustomObject]@{
-        Timestamp = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'); Operator = $env:USERNAME
-        Action = 'Sign Off Idle User (TRMM)'; Target = $s.Hostname
-        Result = $(if ($ok) { 'Success' } else { 'Failed' })
-        Details = "user=$($s.User); session=$($s.SessionId); idleHours=$($s.IdleHours); threshold=$IdleHours"
-    } | Export-Csv -Path $csv -NoTypeInformation -Encoding UTF8 -Append
+    # Through the shared writer, so this feature cannot drift from the column
+    # set every other feature writes into the same file.
+    Write-ActionLog -Action 'Sign Off Idle User (TRMM)' -Target $s.Hostname `
+        -Result $(if ($ok) { 'Success' } else { 'Failed' }) `
+        -Details "user=$($s.User); session=$($s.SessionId); idleHours=$($s.IdleHours); threshold=$IdleHours"
 }
 Write-Host "`nDone. Logged to $csv" -ForegroundColor Green
