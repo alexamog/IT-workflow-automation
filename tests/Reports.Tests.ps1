@@ -164,7 +164,7 @@ Describe 'Format-DurationHours' {
     }
 
     It 'renders a very long-running ticket readably' {
-        # ITSD-1231 really did run this long; "2479 h" tells nobody anything.
+        # A real ticket ran this long once; "2479 h" tells nobody anything.
         Format-DurationHours 2479.2 | Should -Be '103.3 days'
     }
 
