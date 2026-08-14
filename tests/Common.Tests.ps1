@@ -352,14 +352,16 @@ Describe 'Find-ExoRecipient' {
 
 Describe 'Connect-MgGraphSession' {
 
-    It 'returns false when the Microsoft.Graph module is not installed' {
-        function Get-Module { param([switch]$ListAvailable, $Name) }
+    It 'returns false when Microsoft.Graph.Authentication cannot be loaded' {
+        # The real failure this guards: a half-finished install leaves
+        # Connect-MgGraph findable but the module unloadable.
+        function Import-Module { param($Name, $ErrorAction) throw 'the module could not be loaded' }
         function Connect-MgGraph { throw 'must not connect' }
         (Connect-MgGraphSession 6>$null) | Should -BeFalse
     }
 
     It 'reuses an existing context without connecting again' {
-        function Get-Module { param([switch]$ListAvailable, $Name) [pscustomobject]@{ Name = 'Microsoft.Graph' } }
+        function Import-Module { param($Name, $ErrorAction) }
         function Get-MgContext { [pscustomobject]@{ Account = 'admin@x' } }
         $script:mgConnects = 0
         function Connect-MgGraph { param($Scopes, [switch]$NoWelcome, $ErrorAction) $script:mgConnects++ }
@@ -368,7 +370,7 @@ Describe 'Connect-MgGraphSession' {
     }
 
     It 'connects when installed but no context yet' {
-        function Get-Module { param([switch]$ListAvailable, $Name) [pscustomobject]@{ Name = 'Microsoft.Graph' } }
+        function Import-Module { param($Name, $ErrorAction) }
         function Get-MgContext { $null }
         $script:mgConnects = 0
         function Connect-MgGraph { param($Scopes, [switch]$NoWelcome, $ErrorAction) $script:mgConnects++ }

@@ -899,14 +899,16 @@ function Find-ExoRecipient {
 function Connect-MgGraphSession {
     param([string[]]$Scopes = @('User.ReadWrite.All', 'Organization.Read.All'))
 
-    $haveModule = (Get-Module -ListAvailable -Name Microsoft.Graph) -or
-                  ((Get-Module -ListAvailable -Name Microsoft.Graph.Users) -and
-                   (Get-Module -ListAvailable -Name Microsoft.Graph.Identity.DirectoryManagement))
-    if (-not $haveModule) {
-        Write-Host "The Microsoft.Graph module is not installed." -ForegroundColor Red
-        Write-Host "Install it once (no admin rights needed):" -ForegroundColor Yellow
-        Write-Host "    Install-Module Microsoft.Graph -Scope CurrentUser" -ForegroundColor White
-        Write-Host "(or the smaller Microsoft.Graph.Users + Microsoft.Graph.Identity.DirectoryManagement)" -ForegroundColor DarkGray
+    # Connect-MgGraph lives in Microsoft.Graph.Authentication. Import it rather
+    # than only checking the list: a half-finished install leaves the command
+    # findable but the module unloadable ("command was found ... but the module
+    # could not be loaded"), which used to slip past this gate and fail later.
+    try { Import-Module Microsoft.Graph.Authentication -ErrorAction Stop }
+    catch {
+        Write-Host "Microsoft Graph is not usable on this machine: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "Reinstall it (no admin rights needed), then open a NEW PowerShell window:" -ForegroundColor Yellow
+        Write-Host "    Install-Module Microsoft.Graph -Scope CurrentUser -Force -AllowClobber" -ForegroundColor White
+        Write-Host "The AD steps still ran. Do the mailbox/licence part in the M365 admin centre." -ForegroundColor DarkGray
         return $false
     }
 

@@ -1,7 +1,7 @@
 ﻿# Desk Side Toolkit
 
 Menu-driven PowerShell tools for AD, Snipe-IT, Jira, and Tactical RMM: password
-resets, lockouts, account state, lookups, OU moves, reporting, asset management,
+resets, lockouts, account state, lookups, OU moves, asset management,
 issue tracking, and remote machine maintenance.
 
 > **Taking this over?** Read `documentation\DEVELOPER-GUIDE.md` (how it fits together, how
@@ -37,8 +37,7 @@ Examples). Most user scripts take a **SAM** (`alex.amog`) or **UPN**
 | `users\` | Get-UserDetails, Get-UserOUPath, Manage-UserGroups, Move-UserByOUPath |
 | `assets\` | Get-SnipeAsset, New-SnipeAssetFromClone |
 | `onboarding\` | New-UserOnboarding |
-| `reporting\` | Get-DisabledUnmatchedUsers, Get-LockedOutUsers, Group-UnmatchedUsersByOffice |
-| `maintenance\` | Get-UsersOUPaths, Convert-UsersOUToReadable, Remove-UnlistedProfiles |
+| `maintenance\` | Remove-UnlistedProfiles (run directly or via the Tactical RMM standalone edition) |
 | `remote\` | Start-TrmmConsole (hub), Invoke-RemoteProfileCleanup, Send-TrmmFile, Enter-TrmmShell, Invoke-FleetDiskCleanup |
 
 Launcher auto-discovers features from `*.tool.psd1` manifests (see "Adding a
@@ -51,7 +50,7 @@ holds copy-paste REST/AD skeletons for building new scripts.
 ### Jira
 | Option | Script |
 | ------ | ------ |
-| Jira Service Console (my/unassigned tickets, find/search, fix/undo orgs) | `Jira Scripts\Start-JiraConsole.ps1` |
+| Jira Service Console (my/unassigned tickets, find/search, fix orgs, monthly reports) | `Jira Scripts\Start-JiraConsole.ps1` |
 
 ### Assets (Snipe-IT)
 | Option | Script |
@@ -236,30 +235,6 @@ group-backed sites from the M365 admin centre or Teams.
 | View / manage group membership | `Manage-UserGroups.ps1` |
 | Move to an OU path | `Move-UserByOUPath.ps1` |
 
-### Reporting
-| Option | Script |
-| ------ | ------ |
-| AD security events (lockouts, resets, changes) over a time range | `Get-ADAuditEvents.ps1` |
-| Disabled users (Unmatched Accounts OU) | `Get-DisabledUnmatchedUsers.ps1` |
-| Locked-out accounts | `Get-LockedOutUsers.ps1` |
-| Group unmatched users by Office | `Group-UnmatchedUsersByOffice.ps1` |
-
-`Get-ADAuditEvents.ps1` turns the DC Security log into a plain "who did what to
-whom, and when" table over a time range you pick (last 24h/7d/30d or a custom
-window like `48h`, `14d`, or a start date). It covers lockouts, admin password
-resets, user password changes, account enable/disable/create/delete/rename, and
-group add/remove.
-
-For a **"keeps locking out"** complaint, 4740 (locked out) alone isn't enough -
-it's written once per lock and only on the PDC. The events that show every bad
-attempt *and where it came from* are the failed sign-ins (4625/4771/4776), each
-carrying the source IP or computer. Those are included automatically when you
-name a person (`Get-ADAuditEvents.ps1 brittany.harris -Days 7 -AllDcs`), or add
-`-IncludeSignInFailures` for the whole domain. They land on whichever DC handled
-the attempt, so pair with `-AllDcs`. Password resets likewise can be on any DC -
-`-AllDcs` sweeps them too. Read-only; `-Csv` saves the table to `output\`. Needs
-rights to read the DC Security log (domain admin, or a SYSTEM run on a DC).
-
 ### Remote (Tactical RMM)
 | Option | Script |
 | ------ | ------ |
@@ -314,8 +289,6 @@ Snipe-IT change to `Snipe-Asset-Changes.json`).
 ### Setup / Maintenance
 | Option | Script |
 | ------ | ------ |
-| Scan regions for "Users" OUs to JSON | `Get-UsersOUPaths.ps1` |
-| Build readable navigation reference | `Convert-UsersOUToReadable.ps1` |
 | Clean up profiles on THIS computer | `Remove-UnlistedProfiles.ps1` |
 
 ## Examples
@@ -334,7 +307,6 @@ Snipe-IT change to `Snipe-Asset-Changes.json`).
 .\scripts\assets\New-SnipeAssetFromClone.ps1
 
 .\"Jira Scripts"\Start-JiraConsole.ps1
-.\scripts\reporting\Get-DisabledUnmatchedUsers.ps1
 
 # Local profile cleanup (preview first; add -Cleanup / -HealthCheck)
 .\scripts\maintenance\Remove-UnlistedProfiles.ps1 -Keep alex.amog, john.smith -WhatIf
@@ -573,6 +545,7 @@ their next launch - no re-sending zips.
 - RSAT ActiveDirectory module (AD features)
 - Rights for the action (password reset, group edit, PDC Security log for lockouts)
 - `SNIPEIT_TOKEN` for asset options; `TRMM_*` for remote
+
 
 
 

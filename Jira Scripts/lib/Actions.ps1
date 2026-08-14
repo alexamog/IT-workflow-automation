@@ -1,4 +1,4 @@
-<#
+﻿<#
     Actions.ps1
     -----------
     Write operations that change a ticket: add a comment, assign to me,
@@ -396,51 +396,6 @@ function Set-TicketOrganization {
     if (Set-OrgFieldValue -Key $Key -Orgs @(@{ id = $OrgId; name = $OrgName }) -Label "set organization on $Key") {
         Write-Host "$Key organization set to '$OrgName'." -ForegroundColor Green
         Write-OrgChangeLog -Key $Key -Before $before -NewOrgName $OrgName -NewOrgId $OrgId -Reporter $Reporter -Source $Source
-        return $true
-    }
-    return $false
-}
-
-function Restore-TicketOrganization {
-    <#
-    .SYNOPSIS
-        Restores a ticket's Organizations field to a previous value, or clears it.
-    .DESCRIPTION
-        Used to UNDO a change. Sets the field to the supplied "before" list of
-        organizations (by id); an empty/absent list clears the field back to none
-        (via a "set": [] operation). Does not write to the change log itself - the
-        caller marks the original entry as reverted.
-    .PARAMETER Key
-        The issue key to restore.
-    .PARAMETER Before
-        The organization(s) to restore, each carrying an .id (as recorded in the
-        log). Empty or $null clears the field.
-    .OUTPUTS
-        System.Boolean - $true on success, $false on failure.
-    #>
-    [CmdletBinding()]
-    [OutputType([bool])]
-    param(
-        [Parameter(Mandatory)][string]$Key,
-        $Before
-    )
-
-    if (-not $script:OrgFieldId) {
-        Write-Host "No Organizations field on this instance - cannot restore." -ForegroundColor Red
-        return $false
-    }
-
-    # Rebuild org refs (id + name) from the logged "before"; empty clears the field.
-    $orgs = @()
-    foreach ($b in @($Before)) { if ($b -and $b.id) { $orgs += @{ id = "$($b.id)"; name = $b.name } } }
-
-    if (Set-OrgFieldValue -Key $Key -Orgs $orgs -Label "restore organization on $Key") {
-        if ($orgs.Count -gt 0) {
-            $names = ($orgs | ForEach-Object { $_.name }) -join ', '
-            Write-Host "$Key organization restored to '$names'." -ForegroundColor Green
-        } else {
-            Write-Host "$Key organization cleared (back to none)." -ForegroundColor Green
-        }
         return $true
     }
     return $false
