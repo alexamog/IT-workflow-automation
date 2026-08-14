@@ -1,0 +1,1214 @@
+﻿{
+    "exportedBy":  "Alexander Amog",
+    "exportedAt":  "2026-07-13T08:26:48.7392490-07:00",
+    "jql":  "assignee = currentUser() AND statusCategory = Done",
+    "count":  30,
+    "tickets":  [
+                    {
+                        "key":  "ITSD-5662",
+                        "summary":  "Computer clean up",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-07-08T13:31:42.617-0700",
+                        "resolved":  "2026-07-10T15:08:56.795-0700",
+                        "reporter":  "Candace Bolton",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  1800,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5662",
+                        "description":  "Hello,     Just wanted to reach out as the computer in the office at Sturgeon is shutting down during work and having a black screen. It is also saying it has too much information stored.     SumasABI-01    Sincerely,   Candace Bolton,   Program Manager,   Abbotsford Health Portfolio    Lookout Housing \u0026 Health Society C: 604.226.7396            Like Us on Facebook   Follow Us on Twitter   Connect with Us on LinkedIn   Your donation has a direct impact on the life of someone who is homeless   Lookout recognizes and acknowledges that our work takes place on the unceded and traditional lands of The Coast Salish Nations    Lookout Housing and Health Society is a social safety net committed to empowering people from different races, gender, age, religion, identities and unique experiences. We welcome everyone from diverse backgrounds and encourage them to join our team in order to foster an inclusive environment",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-07-08T13:33:52.438-0700",
+                                               "public":  true,
+                                               "body":  "Hi Candace, is the workstation currently turned on and connected to the internet?\n\nI don’t see it online on my end; I’ll remote in once it is.\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-08T13:35:25.736-0700",
+                                               "public":  true,
+                                               "body":  "Additionally,\n\ncan you provide me a list of users who actively use this workstation?\n\nI’ll delete those who are not listed"
+                                           },
+                                           {
+                                               "created":  "2026-07-08T14:15:25.915-0700",
+                                               "public":  true,
+                                               "body":  "Is there a time specifically today or tomorrow that would work best for me to remote in?"
+                                           },
+                                           {
+                                               "created":  "2026-07-08T15:08:34.010-0700",
+                                               "public":  true,
+                                               "body":  "Sure! Sounds good!"
+                                           },
+                                           {
+                                               "created":  "2026-07-09T07:38:54.153-0700",
+                                               "public":  true,
+                                               "body":  "Hi Candance,\n\nCan you also provide me a list of users who actively use this computer? I\u0027ll delete those who aren\u0027t listed.\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-09T07:39:38.346-0700",
+                                               "public":  true,
+                                               "body":  "Candace*\n\nI apologize for the misspelling"
+                                           },
+                                           {
+                                               "created":  "2026-07-09T09:07:28.820-0700",
+                                               "public":  true,
+                                               "body":  "Hi Candace,\n\nI ran the command remotely. Please restart the computer when you can\n\nThank you!"
+                                           },
+                                           {
+                                               "created":  "2026-07-09T09:40:14.517-0700",
+                                               "public":  true,
+                                               "body":  "Please confirm the issue is resolved and i\u0027ll go ahead and close the ticket. Thank you!"
+                                           },
+                                           {
+                                               "created":  "2026-07-10T14:52:56.921-0700",
+                                               "public":  true,
+                                               "body":  "Hi Candace,\n\nJust following up to ask if the issue is resolved.\n\nPlease let me know!"
+                                           },
+                                           {
+                                               "created":  "2026-07-10T15:08:47.534-0700",
+                                               "public":  true,
+                                               "body":  "Sounds good! I\u0027ll go ahead and close this ticket for now. If any issues come back feel free to re-open this ticket.\n\nAlex"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5669",
+                        "summary":  "SharePoint Support ",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-07-09T11:05:42.609-0700",
+                        "resolved":  "2026-07-09T15:20:17.731-0700",
+                        "reporter":  "Chandler Riggins",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  900,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5669",
+                        "description":  "Hi team,  Cody and I have tried everything to organize our SharePoint folder tenant files in numerical order and nothing is working for us. We followed all the chat gpt and google gemini prompts and nothing works.   315 alderson - Documents - Tenant Reference Checks - All Documents   The folders, in the hundreds, jump all over the place. And even renaming them with 0s in front does not work.   Would yall know how to make the folders read in numerical order? We are aware of numerical gaps, but everything was fine until it got to the 100s.   Kind regards,     Chandler Riggins   Property Coordinator   Lookout Housing and Health Society   C: 1604-649-3696   www.lookoutsociety.ca         + Like Us on Facebook +   Follow Us on Twitter Follow Us on Instagram Connect with Us on LinkedIn",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-07-09T11:19:44.982-0700",
+                                               "public":  true,
+                                               "body":  "Hi Chandler,\n\nSharePoint will sort names as text rather than numeric values. If you would like to do it this way, you can do it as,\n\n001, 002, 003 ... 009, 010, 011 ... 099, 100, 101 ... 147, 148.\n\nLet me know what you think and I can think of something\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-09T14:31:08.195-0700",
+                                               "public":  true,
+                                               "body":  "Hi Chandler,\n\nIn SharePoint, you can also setup a column called “Files by number” which takes the Type as a number rather than text.\n\nI already did most of the numbering but the rest I’ll leave to you so you can also get the hang of it.\n\nJust select “IT - number view” and if you click on the “Files by number”, you can sort by ascending order.\n\nFor each blank column for the “Files by number” just type in the corresponding number and it should be good to go.\n\n[inline image - open ticket in browser to view]"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5671",
+                        "summary":  "cannot access Sap account ",
+                        "status":  "Canceled",
+                        "priority":  "Medium",
+                        "created":  "2026-07-09T14:55:41.904-0700",
+                        "resolved":  "2026-07-09T15:06:26.073-0700",
+                        "reporter":  "Adriana.Mitchell@lookoutsociety.ca",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  60,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5671",
+                        "description":  "Hi,     It seems somehow I have been locked out of Sap, I was attempting to assist a new hire access their on boarding as they were having issues with it from their labtop. Now I am not able to get into my account.     Thank you.     Adriana Mitchell    Coordinator -The Village.",
+                        "myComments":  [
+
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5476",
+                        "summary":  "Manager Printer Won\u0027t Scan to Email",
+                        "status":  "Canceled",
+                        "priority":  "Medium",
+                        "created":  "2026-06-18T10:55:25.533-0700",
+                        "resolved":  "2026-07-09T14:51:03.763-0700",
+                        "reporter":  "kali.hegg@lookoutsociety.ca",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  300,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5476",
+                        "description":  "Previously, my printer would occasionally not scan to email and I could turn it off and back on and it would correct the IP Address. Now it does not do this and I need to be able to scan to my email please.   Here is my computer it is connected to: Device name\tCARSMGRDES-01  Full device name\tCARSMGRDES-01.Lookout.local  Processor\tIntel(R) Core(TM) i5-10500T CPU @ 2.30GHz   2.30 GHz  Installed RAM\t16.0 GB (15.7 GB usable)  Device ID\t7B88B0EA-D561-497D-90C7-C8D360380969  Product ID\t00355-63299-35014-AAOEM  System type\t64-bit operating system, x64-based processor  Pen and touch\tNo pen or touch input is available for this display  Printer [Canon Color Imageclass MF656Cdw]",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-07-07T08:04:10.927-0700",
+                                               "public":  true,
+                                               "body":  "Hi Kali,\n\nDo you still need help with this ticket?\n\nOtherwise, I’ll go ahead and close it.\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-07T12:52:24.286-0700",
+                                               "public":  false,
+                                               "body":  "Client is out of office until 2026-07-09"
+                                           },
+                                           {
+                                               "created":  "2026-07-09T10:18:23.321-0700",
+                                               "public":  true,
+                                               "body":  "Hi Kali,\n\nDo you still need this ticket opened?"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5652",
+                        "summary":  "Avalon desktop AVALONDES-03",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-07-08T09:44:43.422-0700",
+                        "resolved":  "2026-07-09T14:33:28.544-0700",
+                        "reporter":  "Jorge.Gonzalez@lookoutsociety.ca",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  60,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5652",
+                        "description":  "Hi,    I wanted to flag that the desktop at Avalon is displaying a moving line across the screen and there\u0027s a message that shows as well. Could you please look into it?    Thank you",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-07-08T10:29:18.612-0700",
+                                               "public":  true,
+                                               "body":  "Hi Jorge, can you try replugging in the cable monitors or even try temporary swapping?\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-09T14:33:28.592-0700",
+                                               "public":  true,
+                                               "body":  "Hi Jorge,\n\nFor now, I’ll close this ticket. After you try troubleshooting by swapping out the cables and it still does not fix the monitor just re-open the ticket and we can go from there.\n\nThank you!\n\nAlex"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5664",
+                        "summary":  "Email access",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-07-08T16:28:43.084-0700",
+                        "resolved":  "2026-07-09T11:26:09.226-0700",
+                        "reporter":  "Quyen Dinh",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  300,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5664",
+                        "description":  "Hi helspdesk,    Could you please help set up the email access as follows:       From Rashida Giwa\u0027s email to Dental@lookoutsociety.ca       From Quyen Dinh\u0027s email to Dental@lookoutsociety.ca       From Mai Nguyen\u0027s email to Dental@lookoutsociety.ca       From Mai Nguyen\u0027s email to Medical.clinic@lookoutsociety.ca   Thank you so much, Quyen Dinh, Surrey Health Coordinator   10697 135A Street, Surrey, BC V3T 4E3   Lookout Housing and Health Society   P: 604 498 2957    C: 778 789 5974    www.lookoutsociety.ca         Like Us on Facebook   Follow Us on Instagram   Connect with Us on LinkedIn   Your donation has a direct impact on the life of someone who is homeless   Lookout Housing and Health Society recognizes and acknowledges that our work takes place on the unceded and traditional lands of the Stó:lō, Hul’qumi’num Treaty Group, Tsleil-Waututh, Musqueam, Squamish, Stz’uminus, Semiahmoo, Qayqayt, Kwantlen, Tsawwassen, Katzie, Nooksack, W̱SÁNEĆ, kʷikʷəƛ̓əm, Quw’utsun, Ts’uubaa-asatx, Te’mexw Treaty Association, and Lekwungen/Songhees Peoples.",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-07-09T07:37:40.790-0700",
+                                               "public":  true,
+                                               "body":  "Hi Quyen,\n\nJust to clarify, you would like me to add these people to these shared mailboxes?\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-09T09:47:47.905-0700",
+                                               "public":  true,
+                                               "body":  "Done. I provided delegation to those to the corresponding mailboxes.\n\nPlease note it may take up to 10 minutes for it to take in effect.\n\nThank you!"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5625",
+                        "summary":  "Computer storage free up - Russell",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-07-06T17:03:41.607-0700",
+                        "resolved":  "2026-07-09T11:25:52.066-0700",
+                        "reporter":  "hugo.calderon@lookoutsociety.ca",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  600,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5625",
+                        "description":  "Hi Helpdesk,    We need storage freed up on our staff office computers. Please let me know if you require more info.    RUSSELLDES-12 - Caseplanner    0000001305    SMZ00SXC0    RUSSELLDES-11 - SRW Computer    0000001303    SMZ00SXCM    Kind regards,     Hugo Calderon   Program Manager   , Russell Housing Centre \u0026 Rhoda Kaellis Residence   Lookout Housing and Health Society   740 Carnarvon Street   New Westminster, BC, V3M 1E7   P: 604-529-9126 EXT 113   C: 236-881-5792",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-07-07T07:40:51.696-0700",
+                                               "public":  true,
+                                               "body":  "Hi Nuzhat,\n\nCan you give me a list of users who actively use each computer? This way I can also delete user profiles that are no longer needed for each computer.\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-07T07:41:27.967-0700",
+                                               "public":  true,
+                                               "body":  "Sorry, not Nuzhat, I meant Hugo\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-07T10:47:41.886-0700",
+                                               "public":  true,
+                                               "body":  "Sounds good! Thank you for the list!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-07T11:22:40.178-0700",
+                                               "public":  true,
+                                               "body":  "Is there a time that works best for me to remote into each workstation? Should only take me about 10 minutes to start the process. Afterwards the computer can be used.\n\nJust ensure that everyone is signed out of the workstation to avoid any loss of work"
+                                           },
+                                           {
+                                               "created":  "2026-07-08T14:38:13.160-0700",
+                                               "public":  true,
+                                               "body":  "Hi, any time that works best tomorrow for me to do this? Thank you!"
+                                           },
+                                           {
+                                               "created":  "2026-07-08T14:52:37.821-0700",
+                                               "public":  true,
+                                               "body":  "Yes, sounds good!"
+                                           },
+                                           {
+                                               "created":  "2026-07-09T10:39:25.846-0700",
+                                               "public":  true,
+                                               "body":  "Hi, I am already working on the computer remotely. This computer can be used normally as usual. Thank you!"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5648",
+                        "summary":  "Front computer log in",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-07-08T08:43:43.201-0700",
+                        "resolved":  "2026-07-08T14:53:02.922-0700",
+                        "reporter":  "Brittany.Harris@lookoutsociety.ca",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  600,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5648",
+                        "description":  "Good morning IT team,    We are struggling with our front computer log in and have tried restarting it to no prevail. Please see the attached photo for the message that is being received by anyone who attempts to log in.     Kindly,    Brittany Harris , Coordinator (She/Her)     Oasis Residential     40 E Hastings, Vancouver, V6A 1N1     Site: 604-565-9678 ext. 105     Fax: 604-569-9664     Cell: 236-885-5334     Work: 236-992-0439     Lookout Housing + Health Society        Lookout recognizes and acknowledges that our work takes place on the unceded and traditional lands of The Coast Salish Nations.",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-07-08T09:01:10.770-0700",
+                                               "public":  true,
+                                               "body":  "Hi Brittany, can you tell me which computer this is?\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-08T09:18:18.605-0700",
+                                               "public":  true,
+                                               "body":  "Hi Brittany,\n\nCan you try logging in again? And see if it displays the same message? if it does, can you tell me which user tried to sign in? Thank you!"
+                                           },
+                                           {
+                                               "created":  "2026-07-08T09:38:53.798-0700",
+                                               "public":  true,
+                                               "body":  "Hello,\n\nCan you have either one of them try again? I suspect its the user’s profile folder being corrupted so I created a backup and see if it’ll re-create the profile.\n\nThank you!"
+                                           },
+                                           {
+                                               "created":  "2026-07-08T10:20:05.521-0700",
+                                               "public":  true,
+                                               "body":  "Ok. Can you try having Joseph login again?\n\nThank you!"
+                                           },
+                                           {
+                                               "created":  "2026-07-08T14:31:14.252-0700",
+                                               "public":  true,
+                                               "body":  "Hello,\n\nany updates? Thank you"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5657",
+                        "summary":  "FW: email login",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-07-08T12:16:42.841-0700",
+                        "resolved":  "2026-07-08T12:22:43.305-0700",
+                        "reporter":  "Nicole Johnston",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  300,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5657",
+                        "description":  "Hi Team,   Could you please reset the password for:  Nicholas Misri   Thank you.   Nicole   From:  Info MDABC \u003cinfo@mdabc.net\u003e   Sent:  Wednesday, July 8, 2026 8:37 AM  To:  Nicole Johnston \u003cNicole.J@mdabc.net\u003e  Subject:  Fw: email login    Hey Nicole,     I remember you asked me in the past to send these emails through you rather than reaching out to IT directly for his request. Any chance you could take care of this for Dr. Misri?     Thanks     Erfan    From: Nicholas Misri \u003c nicholasmisri@gmail.com \u003e  Sent:  Tuesday, July 7, 2026 3:30 PM  To:  Info MDABC \u003c info@mdabc.net \u003e  Subject:  email login     Hi team, Is it possible to reset my password? I can\u0027t seem to login to my email. Thanks! Dr. Nicholas Misri, FRCPC (he/his/him) Psychiatrist, Mood Disorders Association of BC Clinical Instructor, UBC   Caution! This message was sent from outside your organization.  sophospsmartbannerend     Hi team,     Is it possible to reset my password? I can\u0027t seem to login to my email.     Thanks!     Dr. Nicholas Misri, FRCPC   (he/his/him)     Psychiatrist, Mood Disorders Association of BC     Clinical Instructor, UBC Faculty of Medicine     I acknowledge the land on which I work is the unceded homelands of xʷməθkwəy̓əm (Musqueam), Sḵwx̱wú7mesh (Squamish), and Səl̓ílwətaɬ (Tsleil-Waututh) Nations     Kind regards,    Admin Team    Mood Disorders Association of BC A Branch of Lookout Housing and Health Society   P: 604.873.0103     F: 866.821.5992    1030-789 West Pender Street, Vancouver BC V6C 1H2    https://lookoutsociety.ca/mdabc/    \u003c https://can01.safelinks.protection.outlook.com/?url=https%3A%2F%2Flookoutsociety.ca%2F\u0026data=05%7C02%7Chelpdesk%40lookoutsociety.ca%7C6d9720b59c054599383108dedd255260%7C4874c8f415084a41a8cb287f13849603%7C0%7C0%7C639191349550779681%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C\u0026sdata=j9Af3D6MNUJFewd7ozEiPZuWqbNxh6oED1DpSmPLSWU%3D\u0026reserved=0 \u003e    Lookout Housing and Health Society’s valuable work is located on unceded Indigenous land belonging to various Coast Salish nations.    Like us on Facebook   Follow us on Instagram   Connect with us on LinkedIn   Your donation has a direct impact on someone who is homeless   Confidentiality notice:   The information contained in this email is confidential and may be privileged. It is intended solely for the use of the designated addressee(s). Any unauthorized viewing, disclosure, copying, distribution or use of the information contained in this email is prohibited and may be unlawful. If you have received this email in error, please reply to the sender immediately to inform them that you are not the intended recipient and delete the email from your computer system. Thank you.",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-07-08T12:22:43.346-0700",
+                                               "public":  true,
+                                               "body":  "Hi,\n\nLogin credentials are:\n\nusername/email: Nick.Misri@mdabc.net\n\nPassword: Thud97#.Skate.Fog\n\nThank you!\n\nAlex"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5582",
+                        "summary":  "HIFIS 3.8",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-06-30T12:30:42.776-0700",
+                        "resolved":  "2026-07-08T10:59:41.332-0700",
+                        "reporter":  "Danya.Doucette",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  109800,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5582",
+                        "description":  "Hello,    I do not have access to HIFIS 3.8 on this computer at Coles, could it be downloaded?    Kindly,    Danya Doucette   Program Manager ,  Riverside | Sumas | SRSP    Lookout Housing and Health Society    C: 778-347-5196    E: Danya.Doucette@lookoutsociety.ca    www.lookoutsociety.ca      \u003c https://can01.safelinks.protection.outlook.com/?url=https%3A%2F%2Flookoutsociety.ca%2F\u0026data=05%7C02%7Chelpdesk%40lookoutsociety.ca%7C8d812a53ab6c4247918b08ded6ddf054%7C4874c8f415084a41a8cb287f13849603%7C0%7C0%7C639184445926421624%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C\u0026sdata=2jvB1Eu3VB11jFGshIKrfTVh0dwDxzfMK%2FLP3L%2BQraU%3D\u0026reserved=0 \u003e  \u003c https://can01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fcoanet.org%2F\u0026data=05%7C02%7Chelpdesk%40lookoutsociety.ca%7C8d812a53ab6c4247918b08ded6ddf054%7C4874c8f415084a41a8cb287f13849603%7C0%7C0%7C639184445926446920%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C\u0026sdata=sTkWwyZHPXupYvpfd0H8xM4Azi60u%2FR%2F8o9upQes1vU%3D\u0026reserved=0 \u003e     Like Us on Facebook   Follow Us on Instagram   Connect with Us on LinkedIn   Your donation has a direct impact on the life of someone who is homeless   Lookout recognizes and acknowledges that our work takes place on the unceded and traditional lands of The Coast Salish Nations.    Confidentiality notice:  The information contained in this email is confidential and may be privileged. It is intended solely for the use of the designated addressee(s). Any unauthorized viewing, disclosure, copying, distribution or use of the information contained in this email is prohibited and may be unlawful. If you have received this email in error, please reply to the sender immediately to inform them that you are not the intended recipient and delete the email from your computer system. Thank you.",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-06-30T12:52:42.610-0700",
+                                               "public":  true,
+                                               "body":  "Hi Danya,\n\nCan you let me know which computer you’re trying to access HIFIS on?\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-06-30T13:13:43.540-0700",
+                                               "public":  true,
+                                               "body":  "Hi Danya,\n\nIs there any time that works for me to remote into the computer?"
+                                           },
+                                           {
+                                               "created":  "2026-07-02T07:48:37.996-0700",
+                                               "public":  true,
+                                               "body":  "Hi Danya,\n\nAre you free anytime today?"
+                                           },
+                                           {
+                                               "created":  "2026-07-02T08:32:25.633-0700",
+                                               "public":  true,
+                                               "body":  "Hi Danya,\n\nYes! I’ll remote in at 9am. You can just leave it unattended and I’ll take a look!\n\nThank you!"
+                                           },
+                                           {
+                                               "created":  "2026-07-02T08:59:20.049-0700",
+                                               "public":  false,
+                                               "body":  "test API"
+                                           },
+                                           {
+                                               "created":  "2026-07-02T09:05:43.119-0700",
+                                               "public":  true,
+                                               "body":  "Hi Danya, can you try it now? I just copied onto your desktop. Thank you!"
+                                           },
+                                           {
+                                               "created":  "2026-07-02T14:44:18.617-0700",
+                                               "public":  true,
+                                               "body":  "Hi Danya,\n\nHave you gotten a chance to give it a go?\n\nLet me know!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-03T08:16:14.508-0700",
+                                               "public":  true,
+                                               "body":  "Hi, the password is here: https://password.lookoutsociety.ca/#/send/Db1bABcDR1qpkF2-18dGww/1seHKiLHTXwEONFIfurwKQ\n\nThank you!"
+                                           },
+                                           {
+                                               "created":  "2026-07-03T11:03:23.526-0700",
+                                               "public":  true,
+                                               "body":  "Please keep me updated!"
+                                           },
+                                           {
+                                               "created":  "2026-07-03T11:06:45.044-0700",
+                                               "public":  true,
+                                               "body":  "Please try again here:\n\nhttps://password.lookoutsociety.ca/#/send/Db1bABcDR1qpkF2-18dGww/1seHKiLHTXwEONFIfurwKQ\n\nThank you!"
+                                           },
+                                           {
+                                               "created":  "2026-07-03T11:20:14.538-0700",
+                                               "public":  true,
+                                               "body":  "What is the name of the workstation you are on? I can remote in and check"
+                                           },
+                                           {
+                                               "created":  "2026-07-06T14:34:53.447-0700",
+                                               "public":  true,
+                                               "body":  "Any updates? Thank you!"
+                                           },
+                                           {
+                                               "created":  "2026-07-07T08:02:36.611-0700",
+                                               "public":  true,
+                                               "body":  "Sounds good.\n\nIs there any time today that works best for me to remote in and to take a look?\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-07T08:53:01.586-0700",
+                                               "public":  true,
+                                               "body":  "Hi Danya,\n\nThe HIFIS is good to go now.\n\nI placed it onto your desktop.\n\nFeel free to reopen this ticket if the issue persists\n\nThank you!\n\nSincerely,\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-07T09:20:34.991-0700",
+                                               "public":  true,
+                                               "body":  "Hi Danya,\n\nCan be found here:\n\nhttps://password.lookoutsociety.ca/#/send/l46U1aHLT-SXJD21LZdxnw/YZxBHK3BgOolXyMo3GH0pA\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-07T09:31:14.376-0700",
+                                               "public":  true,
+                                               "body":  "Hi Danya, are you talking about sigining into the HIFIS application itself or when opening the HIFIS shortcut?"
+                                           },
+                                           {
+                                               "created":  "2026-07-07T09:39:10.896-0700",
+                                               "public":  true,
+                                               "body":  "Hi Danya,\n\nIf you\u0027re talking about the application itself, you\u0027ll have to reach out to admin team.\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-07T13:40:22.919-0700",
+                                               "public":  false,
+                                               "body":  "Waiting on client to confirm if their issue currently is with connecting to HIFIS or if its the application itself"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5636",
+                        "summary":  "FW: Work phone pickup for Anna Pulawski",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-07-07T09:06:43.634-0700",
+                        "resolved":  "2026-07-08T10:59:19.923-0700",
+                        "reporter":  "anna.pulawski@lookoutsociety.ca",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  300,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5636",
+                        "description":  "For reference  Alexander Amog    (He/Him)   Information Technology Support Technician   Lookout Housing and Health Society   P: 604-239-2422   www.lookoutsociety.ca         Like Us on Facebook   Follow Us on Instagram   Connect with Us on LinkedIn   Your donation has a direct impact on the life of someone who is homeless   Lookout Housing and Health Society recognizes and acknowledges that our work takes place on the unceded and traditional lands of the Stó:lō, Hul’qumi’num Treaty Group, Tsleil-Waututh, Musqueam, Squamish, Stz’uminus, Semiahmoo, Qayqayt, Kwantlen, Tsawwassen, Katzie, Nooksack, W̱SÁNEĆ, kʷikʷəƛ̓əm, Quw’utsun, Ts’uubaa-asatx, Te’mexw Treaty Association, and Lekwungen/Songhees Peoples.   Confidentiality notice: The information contained in this email is confidential and may be privileged. It is intended solely for the use of the designated addressee(s). Any unauthorized viewing, disclosure, copying, distribution or use of the information contained in this email is prohibited and may be unlawful. If you have received this email in error, please reply to the sender immediately to inform them that you are not the intended recipient and delete the email from your computer system. Thank you.    From:  Anna Pulawski \u003canna.pulawski@lookoutsociety.ca\u003e   Sent:  Tuesday, July 7, 2026 8:37 AM  To:  Alexander Amog \u003calexander.amog@lookoutsociety.ca\u003e  Subject:  Re: Work phone pickup for Anna Pulawski    Hi Alex,     Thank you, I will create a ticket in a little bit. Come this afternoon and give you an hour heads up.    From: Alexander Amog \u003c alexander.amog@lookoutsociety.ca \u003e  Sent:  Tuesday, July 7, 2026 8:19 AM  To:  Anna Pulawski \u003c anna.pulawski@lookoutsociety.ca \u003e  Subject:  Work phone pickup for Anna Pulawski     Hi Anna,  Your phone is ready to be picked up and setup with your email. Please let us know an hour in advanced of when you are coming to get it.  Also please also make a ticket for this as it helps keep track of what tasks have been done! 😊  Thank you!  Sincerely,  Alex  Alexander Amog    (He/Him)   Information Technology Support Technician (student)   Lookout Housing and Health Society   P: 604-239-2422   www.lookoutsociety.ca         Like Us on Facebook   Follow Us on Instagram   Connect with Us on LinkedIn   Your donation has a direct impact on the life of someone who is homeless   Lookout Housing and Health Society recognizes and acknowledges that our work takes place on the unceded and traditional lands of the Stó:lō, Hul’qumi’num Treaty Group, Tsleil-Waututh, Musqueam, Squamish, Stz’uminus, Semiahmoo, Qayqayt, Kwantlen, Tsawwassen, Katzie, Nooksack, W̱SÁNEĆ, kʷikʷəƛ̓əm, Quw’utsun, Ts’uubaa-asatx, Te’mexw Treaty Association, and Lekwungen/Songhees Peoples.   Confidentiality notice: The information contained in this email is confidential and may be privileged. It is intended solely for the use of the designated addressee(s). Any unauthorized viewing, disclosure, copying, distribution or use of the information contained in this email is prohibited and may be unlawful. If you have received this email in error, please reply to the sender immediately to inform them that you are not the intended recipient and delete the email from your computer system. Thank you.     Respectfully,    Anna Pulawski     Temp. Coordinator   Surrey Addictions Services   SafePoint Supervised Consumption Site + Surrey Smoke OPS    Surrey Intensive Case Management Team (ICM) + Cooper\u0027s Residence   Lookout Housing \u0026 Health Society   www.lookoutsociety.ca         Like Us on Facebook   Connect with Us on LinkedIn   Your donation has a direct impact on the life of someone who is homeless   Lookout Housing \u0026 Health Society’s valuable work is located on unceded Indigenous land belonging to various Coast Salish nations",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-07-07T09:06:44.860-0700",
+                                               "public":  true,
+                                               "body":  "[inline image - open ticket in browser to view]\n\n[inline image - open ticket in browser to view]"
+                                           },
+                                           {
+                                               "created":  "2026-07-07T09:12:11.965-0700",
+                                               "public":  true,
+                                               "body":  "No worries about creating the ticket. I just made it for you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-08T08:28:57.123-0700",
+                                               "public":  false,
+                                               "body":  "Client confirmed pickup at around 12:00-14:00 today"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5650",
+                        "summary":  "TEAMS not working ",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-07-08T09:29:43.153-0700",
+                        "resolved":  "2026-07-08T10:46:39.829-0700",
+                        "reporter":  "amitoj toor",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  300,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5650",
+                        "description":  "Hi It can you please assist my teams is not working as it is crucial for LEEP :        Best,    Aj Amitoj Toor      Acting Manager - LEEP Surrey/LEEP Burnaby (Lookout Ethical Employment Program)    Lookout Housing and Health Society     C: (778) 871-6187        www.lookoutsociety.ca            Lookout Housing and Health Society    Like Us on Facebook   Connect with Us on LinkedIn     Your donation has a direct impact on the life of someone who is homeless     Lookout recognizes and acknowledges that our work takes place on the unceded and traditional lands of The Coast Salish Nations",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-07-08T09:33:11.181-0700",
+                                               "public":  true,
+                                               "body":  "Hi Amitoj,\n\nCan you tell me the device name? I’ll take a look and remote in\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-08T09:51:52.442-0700",
+                                               "public":  true,
+                                               "body":  "Please restart your laptop when you can and then see if the error still shows. Thank you!"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5651",
+                        "summary":  "Lion Hotel Printer cable broken",
+                        "status":  "Canceled",
+                        "priority":  "Medium",
+                        "created":  "2026-07-08T09:41:46.545-0700",
+                        "resolved":  "2026-07-08T10:38:03.198-0700",
+                        "reporter":  "Jorge.Gonzalez@lookoutsociety.ca",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  null,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5651",
+                        "description":  "Hi,    The cable for the Lion printer is broken; would it be possible to have a replacement?    Thank you,    Jorge Gonzalez (He/Him)   DTES Harbourside Portfolio Programme Manager   Lookout Housing and Health Society   C: 604-803-5284   www.lookoutsociety.ca          Like Us on Facebook   Follow Us on Instagram   Connect with Us on LinkedIn   Your donation has a direct impact on the life of someone who is homeless   Lookout Housing and Health Society recognizes and acknowledges that our work takes place on the unseeded and traditional lands of the Stó:lō, Hul’qumi’num Treaty Group, Tsleil-Waututh, Musqueam, Squamish, Stz’uminus, Semiahmoo, Qayqayt, Kwantlen, Tsawwassen, Katzie, Nooksack, W̱SÁNEĆ, kʷikʷəƛ̓əm, Quw’utsun, Ts’uubaa-asatx, Te’mexw Treaty Association, and Lekwungen/Songhees Peoples.   Confidentiality notice:  The information contained in this email is confidential and may be privileged. It is intended solely for the use of the designated addressee(s). Any unauthorized viewing, disclosure, copying, distribution or use of the information contained in this email is prohibited and may be unlawful. If you have received this email in error, please reply to the sender immediately to inform them that you are not the intended recipient and delete the email from your computer system. Thank you.      \u003c https://can01.safelinks.protection.outlook.com/?url=https%3A%2F%2Foutlook.office365.com%2Fbookwithme%2Fuser%2F99fef0ea5c97428692036db9702ca81f%40lookoutsociety.ca%3Fanonymous%26ep%3Dsignature\u0026data=05%7C02%7Chelpdesk%40lookoutsociety.ca%7C0cc1871404754f6bc11108dedd0fb9a5%7C4874c8f415084a41a8cb287f13849603%7C0%7C0%7C639191256795994985%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C\u0026sdata=IT%2Bnm36JIyuvH86iLcKr9HpWXc%2BTBKZ5H5NkwXU1w7U%3D\u0026reserved=0 \u003e | |  Book time to meet with me  | |",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-07-08T10:38:03.239-0700",
+                                               "public":  true,
+                                               "body":  "Hi Jorge,\n\nThere is already another ticket for this printer (\n\n[inline image - open ticket in browser to view]\nITSD-5579\n\nWaiting for customer\n\n)\n\nYou can reach out to Debbie Turner as she is the reporter for this ticket referenced.\n\nIt seems that Steven ordered a replacement"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5542",
+                        "summary":  "Lion Desktop -LIONDES-00",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-06-25T10:06:43.647-0700",
+                        "resolved":  "2026-07-07T13:39:19.931-0700",
+                        "reporter":  "Jorge.Gonzalez@lookoutsociety.ca",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  1800,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5542",
+                        "description":  "HI,    Staff found this message on the desktop at Lion Hotel, should it remain this way, or it should be turned on? Jorge Gonzalez (He/Him)   DTES Harbourside Portfolio Programme Manager   Lookout Housing and Health Society   C: 604-803-5284   www.lookoutsociety.ca          Like Us on Facebook   Follow Us on Instagram   Connect with Us on LinkedIn   Your donation has a direct impact on the life of someone who is homeless   Lookout Housing and Health Society recognizes and acknowledges that our work takes place on the unseeded and traditional lands of the Stó:lō, Hul’qumi’num Treaty Group, Tsleil-Waututh, Musqueam, Squamish, Stz’uminus, Semiahmoo, Qayqayt, Kwantlen, Tsawwassen, Katzie, Nooksack, W̱SÁNEĆ, kʷikʷəƛ̓əm, Quw’utsun, Ts’uubaa-asatx, Te’mexw Treaty Association, and Lekwungen/Songhees Peoples.   Confidentiality notice:  The information contained in this email is confidential and may be privileged. It is intended solely for the use of the designated addressee(s). Any unauthorized viewing, disclosure, copying, distribution or use of the information contained in this email is prohibited and may be unlawful. If you have received this email in error, please reply to the sender immediately to inform them that you are not the intended recipient and delete the email from your computer system. Thank you.      \u003c https://can01.safelinks.protection.outlook.com/?url=https%3A%2F%2Foutlook.office365.com%2Fbookwithme%2Fuser%2F99fef0ea5c97428692036db9702ca81f%40lookoutsociety.ca%3Fanonymous%26ep%3Dsignature\u0026data=05%7C02%7Chelpdesk%40lookoutsociety.ca%7C7b97c006a819488c051708ded2dc00f5%7C4874c8f415084a41a8cb287f13849603%7C0%7C0%7C639180039587031067%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C\u0026sdata=v%2BQU6DViTkEpqwrbxSMk9kv0scjIgm%2FvcOgI1UDzzJ4%3D\u0026reserved=0 \u003e | |  Book time to meet with me  | |",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-06-26T10:43:44.479-0700",
+                                               "public":  true,
+                                               "body":  "Hi Jorge,\n\nWould you be able to turn this computer on so I can remote in and take a look?\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-06-26T14:55:28.826-0700",
+                                               "public":  true,
+                                               "body":  "Hi Jorge,\n\nI tried to call the front office with the phone number you provided (604 806 0356) however; they weren’t able to pick up.\n\nPlease let me know when you go on site next time. We can try again when you’re there.\n\nAt the same time, we’ll install additional software for this workstation.\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-06-29T09:22:46.765-0700",
+                                               "public":  true,
+                                               "body":  "Hi Jorge, let me know if you’ll be on site today so I can manually remote into the workstation.\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-02T09:29:57.192-0700",
+                                               "public":  true,
+                                               "body":  "Hi Jorge, just following up if you\u0027ll be on site so I can manually remote into the workstation. Thank you!"
+                                           },
+                                           {
+                                               "created":  "2026-07-06T07:52:35.414-0700",
+                                               "public":  true,
+                                               "body":  "Hi Jorge, do you still need help with this? Otherwise I can close this ticket for you. Thank you!"
+                                           },
+                                           {
+                                               "created":  "2026-07-06T09:33:59.683-0700",
+                                               "public":  false,
+                                               "body":  "Attmepted to phone number. No One picked up. Will try again later"
+                                           },
+                                           {
+                                               "created":  "2026-07-06T14:00:35.987-0700",
+                                               "public":  false,
+                                               "body":  "Jorge was on site and contacted me. However right after the electricity went out after he sent me that message. Followed up again to ask if he can still get the computer up and running"
+                                           },
+                                           {
+                                               "created":  "2026-07-06T14:12:09.253-0700",
+                                               "public":  false,
+                                               "body":  "Jorge confirmed electricity is still not working"
+                                           },
+                                           {
+                                               "created":  "2026-07-07T08:11:31.477-0700",
+                                               "public":  true,
+                                               "body":  "Hi Jorge,\n\nCan you confirm if the power is still down and what the cause could be?\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-07T08:56:42.687-0700",
+                                               "public":  true,
+                                               "body":  "Just to confirm,\n\nIs the power down for the entire site or just for the office?\n\nIf you need a powerbar, you can always pick it up from the admin building.\n\nThank you!\n\nSincerely,\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-07T09:11:40.212-0700",
+                                               "public":  true,
+                                               "body":  "Yes!\n\nSee you later today"
+                                           },
+                                           {
+                                               "created":  "2026-07-07T13:28:02.412-0700",
+                                               "public":  true,
+                                               "body":  "I don\u0027t see it currently. Can you confirm that its connected to the internet?"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5399",
+                        "summary":  "HIFIS ISSUES with computer and for staff member",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-06-11T11:53:43.608-0700",
+                        "resolved":  "2026-07-07T12:42:43.191-0700",
+                        "reporter":  "michelle.bleaney@lookoutsociety.ca",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  600,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5399",
+                        "description":  "Hi    Samantha Scott is having issues with HIFIS account and also one of our computers at New Roots needs HIFIS downloaded onto it. Please see below:    Sam is having some issues with her HIFIS account.       HIFIS has not been installed on \"NEWROOTSDES-09\" which is the middle computer for. There is no option to download it onto the desktop on this computer for either of us.       On \"NEWROOTSDES-08\" HIFIS does not allow Sam to copy and paste from the shift report into HIFIS. This means she has to type out entries manually if on this computer. We tried all options, the prompt comes up to copy and paste but it does not actually copy and paste into HIFIS.       HIFIS is running extremely slow on NEWROOTSDES-09   Thank you   Michelle Bleaney ;     Langley Programs Coordinator    Lookout Housing \u0026 Health Society    Cell# 778 789 -1952       When Sam tries to change the case planner name to herself under open cases, the program glitches and goes to other people\u0027s name. We tried all options.   Please advise",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-07-06T09:33:08.333-0700",
+                                               "public":  true,
+                                               "body":  "Hi Michelle, is there a time that works best for me to remote into NEWROOTSDES-09 so I can install HIFIS?\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-06T13:55:03.662-0700",
+                                               "public":  true,
+                                               "body":  "Hi Michelle,\n\nHIFIS should now be on the desktop!\n\nAlex\n\ny"
+                                           },
+                                           {
+                                               "created":  "2026-07-07T12:42:29.900-0700",
+                                               "public":  true,
+                                               "body":  "Hi,\n\nRegarding the NEWROOTSDES-08 computer, when you connect to HIFIS, make sure to checkmark the “clipboard” option. This allows you to copy and paste from the host computer (your workstation) onto the HIFIS application.\n\nThank you!\n\nAlex\n\n[inline image - open ticket in browser to view]"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5609",
+                        "summary":  "New Roots computers not working",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-07-06T08:35:43.187-0700",
+                        "resolved":  "2026-07-07T11:39:36.798-0700",
+                        "reporter":  "michelle.bleaney@lookoutsociety.ca",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  600,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5609",
+                        "description":  "The computers are not working properly - the middle computer \"NewRoots09\" froze, made a loud buzzing sound and now wont turn on at all.     \"NewRoots08\" on the far left side is super slow and almost un-usable.    Please advise     Michelle Bleaney ;      Langley Programs Coordinator     Lookout Housing \u0026 Health Society     Cell# 778 789 -1952",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-07-06T08:45:31.221-0700",
+                                               "public":  true,
+                                               "body":  "Hi Michelle,\n\nFor the NEWROOTSDES-09, can you disconnect the power cable and reconnect it after 10 seconds and then try to power it on?\n\nFor the NEWROOTSDES-08 workstation, is there a time that works best for me to remote in?\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-06T09:26:35.307-0700",
+                                               "public":  true,
+                                               "body":  "Hi,\n\nI just remoted in and cleared some space and fixed some corrupted files. Please confirm if this workstation is still slow or not.\n\nThank you!\n\nAlex"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5623",
+                        "summary":  "Account creations \u0026 deactivations",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-07-06T16:16:42.988-0700",
+                        "resolved":  "2026-07-07T08:01:26.979-0700",
+                        "reporter":  "Nuzhat Tariq",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  1800,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5623",
+                        "description":  "Hi team,   Can you please create accounts for new hires:  Abimbola Oyinkolade   Cas PRW   Powell Horizon Support Recovery   Kateline Herbst-Reid   Cas SRW   Russell Residence   Emily Natchev   Summer Student   Russell Residence   And deactivate for employees no longer working at Lookout:  Pouya Aliakbari   Summer Student   Benita Mugisha   Cas SRW   Hemani Dhillon   Cas SRW   Elizabeth Ogodobri   Cook   Frances Mallett   Cas TSW   Adeniyi Abdulai   CSW005   Valerie Pentz   SRW416   Myla Todoschuk   Supervisor   David Parsons   Cas JANMAINT   Kindly,  Nuzhat Tariq  (she/her)  Administrative Assistant  Lookout Housing and Health Society  P: 604-255-0340 ext. 132  F: 604-255-0790  www.lookoutsociety.ca        Like Us on Facebook   Connect with Us on LinkedIn   Your donation has a direct impact on the life of someone who is homeless   Lookout recognizes and acknowledges that our work takes place on the unceded and traditional lands of The Coast Salish Nations",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-07-07T07:50:54.755-0700",
+                                               "public":  true,
+                                               "body":  "Hi,\n\nThe new account(s) you requested has been created. Details are below:\n\nAccount name: Abimbola Oyinkolade\n\nUsername: abimbola.oyinkolade@lookoutsociety.ca\n\nTemporary password: Lookout1234!\n\nAccount type: Email / network login\n\nAccount name: Emily Natchev\n\nUsername: emily.natchev@lookoutsociety.ca\n\nTemporary password: Lookout1234!\n\nAccount type: Email / network login\n\nAccount name: Katelin Herbst-Reid\n\nUsername: katelin.herbst-reid@lookoutsociety.ca\n\nTemporary password: Lookout1234!\n\nAccount type: Email / network login\n\nNotes:\n\nThe user(s) will be prompted to change the password on first login.\n\nLet us know if you need anything adjusted."
+                                           },
+                                           {
+                                               "created":  "2026-07-07T08:01:08.624-0700",
+                                               "public":  false,
+                                               "body":  "I confirmed that the following list of people’s AD accounts have been disabled (already disabled, mailbox converted to shared mailbox, and revoked Office 365 E1 licenses:\n\nPouya Aliakbari\n\nBenita Mugisha\n\nHemani Dhillon\n\nElizabeth Ogodobri\n\nFrances Mallett\n\nAdeniyi Abdulai\n\nValerie Pentz\n\nMyla Todoschuk\n\nDavid Parsons"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5575",
+                        "summary":  "Cordovades-02",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-06-30T09:24:42.704-0700",
+                        "resolved":  "2026-07-06T14:34:09.249-0700",
+                        "reporter":  "Aleksander Petkov",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  600,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5575",
+                        "description":  "Good morning,     One of my desktops screens is super blurry to the point of bothering my eyes i have tried to fix it on my end no luck could you please look into it ?    Aleksander Petkov   Program Manager Eastside Oppenheimer   Lookout Housing \u0026 Health Society   P: 604-314-7169   aleksander.petkov@lookoutsociety.ca   www.lookoutsociety.ca    \u003c https://can01.safelinks.protection.outlook.com/?url=https%3A%2F%2Flookoutsociety.ca%2F\u0026data=05%7C02%7Chelpdesk%40lookoutsociety.ca%7Ce38de509ff954f0c048b08ded6c3f78d%7C4874c8f415084a41a8cb287f13849603%7C0%7C0%7C639184334341999276%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C\u0026sdata=MAnH9IaQjtls2yevErPUDvHouUPP8DwR%2FwPTCs5%2BG84%3D\u0026reserved=0 \u003e  \u003c https://can01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fcoanet.org%2F\u0026data=05%7C02%7Chelpdesk%40lookoutsociety.ca%7Ce38de509ff954f0c048b08ded6c3f78d%7C4874c8f415084a41a8cb287f13849603%7C0%7C0%7C639184334342021718%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C\u0026sdata=tuEAvEoUI8j8zS7%2FtlyV0ZwAS9Gumn08nh4w7ti9kYY%3D\u0026reserved=0 \u003e    Like Us on Facebook   Follow Us on Instagram   Connect with Us on LinkedIn   Your donation has a direct impact on the life of someone who is homeless   Lookout recognizes and acknowledges that our work takes place on the unceded and traditional lands of The Coast Salish Nations.   Confidentiality notice: The information contained in this email is confidential and may be privileged. It is intended solely for the use of the designated addressee(s). Any unauthorized viewing, disclosure, copying, distribution or use of the information contained in this email is prohibited and may be unlawful. If you have received this email in error, please reply to the sender immediately to inform them that you are not the intended recipient and delete the email from your computer system. Thank you.",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-06-30T09:27:41.185-0700",
+                                               "public":  true,
+                                               "body":  "Hi Aleksander,\n\nIs there a phone number I can reach you at?"
+                                           },
+                                           {
+                                               "created":  "2026-06-30T09:41:46.299-0700",
+                                               "public":  false,
+                                               "body":  "Reached out to client.\n\nMonitor started having this issue a few weeks ago.\n\nMonitor is not new. Received a few months ago.\n\nAsked if client is willing to try to swap the cables between this monitor and their second monitor but client said they don’t feel comfortable swapping it.\n\nClient stated its not a very big issue and that we can take a look next time we do a site visit."
+                                           },
+                                           {
+                                               "created":  "2026-07-03T08:51:26.644-0700",
+                                               "public":  false,
+                                               "body":  "Client contacted with Khush. Client will try it and let us know"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5608",
+                        "summary":  "\u003cEmpty Subject\u003e",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-07-04T09:39:45.079-0700",
+                        "resolved":  "2026-07-06T09:34:43.943-0700",
+                        "reporter":  "Beryl Tukov",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  300,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5608",
+                        "description":  "Hi,     Got this notice today, stating my PC and mobile device are almost linked. Not sure if this is from It or not.     Thank You    Beryl Tukov    Program Coordinator      SPUDS Temp Shelter      1660E Hastings St, Vancouver BC V5L 1S6    Lookout Housing and Health Society   beryl.tukov@lookoutsociety.ca   www.lookoutsociety.ca          Like Us on Facebook   Follow Us on Instagram   Connect with Us on LinkedIn   Your donation has a direct impact on the life of someone who is homeless   Lookout Housing and Health Society recognizes and acknowledges that our work takes place on the unseeded and traditional lands of the Stó:lō, Hul’qumi’num Treaty Group, Tsleil-Waututh, Musqueam, Squamish, Stz’uminus, Semiahmoo, Qayqayt, Kwantlen, Tsawwassen, Katzie, Nooksack, W̱SÁNEĆ, kʷikʷəƛ̓əm, Quw’utsun, Ts’uubaa-asatx, Te’mexw Treaty Association, and Lekwungen/Songhees Peoples.   Confidentiality notice:  The information contained in this email is confidential and may be privileged. It is intended solely for the use of the designated addressee(s). Any unauthorized viewing, disclosure, copying, distribution or use of the information contained in this email is prohibited and may be unlawful. If you have received this email in error, please reply to the sender immediately to inform them that you are not the intended recipient and delete the email from your computer system. Thank you.",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-07-06T07:49:37.097-0700",
+                                               "public":  true,
+                                               "body":  "Hi Beryl,\n\nThis is not from us, but it is a Windows feature; this does not need to be setup.\n\nYou can disable this notification if you go to Task manager \u003e Startup apps \u003e Phone Link and click “Disable”.\n\nI can also remote into the workstation and disable it for you.\n\nOtherwise, you safely ignore this message.\n\nSincerely,\n\nAlex"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5606",
+                        "summary":  "Paul Ani - Access to BBB.Staff email ",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-07-03T13:08:47.991-0700",
+                        "resolved":  "2026-07-03T14:39:20.365-0700",
+                        "reporter":  "jennifer.harding@lookoutsociety.ca",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  300,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5606",
+                        "description":  "Hi Helpdesk,     Can we please request Paul Ani be added to the team email at BBB as he has recently joined the team.     Thank you.    Sincerely,      Jennifer Harding, Program Manager      Baird Blackstone Supportive Housing \u0026 Guildford Shelter      Lookout Housing and Health Society     P: 778-293-0889 EXT 102     C: 778-237-0400     Email: Jennifer.harding@lookoutsociety.ca     www.lookoutsociety.ca          Like Us on Facebook   Follow Us on Instagram   Connect with Us on LinkedIn   Your donation has a direct impact on the life of someone who is homeless   Lookout Housing and Health Society recognizes and acknowledges that our work takes place on the unceeded and traditional lands of the Stó:lō, Hul’qumi’num Treaty Group, Tsleil-Waututh, Musqueam, Squamish, Stz’uminus, Semiahmoo, Qayqayt, Kwantlen, Tsawwassen, Katzie, Nooksack, W̱SÁNEĆ, kʷikʷəƛ̓əm, Quw’utsun, Ts’uubaa-asatx, Te’mexw Treaty Association, and Lekwungen/Songhees Peoples.   Confidentiality notice: The information contained in this email is confidential and may be privileged. It is intended solely for the use of the designated addressee(s). Any unauthorized viewing, disclosure, copying, distribution or use of the information contained in this email is prohibited and may be unlawful. If you have received this email in error, please reply to the sender immediately to inform them that you are not the intended recipient and delete the email from your computer system. Thank you.",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-07-03T13:26:08.287-0700",
+                                               "public":  true,
+                                               "body":  "Added!\n\nPlease confirm if Paul can access the shared mailbox.\n\nThank you!\n\nAlex"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5603",
+                        "summary":  "Account creations",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-07-03T09:23:42.786-0700",
+                        "resolved":  "2026-07-03T14:38:45.064-0700",
+                        "reporter":  "Nuzhat Tariq",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  600,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5603",
+                        "description":  "Hi team,   Please create accounts for the following new hires, thank you!  Luke Li   Summer Student   Russell Residence   Anuar Muwonge   PRW015   Powell Horizon Support Recovery   Vee Olaoye   Cas SRW   Walton Shelter   Sunny Kaur   Cas MCA   Al Mitchell Place   Precious Asaolu   Homemaker   Russell Residence   Angela Ruggeri   Cas TSW   Savoy Hotel   Kindly,  Nuzhat Tariq  (she/her)  Administrative Assistant  Lookout Housing and Health Society  P: 604-255-0340 ext. 132  F: 604-255-0790  www.lookoutsociety.ca        Like Us on Facebook   Connect with Us on LinkedIn   Your donation has a direct impact on the life of someone who is homeless   Lookout recognizes and acknowledges that our work takes place on the unceded and traditional lands of The Coast Salish Nations",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-07-03T10:12:13.446-0700",
+                                               "public":  false,
+                                               "body":  "Luke, Anuar, and Angela accounts confirmed and created."
+                                           },
+                                           {
+                                               "created":  "2026-07-03T14:10:10.635-0700",
+                                               "public":  true,
+                                               "body":  "Hi ,\n\nThe new account(s) you requested has been created. Details are below:\n\nAccount name: Luke Li\n\nUsername: luke.li@lookoutsociety.ca\n\nTemporary password: Lookout1234!\n\nAccount type: Email / network login\n\nAccount name: Anuar Muwonge\n\nUsername: anuar.muwonge@lookoutsociety.ca\n\nTemporary password: Lookout1234!\n\nAccount type: Email / network login\n\nAccount name: Angela ruggeri\n\nUsername: angela.ruggeri@lookoutsociety.ca\n\nTemporary password: Lookout1234!\n\nAccount type: Email / network login\n\nAccount name: Shanipreet Kaur\n\nUsername: shanipreet.kaur@lookoutsociety.ca\n\nTemporary password: Lookout1234!\n\nAccount type: Email / network login\n\nAccount name: Yetunde Asaolu\n\nUsername: yetunde.asaolu@lookoutsociety.ca\n\nTemporary password: Lookout1234!\n\nAccount type: Email / network login\n\nAccount name: Victoria Olaoye\n\nUsername: victoria.olaoye@lookoutsociety.ca\n\nTemporary password: Lookout1234!\n\nAccount type: Email / network login\n\nNotes:\n\nThe user(s) will be prompted to change the password on first login.\n\nLet us know if you need anything adjusted."
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5604",
+                        "summary":  "NSJ guest computer ",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-07-03T11:35:41.650-0700",
+                        "resolved":  "2026-07-03T13:57:56.431-0700",
+                        "reporter":  "Stephanie Plourde",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  300,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5604",
+                        "description":  "Hey, I just tried the password that Alex sent securely for the Junction guest computer, it is not working. Is there no way to login remotely and reset this?     S Stephanie Plourde (  she/her )   Manager – North Shore Junction   Lookout Housing and Health Society   C: 236-788-4701     www.lookoutsociety.ca     Sent from my phone on unceded Coast Salish territory",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-07-03T11:38:04.054-0700",
+                                               "public":  true,
+                                               "body":  "Hi again,\n\nCan you tell me the name of the workstation? I can try to remote in"
+                                           },
+                                           {
+                                               "created":  "2026-07-03T11:47:31.674-0700",
+                                               "public":  true,
+                                               "body":  "Hi Stephanie,\n\nCan you confirm its connected to the regular internet and not the Lookout internet?\n\nThank you again!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-03T11:55:02.805-0700",
+                                               "public":  true,
+                                               "body":  "No worries! I have the name of the workstation. Can you quickly restart the computer and double check if its connected afterwards? Can send a photo if possible.\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-03T12:31:22.811-0700",
+                                               "public":  true,
+                                               "body":  "Hi Stephanie, I managed to get into the computer. The password should work now (same as I mentioned earlier). The issue was somebody tried to tamper with the guest computer (delete all the accounts). This is what caused the login to not work."
+                                           },
+                                           {
+                                               "created":  "2026-07-03T12:31:37.421-0700",
+                                               "public":  true,
+                                               "body":  "Please give it some time before logging in. I am still currently working on it"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5597",
+                        "summary":  "FW: SAP profile for Jason Mosimann",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-07-02T15:13:43.600-0700",
+                        "resolved":  "2026-07-03T13:56:59.500-0700",
+                        "reporter":  "Stephanie Plourde",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  300,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5597",
+                        "description":  "Hi Helpdesk, please activate Jason Mosimann’s email account now that his SAP personnel profile is fixed!      Stephanie Plourde (  she/her )   Program Manager – North Shore Recovery portfolio   North Shore Junction, Dovercourt Residence, Parents Forever   Lookout Housing and Health Society    Cell: 236-788-4701   Book time with Stephanie Plourde     From:  Mohammad Nazari \u003cmohammad.nazari@lookoutsociety.ca\u003e   Sent:  Thursday, July 2, 2026 1:00 PM  To:  Stephanie Plourde \u003cStephanie.Plourde@lookoutsociety.ca\u003e; Payroll SAP \u003cpayrollsap@lookoutsociety.ca\u003e; Steven Fortin \u003cSteven.Fortin@lookoutsociety.ca\u003e  Cc:  Troy Sears \u003cTroy.Sears@lookoutsociety.ca\u003e; Amy Bell \u003cAmy.Bell@lookoutsociety.ca\u003e; Edgar Montoya \u003cEdgar.Montoya@lookoutsociety.ca\u003e  Subject:  RE: SAP profile for Jason Mosimann    No worries,  I also added his Lookout email address to the new profile. If it is still not working, please reach out to the IT team to have the account activated.     Best regards,  Mohammad Nazari,    Finance Department   Lookout Housing and Health Society   544 Columbia St., New Westminster BC V3L 1B1   P: 778-732-1225, F: 604-255-0790   www.lookoutsociety.ca   From:  Stephanie Plourde \u003c Stephanie.Plourde@lookoutsociety.ca \u003e   Sent:  July 2, 2026 12:54 PM  To:  Mohammad Nazari \u003c mohammad.nazari@lookoutsociety.ca \u003e; Payroll SAP \u003c payrollsap@lookoutsociety.ca \u003e; Steven Fortin \u003c Steven.Fortin@lookoutsociety.ca \u003e  Cc:  Troy Sears \u003c Troy.Sears@lookoutsociety.ca \u003e; Amy Bell \u003c Amy.Bell@lookoutsociety.ca \u003e; Edgar Montoya \u003c Edgar.Montoya@lookoutsociety.ca \u003e  Subject:  RE: SAP profile for Jason Mosimann    Thank you so much, Mohammad. I can confirm that Jason is now added to the schedule as normal. Just wanted to flag that his email is currently de-activated!   Stephanie Plourde (  she/her )   Program Manager – North Shore Recovery portfolio   North Shore Junction, Dovercourt Residence, Parents Forever   Lookout Housing and Health Society    Cell: 236-788-4701   Book time with Stephanie Plourde     From:  Mohammad Nazari \u003c mohammad.nazari@lookoutsociety.ca \u003e   Sent:  Thursday, July 2, 2026 12:45 PM  To:  Stephanie Plourde \u003c Stephanie.Plourde@lookoutsociety.ca \u003e; Payroll SAP \u003c payrollsap@lookoutsociety.ca \u003e; Steven Fortin \u003c Steven.Fortin@lookoutsociety.ca \u003e  Cc:  Troy Sears \u003c Troy.Sears@lookoutsociety.ca \u003e; Amy Bell \u003c Amy.Bell@lookoutsociety.ca \u003e; Edgar Montoya \u003c Edgar.Montoya@lookoutsociety.ca \u003e  Subject:  RE: SAP profile for Jason Mosimann    Hi,  Kindly be advised that we resolved the issue by adding the employee as a new hire. Please use Jason\u0027s employee ID   202201  going forward.     Best regards,  Mohammad Nazari,    Finance Department   Lookout Housing and Health Society   544 Columbia St., New Westminster BC V3L 1B1   P: 778-732-1225, F: 604-255-0790   www.lookoutsociety.ca   From:  Stephanie Plourde \u003c Stephanie.Plourde@lookoutsociety.ca \u003e   Sent:  July 2, 2026 9:07 AM  To:  Payroll SAP \u003c payrollsap@lookoutsociety.ca \u003e; Steven Fortin \u003c Steven.Fortin@lookoutsociety.ca \u003e  Cc:  Troy Sears \u003c Troy.Sears@lookoutsociety.ca \u003e; Amy Bell \u003c Amy.Bell@lookoutsociety.ca \u003e  Subject:  SAP profile for Jason Mosimann    Hello team, I’m wondering what the status is for Jason Mosimann’s SAP profile in WT\u0026A. I have checked this morning and he is still not showing up in WT\u0026A.      His start date in this position was Tuesday, June 9th. As I mentioned in my emails on Monday, June 22nd, I don’t have the ability to schedule Jason or to manually add his shifts to his timesheet. I have confirmed that he did get paid on Friday, June 26th.   Please let me know how we can have Jason’s WT\u0026A profile working properly asap.   Thank you,  Stephanie   Stephanie Plourde (  she/her )   Program Manager – North Shore Recovery portfolio   North Shore Junction, Dovercourt Residence, Parents Forever   Lookout Housing and Health Society    www.lookoutsociety.ca    Cell: 236-788-4701   Book time with Stephanie Plourde    Lookout Housing and Health Society’s work is located on unceded Indigenous land belonging to various Coast Salish nations.   + Visit Our Website |    + Donate Here to Support Lookout |    + Follow Us on Social Media +  Confidentiality notice: The information contained in this email is confidential and may be privileged. It is intended solely for the use of the designated addressee(s). Any unauthorized viewing, disclosure, copying, distribution or use of the information contained in this email is prohibited and may be unlawful. If you have received this email in error, please reply to the sender immediately to inform them that you are not the intended recipient and delete the email from your computer system. Thank you.",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-07-02T15:24:50.336-0700",
+                                               "public":  true,
+                                               "body":  "Hi Stephanie,\n\nThe new account you requested has been created. Details are below:\n\n- Account name: Jason Mosimann\n\n- Username: jason.mosimann@lookoutsociety.ca\n\n- Temporary password: Lookout1234!\n\n- Account type: Email / network login\n\nNotes:\n\n- The user will be prompted to change the password on first login.\n\nKeep me updated!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-03T10:48:13.609-0700",
+                                               "public":  true,
+                                               "body":  "Hi Stephanie, can you provide me the name of the workstation? I\u0027ll remote in and try"
+                                           },
+                                           {
+                                               "created":  "2026-07-03T11:13:16.728-0700",
+                                               "public":  true,
+                                               "body":  "Hi Stephanie,\n\nI just remoted in and its now prompting Jason to change his password. He should be able to do it now.\n\nPassword is Lookout1234!\n\nThank you!"
+                                           },
+                                           {
+                                               "created":  "2026-07-03T11:22:14.481-0700",
+                                               "public":  true,
+                                               "body":  "I see that he has logged in now. I can go ahead and close this ticket"
+                                           },
+                                           {
+                                               "created":  "2026-07-03T11:27:48.795-0700",
+                                               "public":  true,
+                                               "body":  "No worries!\n\nIn regard to this NSJ guest computer, the password should remain the same.\n\nHere is a secure link to this password: https://password.lookoutsociety.ca/#/send/iO5vrAZnQk2unoXnxvEBpg/WhcCNIM5OPEUM7cM_hEEvQ\n\nIf that does not work, then you’ll have to create a new IT ticket for this and drop it off to us.\n\nThank you!\n\nAlex"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5574",
+                        "summary":  "Computer access",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-06-30T08:55:43.428-0700",
+                        "resolved":  "2026-07-03T10:34:30.907-0700",
+                        "reporter":  "anna.pulawski@lookoutsociety.ca",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  1800,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5574",
+                        "description":  "Hi,    I need access to the ICM coordinator computer, I was unable to. This is what it says: Respectfully,    Anna Pulawski    Part-time coordinator - Macmillan House   Lookout Housing + Health Society   C: 236-881-3614    Lookout Housing and Health Society     www.lookoutsociety.ca      Lookout recognizes and acknowledges that our work takes place on the unceded and traditional lands of The Coast Salish Nations.",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-06-30T09:20:37.987-0700",
+                                               "public":  true,
+                                               "body":  "Hi Anna.\n\nCan you provide me the name of this computer please? I’ll take a look"
+                                           },
+                                           {
+                                               "created":  "2026-06-30T12:59:27.659-0700",
+                                               "public":  true,
+                                               "body":  "No worries!\n\nIt seems that it is offline.\n\nCan you first restart the computer and at the login page take a photo of the bottom-right?\n\nI am looking for icons like this:\n\n[inline image - open ticket in browser to view]\n\nThank you!"
+                                           },
+                                           {
+                                               "created":  "2026-06-30T13:13:14.629-0700",
+                                               "public":  true,
+                                               "body":  "Hi Anna, it seems that its disconnected from the internet completely based off the globe icon.\n\nCan you take a photo of the back of where the wires are?"
+                                           },
+                                           {
+                                               "created":  "2026-06-30T13:24:47.575-0700",
+                                               "public":  true,
+                                               "body":  "Can you click this icon and send me a photo of what it shows?\n\n[inline image - open ticket in browser to view]"
+                                           },
+                                           {
+                                               "created":  "2026-06-30T14:59:22.971-0700",
+                                               "public":  true,
+                                               "body":  "Hi Anna,\n\nNo worries. Instead can you try connecting to the LookoutStaff-WiFi?\n\nThe password for that is here:\n\nhttps://password.lookoutsociety.ca/#/send/6nShvD5jQVWkXE6z73YmmA/bP2mw9-dHxHQYeH72weONg\n\nAnd then try to login.\n\nIn regard to the wired connection, it seems that we will have to head there physically to check it out.\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-02T11:31:13.323-0700",
+                                               "public":  true,
+                                               "body":  "Hi Anna,\n\nPlease update me when you can!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-03T08:25:38.748-0700",
+                                               "public":  true,
+                                               "body":  "No worries. Here it is: https://password.lookoutsociety.ca/#/send/6nShvD5jQVWkXE6z73YmmA/bP2mw9-dHxHQYeH72weONg\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-03T09:16:47.822-0700",
+                                               "public":  true,
+                                               "body":  "Hi Anna,\n\nYes! Please drop everything off here. And yes, the cell phone for the SafePoint coordinator needs to be reset by us.\n\nI will keep this ticket open until then.\n\nThank you again!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-03T10:11:02.424-0700",
+                                               "public":  true,
+                                               "body":  "Hi Anna,\n\nFirst, can you temporarily turn off the Wi-Fi on the computer? This way we can switch to hardwired connection. You can turn it off by clicking the icon.\n\n[inline image - open ticket in browser to view]\n\nThen try to reconnect the physical ethernet cable from the computer (Light gray cable). Ensure that lights are blinking green.\n\n[inline image - open ticket in browser to view]\n\nThen check if the other end of the cable is connected and if that device is turned on (Send a photo just in case).\n\nAnd then see if this icon appears for the computer.\n\n[inline image - open ticket in browser to view]\n\nAlso,\n\nfor security reasons, my colleague Khush has reset your account password (several staff members clicked on a phishing link which cause a massive password reset). Password should be Lookout1234!\n\n(I apologize for the long list of instructions)\n\nKeep me updated!\n\nThank you!"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5592",
+                        "summary":  "Cannot sign in ",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-07-02T09:25:45.753-0700",
+                        "resolved":  "2026-07-02T10:02:27.189-0700",
+                        "reporter":  "Danya.Doucette",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  300,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5592",
+                        "description":  "Hello,    Lori Cronin continues to get this message when trying to sign in. Kindly,    Danya Doucette Program Manager ,  Riverside | Sumas | SRSPLookout Housing and Health Society   C: 778-347-5196E: Danya.Doucette@lookoutsociety.ca    www.lookoutsociety.ca      \u003c https://can01.safelinks.protection.outlook.com/?url=https%3A%2F%2Flookoutsociety.ca%2F\u0026data=05%7C02%7Chelpdesk%40lookoutsociety.ca%7C3160b0dadf624b061f5e08ded85675c6%7C4874c8f415084a41a8cb287f13849603%7C0%7C0%7C639186063272519217%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C\u0026sdata=i%2Fo2B336RE8tfPWtMH%2Bk2vqUdK6M4dmUAAK0qbGNHI4%3D\u0026reserved=0 \u003e  \u003c https://can01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fcoanet.org%2F\u0026data=05%7C02%7Chelpdesk%40lookoutsociety.ca%7C3160b0dadf624b061f5e08ded85675c6%7C4874c8f415084a41a8cb287f13849603%7C0%7C0%7C639186063272554983%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C\u0026sdata=WdmY6ZYJDNm7AoflX1A1vN3Q1hrIjnqMjEyvP88i16Y%3D\u0026reserved=0 \u003e",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-07-02T09:27:55.567-0700",
+                                               "public":  true,
+                                               "body":  "Hi, can you tell me which device this is? Thank you!"
+                                           },
+                                           {
+                                               "created":  "2026-07-02T09:51:53.640-0700",
+                                               "public":  true,
+                                               "body":  "Hi,\n\ncan you please have her to re-sign in on the workstation? Thank you!"
+                                           },
+                                           {
+                                               "created":  "2026-07-02T10:02:16.226-0700",
+                                               "public":  true,
+                                               "body":  "Perfect. I\u0027ll close the ticket"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5568",
+                        "summary":  "Acorn Staff Computer not allowing log in. ",
+                        "status":  "Closed",
+                        "priority":  "Medium",
+                        "created":  "2026-06-29T11:12:43.151-0700",
+                        "resolved":  "2026-07-02T09:53:23.819-0700",
+                        "reporter":  "corelli.mattice@lookoutsociety.ca",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  1800,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5568",
+                        "description":  "Hi IT Team,     ACORNDES-02 is not allowing two of my casuals to log in. Both can access other Acorn computers. The notice says there is a group policy and that login is blocked. I could log in so I am not sure what is happening.     With gratitude,    Corelli Mattice, (she/her)   Program Manager, Acorn House     Lookout Housing and Health Society    C: (236)788-3992   W: (604)243-8668     Oak Care Center     719 W59th Avenue, Vancouver V6P 0H4    www.lookoutsociety.ca      \u003c https://can01.safelinks.protection.outlook.com/?url=https%3A%2F%2Flookoutsociety.ca%2F\u0026data=05%7C02%7Chelpdesk%40lookoutsociety.ca%7Cb51a8f2b7cc74e0eec6408ded609f8e5%7C4874c8f415084a41a8cb287f13849603%7C0%7C0%7C639183535508922909%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C\u0026sdata=5ZyZz5d2Qzu8OdAjNWEFswl7DMiknZfgXYgGplq2Rrg%3D\u0026reserved=0 \u003e  \u003c https://can01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fcoanet.org%2F\u0026data=05%7C02%7Chelpdesk%40lookoutsociety.ca%7Cb51a8f2b7cc74e0eec6408ded609f8e5%7C4874c8f415084a41a8cb287f13849603%7C0%7C0%7C639183535508952039%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C\u0026sdata=j4G9Q1kS8jmQsJ6tfvfBqWRsiCGdpyn9nNGyFE7gqMc%3D\u0026reserved=0 \u003e     Like Us on Facebook   Follow Us on Twitter   Follow Us on Instagram   Connect with Us on LinkedIn   Your donation has a direct impact on the life of someone who is homeless   Lookout Housing and Health Society recognizes and acknowledges that our work takes place on the unceeded and traditional lands of the Stó:lō, Hul’qumi’num Treaty Group, xʷməθkwəy̓əm (Musqueam), Skwxwú7mesh (Squamish) and Səl̓ílwətaʔ/Selilwitulh (Tsleil-Waututh), Stz’uminus, Semiahmoo, Qayqayt, Kwantlen, Tsawwassen, Katzie, Nooksack, W̱SÁNEĆ, kʷikʷəƛ̓əm, Quw’utsun, Ts’uubaa-asatx, Te’mexw Treaty Association, Ligwiłda’xw people; the We Wai Kai, Wei Wai Kum, Kwiakah First Nations and Lekwungen/Songhees Peoples.    Confidentiality notice:  The information contained in this email is confidential and may be privileged. It is intended solely for the use of the designated addressee(s). Any unauthorized viewing, disclosure, copying, distribution or use of the information contained in this email is prohibited and may be unlawful. If you have received this email in error, please reply to the sender immediately to inform them that you are not the intended recipient and delete the email from your computer system. Thank you.     \u003c https://can01.safelinks.protection.outlook.com/?url=https%3A%2F%2Foutlook.office.com%2Fbookwithme%2Fuser%2F34cd53c51f954697ace1e2cf444c3f89%40lookoutsociety.ca%3Fanonymous%26ep%3Dsignature%26ismsaljsauthenabled\u0026data=05%7C02%7Chelpdesk%40lookoutsociety.ca%7Cb51a8f2b7cc74e0eec6408ded609f8e5%7C4874c8f415084a41a8cb287f13849603%7C0%7C0%7C639183535509086680%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C\u0026sdata=VYw1ax8jgCQjr0b8mCGPAMLtrf2%2FzR%2Br8lIQSpc0QII%3D\u0026reserved=0 \u003e   Book time to meet with me",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-06-29T11:30:11.226-0700",
+                                               "public":  true,
+                                               "body":  "Hi Corelli, can you provide me the name of the other person?\n\nI will take a look into Sahand’s account and unlock it.\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-06-29T12:31:39.026-0700",
+                                               "public":  false,
+                                               "body":  "Confirmed that the workstation needs to be troubleshooted. Both accounts are fine. Both tested on MEDLAP-02 and both are able to sign in (Reset Sahand’s password).\n\nCurrently working on ACORNDES-02"
+                                           },
+                                           {
+                                               "created":  "2026-06-29T14:33:22.888-0700",
+                                               "public":  false,
+                                               "body":  "Confirmed Windows Image was corrupted with sfc. Ran DISM scan to restore image and installed Windows updates (last updated in 2024).\n\nJune 29 1:27pm: Messaged Corelli on MS Teams to go ahead and try the computer to confirm if its working or not."
+                                           },
+                                           {
+                                               "created":  "2026-07-02T09:37:16.925-0700",
+                                               "public":  true,
+                                               "body":  "Hi Corelli,\n\nJust folllowing up to see if you were able to confirm if the issue is resolved. Thank you!\n\nAlex"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5578",
+                        "summary":  "RE: Creating a CSW email for Powell horizons SRP",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-06-30T10:44:41.522-0700",
+                        "resolved":  "2026-07-02T09:18:12.584-0700",
+                        "reporter":  "Patricia.Baranowski",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  600,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5578",
+                        "description":  "Good morning everyone!    Could you help us with creating an email for our csw workers? Can the email be cswpowellhorizonsrp@lookoutsociety.ca    Best regards,   Patty Baranowski (she/her)   Temporary Program Coordinator - Vancouver Supportive Recovery   www.lookoutsociety.ca   Lookout recognizes and acknowledges that our work takes place on the unceded and traditional lands of The Coast Salish Nations.   Visit Our Website |   Donate Here to Support Lookout |   Follow Us on Social Media   Confidentiality notice:  The information contained in this email is confidential and may be privileged. It is intended solely for the use of the designated addressee(s). Any unauthorized viewing, disclosure, copying, distribution, or use of the information contained in this email is prohibited and may be unlawful. If you have received this email in error, please reply to the sender immediately to inform them that you are not the intended recipient and delete the email from your computer system. Thank you.",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-06-30T11:15:45.602-0700",
+                                               "public":  true,
+                                               "body":  "Hi Patricia,\n\nI can make a shared mailbox for this.\n\nCan you provide me a list of people and their emails who would like to be part of this mailbox?\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-06-30T12:16:30.064-0700",
+                                               "public":  true,
+                                               "body":  "Sounds good!\n\nI just created the shared mailbox:\n\nCSW Powell horizons SRP\n\ncswpowellhorizonsrp@lookoutsociety.ca\n\nAre there any specific permissions you would like me to do?\n\nCurrently everyone is able to send and read (acting as mailbox owners)"
+                                           },
+                                           {
+                                               "created":  "2026-06-30T12:50:19.406-0700",
+                                               "public":  true,
+                                               "body":  "Hi Patricia,\n\nGive it about an hour before adding it.\n\nBut I will also do the same for testing purposes just in case.\n\nThank you again!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-06-30T13:11:41.583-0700",
+                                               "public":  true,
+                                               "body":  "Hi Patricia,\n\nI just tried it on my end and it seems to work now.\n\nCan you give it a go as well?"
+                                           },
+                                           {
+                                               "created":  "2026-06-30T13:12:29.920-0700",
+                                               "public":  true,
+                                               "body":  "Try adding it from the outlook software and not the web app (OWA)"
+                                           },
+                                           {
+                                               "created":  "2026-06-30T13:17:14.659-0700",
+                                               "public":  true,
+                                               "body":  "Hi Patricia,\n\nI just tried both ways and they both work.\n\nFor the web browser (OWA), try signing out and then signing back in and then try to access.\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-07-02T07:50:04.223-0700",
+                                               "public":  true,
+                                               "body":  "Hi Patricia,\n\nCan you confirm if the mailbox works for you and your team?\n\nThank you!\n\nAlex"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5573",
+                        "summary":  "Account creations \u0026 deactivation",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-06-29T16:43:43.182-0700",
+                        "resolved":  "2026-06-30T13:17:44.428-0700",
+                        "reporter":  "Nuzhat Tariq",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  300,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5573",
+                        "description":  "Hi team,  Can you please create accounts for the following new staff:  Pouya Aliakbari   Summer Student   Gateway Shelter   Tahaminul Hoq Tahim   Cas MCA   Al Mitchell Place   Adam Janzen   COOK038   The Junction-Courtenay   Nikhil Chaudhary   Cas SRW   Homewood   And deactivate for staff no longer working with us:  Hazel Domingo   MCA002   Kindly,  Nuzhat Tariq  (she/her)  Administrative Assistant  Lookout Housing and Health Society  P: 604-255-0340 ext. 132  F: 604-255-0790  www.lookoutsociety.ca        Like Us on Facebook   Connect with Us on LinkedIn   Your donation has a direct impact on the life of someone who is homeless   Lookout recognizes and acknowledges that our work takes place on the unceded and traditional lands of The Coast Salish Nations",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-06-30T09:24:27.477-0700",
+                                               "public":  false,
+                                               "body":  "Followed documentation for new accounts from https://lookoutsociety.atlassian.net/wiki/spaces/LHKB/pages/1584922627/User+Creation\n\nHowever did not complete the last step (licensing). Will update when done.\n\ntemp passwords are set to Lookout1234!\n\nHazel Domingo account is already disabled in AD. Will ask more on what to do."
+                                           },
+                                           {
+                                               "created":  "2026-06-30T10:44:26.186-0700",
+                                               "public":  false,
+                                               "body":  "Confirmed new users already have E1 licenses.\n\nRemoved E1 License on Hazel Domingo account"
+                                           },
+                                           {
+                                               "created":  "2026-06-30T10:55:58.028-0700",
+                                               "public":  true,
+                                               "body":  "Hi Nuzhat,\n\nThe new account(s) you requested has been created. Details are below:\n\n- Account name: Pouya Aliakbari\n\n- Username: Pouya.Aliakbari@lookoutsociety.ca\n\n- Temporary password: Lookout1234!\n\n- Account type: Email / network login\n\n- Account name: Tahaminul Hoq Tahim\n\n- Username: TahaminulHoq.Tahim@lookoutsociety.ca\n\n- Temporary password: Lookout1234!\n\n- Account type: Email / network login\n\n- Account name: Pouya Aliakbari\n\n- Username: Adam.Janzen@lookoutsociety.ca\n\n- Temporary password: Lookout1234!\n\n- Account type: Email / network login\n\n- Account name: Nikhil Chaudhary\n\n- Username: Nikhil.Chaudhary@lookoutsociety.ca\n\n- Temporary password: Lookout1234!\n\n- Account type: Email / network login\n\nNotes:\n\n- The user(s) will be prompted to change the password on first login."
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5572",
+                        "summary":  "Manager Folder access",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-06-29T16:07:44.666-0700",
+                        "resolved":  "2026-06-30T11:30:06.252-0700",
+                        "reporter":  "tanya.morrison@lookoutsociety.ca",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  600,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5572",
+                        "description":  "Hi there,    Are you able to restrict this Leep Manager folder to just Jazzmyn and myself on our sharepoint?     I think we tried before and then it messed up the team access, it is currently in the \u0027root\u0027 folder.    Please let me know if this will work or not     Respectfully,     Tanya Morrison, Program Coordinator     LEEP Vancouver (Lookout Ethical Employment Program)    Lookout Housing and Health Society    www.lookoutsociety.ca             \u003c https://can01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fwww.facebook.com%2FLookoutSociety%2F\u0026data=05%7C02%7Chelpdesk%40lookoutsociety.ca%7C3316c8b94b354f363bef08ded6331823%7C4874c8f415084a41a8cb287f13849603%7C0%7C0%7C639183712100758557%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C\u0026sdata=hCzm6bq0PGj595YJLzBBbXov4TR6QeKgznHIx1KsT0Y%3D\u0026reserved=0 \u003e    \u003c https://can01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fwww.instagram.com%2Flookoutsociety%2F\u0026data=05%7C02%7Chelpdesk%40lookoutsociety.ca%7C3316c8b94b354f363bef08ded6331823%7C4874c8f415084a41a8cb287f13849603%7C0%7C0%7C639183712100780346%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C\u0026sdata=lD46O%2Fi5NimfCxy4x%2FIyCBuq0il5OZfuEQqTpU%2BT0Hs%3D\u0026reserved=0 \u003e    \u003c https://can01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fwww.linkedin.com%2Fcompany%2Flookout-emergency-aid-society\u0026data=05%7C02%7Chelpdesk%40lookoutsociety.ca%7C3316c8b94b354f363bef08ded6331823%7C4874c8f415084a41a8cb287f13849603%7C0%7C0%7C639183712100801819%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C\u0026sdata=pbHZ1IPQ6ys1oXsjmyURMAkP2zrto1srGN8bnaOlYus%3D\u0026reserved=0 \u003e    \u003c https://can01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fwww.youtube.com%2Fchannel%2FUCLzkQvmfoTYWJfT0lIbq_Tg\u0026data=05%7C02%7Chelpdesk%40lookoutsociety.ca%7C3316c8b94b354f363bef08ded6331823%7C4874c8f415084a41a8cb287f13849603%7C0%7C0%7C639183712100827838%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C\u0026sdata=OJm2g27nnQ8NSSX1UNwcBsdEEUZS7CTfn1TNzUlVPT4%3D\u0026reserved=0 \u003e    Your donation has a direct impact on the life of someone who is homeless   Lookout Housing and Health Society’s valuable work is located on unceded Indigenous land belonging to various Coast Salish nations.",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-06-30T09:30:19.279-0700",
+                                               "public":  true,
+                                               "body":  "Hi Tanya,\n\nIs there a time today where I can remote in and take a look?\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-06-30T09:38:05.918-0700",
+                                               "public":  true,
+                                               "body":  "Sounds good. 11:30 am today is fine?"
+                                           },
+                                           {
+                                               "created":  "2026-06-30T10:18:58.613-0700",
+                                               "public":  true,
+                                               "body":  "Hi Tanya,\n\nI just configured the permissions.\n\nI removed Shadin Hosain and added you and Jazzmyn.\n\nI know you asked for just you and Jazzmyn but Sarah Jetha also has access as the folder states that she is the owner of this folder.\n\nPlease let me know if all is good.\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-06-30T10:57:23.856-0700",
+                                               "public":  true,
+                                               "body":  "Hi Tanya,\n\nSounds good! I will work on that as well!"
+                                           },
+                                           {
+                                               "created":  "2026-06-30T10:59:06.739-0700",
+                                               "public":  true,
+                                               "body":  "Oh, it turns out its already setup!\n\nI will send a test email to Sarah’s email. Please let me know if you receive it!"
+                                           }
+                                       ]
+                    },
+                    {
+                        "key":  "ITSD-5279",
+                        "summary":  "Printer Not Connecting",
+                        "status":  "Resolved",
+                        "priority":  "Medium",
+                        "created":  "2026-06-02T13:32:39.326-0700",
+                        "resolved":  "2026-06-26T13:02:58.986-0700",
+                        "reporter":  "Rhea Eve",
+                        "assignee":  "Alexander Amog",
+                        "labels":  [
+
+                                   ],
+                        "timeSpentSeconds":  6300,
+                        "url":  "https://lookoutsociety.atlassian.net/browse/ITSD-5279",
+                        "description":  "HI, The printer in our Lighthouse Case planner office is not connecting to the computers/network and we have been unable to print. We have tried disconnecting and reconnecting to the net work, restarting the printer, re-adding the printer on the computer with no success.",
+                        "myComments":  [
+                                           {
+                                               "created":  "2026-06-24T13:19:42.583-0700",
+                                               "public":  true,
+                                               "body":  "Hi Rhea,\n\nWould you be available today before 2pm for me to remote in to take a look at the printer?\n\nOr if not, can you send me screenshots of the error messages that you receive when you attempt to print?\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-06-26T08:12:21.729-0700",
+                                               "public":  true,
+                                               "body":  "Hi Jessika,\n\nIs there any time today that works for you for me to remote into your computer so I can troubleshoot the printer?\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-06-26T08:25:05.065-0700",
+                                               "public":  true,
+                                               "body":  "Hi Jessika,\n\nWould right now be fine for me to remote into REDLIONDES-11?\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-06-26T08:39:18.494-0700",
+                                               "public":  true,
+                                               "body":  "Hi Jessika,\n\nSo I just took a look. Everything is connected and good. Its just the toner needs to be replaced. In the screenshot below, it shows that the toner is empty.\n\nPlease go ahead and replace it when you can!\n\n[inline image - open ticket in browser to view]\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-06-26T09:24:37.245-0700",
+                                               "public":  true,
+                                               "body":  "Hi Jessika,\n\nIs there anyone on site that can assist me in testing out the printer? Or maybe the person who is logged onto this desktop?\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-06-26T09:42:02.294-0700",
+                                               "public":  true,
+                                               "body":  "Hi Jessika,\n\nSounds good. I’ll reach out in about 20 minutes or so.\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-06-26T10:54:26.746-0700",
+                                               "public":  true,
+                                               "body":  "Hi Jessika and Rhea,\n\nThe printer is up and running and have been added to both staff computers (REDLINEDES-11 REDLINEDES-02). We have confirmed with Sabrina that it is able to print.\n\nThank you!"
+                                           },
+                                           {
+                                               "created":  "2026-06-26T12:36:08.149-0700",
+                                               "public":  true,
+                                               "body":  "Hi Jessika,\n\nFor sure!\n\nWhat time works best for you for me to remote in?\n\nThank you!\n\nAlex"
+                                           },
+                                           {
+                                               "created":  "2026-06-26T12:49:48.265-0700",
+                                               "public":  true,
+                                               "body":  "Hi Jessika,\n\nI just added it. Can you try printing and see if it works?\n\nThank you!"
+                                           },
+                                           {
+                                               "created":  "2026-06-26T13:02:59.037-0700",
+                                               "public":  false,
+                                               "body":  "Add staff printer 10.113.208.236"
+                                           }
+                                       ]
+                    }
+                ]
+}
