@@ -64,9 +64,7 @@ and project key live in the config block at the top of `lib/Context.ps1`.
 2) Unassigned queue               pick up open tickets no one owns
 3) Find / search tickets          open one by key, or filter by keyword,
                                    reporter, assignee, status, priority, recency
-4) Fix missing organizations      suggest from history / AD department
-5) Undo organization changes      revert from the log
-6) Monthly reports                ticket numbers by site, CSAT, first response
+4) Monthly reports                ticket numbers by site, CSAT, first response
 Q) Quit
 ```
 
@@ -124,7 +122,7 @@ When typing a note or reply, enter your text over one or more lines and press
 
 ## Monthly reports
 
-Menu option **6** does the two monthly write-ups that used to be done by hand.
+Menu option **4** does the two monthly write-ups that used to be done by hand.
 Everything is read-only — no ticket is changed. It defaults to **last month**,
 which is what both of the old runbooks asked for.
 
@@ -142,7 +140,7 @@ every ticket **created** in the month, drops the ones nobody worked (`Canceled`,
 `Closed`), and totals them per Organization — the same table the pivot produced.
 
 Two things the manual version could not tell you, printed underneath:
-- how many tickets have **no organization** set (menu option 4 fixes those), and
+- how many tickets have **no organization** set, and
 - how many had **more than one** organization. Those are counted once, against
   their first one, so the site numbers always add up to the total.
 

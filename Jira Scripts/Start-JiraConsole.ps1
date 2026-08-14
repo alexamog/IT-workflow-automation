@@ -54,14 +54,13 @@ Write-Host "Signed in as $script:MyDisplayName" -ForegroundColor Green
         Write-ToolMenuItem -Key 1 -Label 'My tickets (all open)'
         Write-ToolMenuItem -Key 2 -Label 'Unassigned queue' -Note 'view, then pick up'
         Write-ToolMenuItem -Key 3 -Label 'Find / search tickets' -Note 'key, keyword, reporter, assignee, status...'
-        Write-ToolMenuItem -Key 4 -Label 'Fix missing organizations' -Note 'suggest from history / AD department'
-        Write-ToolMenuItem -Key 5 -Label 'Monthly reports' -Note 'ticket numbers by site, CSAT, first response'
+        Write-ToolMenuItem -Key 4 -Label 'Monthly reports' -Note 'ticket numbers by site, CSAT, first response'
         Write-ToolMenuItem -Key 'Q' -Label 'Quit'
         Write-Host ''
     }
     else {
         Write-Host "`n=== JIRA SERVICE CONSOLE ===" -ForegroundColor Cyan
-        Write-Host "  1) My tickets   2) Unassigned   3) Search   4) Fix orgs   5) Monthly reports   Q) Quit"
+        Write-Host "  1) My tickets   2) Unassigned   3) Search   4) Monthly reports   Q) Quit"
     }
 
     $choice = (Read-Host "  Select").Trim().ToUpper()
@@ -69,8 +68,7 @@ Write-Host "Signed in as $script:MyDisplayName" -ForegroundColor Green
         "1" { Invoke-TicketBrowser -Fetch { Get-MyTicket }         -Title "My tickets (all open)" -RefreshSeconds 90 }
         "2" { Invoke-TicketBrowser -Fetch { Get-UnassignedTicket } -Title "Unassigned queue ($script:ProjectKey) - select to view details" -RefreshSeconds 90 }
         "3" { Invoke-TicketSearch }
-        "4" { Invoke-FixMissingOrgs }
-        "5" { Invoke-MonthlyReports }
+        "4" { Invoke-MonthlyReports }
         "Q" { break mainMenu }   # break the loop, not just the switch
         default { Write-Host "Unknown option." -ForegroundColor DarkGray }
     }

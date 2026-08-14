@@ -50,7 +50,7 @@ holds copy-paste REST/AD skeletons for building new scripts.
 ### Jira
 | Option | Script |
 | ------ | ------ |
-| Jira Service Console (my/unassigned tickets, find/search, fix orgs, monthly reports) | `Jira Scripts\Start-JiraConsole.ps1` |
+| Jira Service Console (my/unassigned tickets, find/search, monthly reports) | `Jira Scripts\Start-JiraConsole.ps1` |
 
 ### Assets (Snipe-IT)
 | Option | Script |
@@ -466,7 +466,7 @@ output\
 
 All record timestamp + operator. Failures logged with the error.
 
-Scripts never build these paths by hand â€” they call
+Scripts never build these paths by hand - they call
 `Get-ADToolOutputDir -Category 'Logs'` (or `'Reports\...'`), which creates the
 folder on demand. Adding a new output means picking a category, not inventing a
 new place.

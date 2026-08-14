@@ -1,4 +1,4 @@
-<#
+﻿<#
     Helpers.ps1
     -----------
     Small, self-contained utilities with no Jira API calls:
@@ -349,57 +349,4 @@ function Get-AdfText {
     if ($Node.text)    { $parts += [string]$Node.text }
     if ($Node.content) { foreach ($child in $Node.content) { $parts += (Get-AdfText $child) } }
     return ($parts -join ' ')
-}
-
-function Get-TicketKeywordOrg {
-    <#
-    .SYNOPSIS
-        Finds an organization whose distinctive name-word appears in ticket text.
-    .DESCRIPTION
-        Tickets often name their site in the summary/description (e.g. "...free up
-        - Russell" points to "Russell Residence and Housing Centre"). This tokenizes
-        each organization name, drops generic words (Shelter, Housing, Centre, ...),
-        and returns the first org whose distinctive token appears as a whole word in
-        the text. The reporter's own candidate orgs are checked before the full list.
-    .PARAMETER Text
-        The ticket text to scan (summary + description), any case.
-    .PARAMETER CandidateOrgs
-        Organization names to prefer (from history / department), in priority order.
-    .PARAMETER AllOrgs
-        All organization names, checked only if no candidate matched.
-    .OUTPUTS
-        PSCustomObject { Org; Keyword } for the match, or $null.
-    #>
-    [CmdletBinding()]
-    param(
-        [string]$Text,
-        [string[]]$CandidateOrgs = @(),
-        [string[]]$AllOrgs = @()
-    )
-    if ([string]::IsNullOrWhiteSpace($Text)) { return $null }
-    $lower = $Text.ToLower()
-
-    # Generic org-name words that don't identify a specific site - ignored so only
-    # the distinctive part (a place/person name) is matched.
-    $stop = @(
-        'shelter','house','houses','housing','residence','residences','centre','center',
-        'building','lodge','program','programs','service','services','hotel','society',
-        'inn','place','manor','hall','room','rooms','wellness','recovery','health','community',
-        'supportive','head','office','home','homes','care','unit','units','support','clinic',
-        'project','hostel','court','village','tower','towers','plaza','block','apartments',
-        'apartment','transitional','emergency','the','and','for'
-    )
-
-    foreach ($list in @($CandidateOrgs, $AllOrgs)) {
-        foreach ($org in $list) {
-            if (-not $org) { continue }
-            $tokens = @(($org.ToLower() -split '[^a-z0-9]+') | Where-Object { $_.Length -ge 3 -and $stop -notcontains $_ })
-            foreach ($tok in $tokens) {
-                if ($lower -match "\b$([regex]::Escape($tok))\b") {
-                    return [pscustomobject]@{ Org = $org; Keyword = $tok }
-                }
-            }
-        }
-    }
-    return $null
 }

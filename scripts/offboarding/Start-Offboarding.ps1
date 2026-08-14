@@ -266,6 +266,35 @@ foreach ($p in $approved) {
             -Details "$source - $($p.Name)$(if ($p.Role) { " ($($p.Role))" })"
         $disabled++
         $justDisabled += $p
+
+        # Strip every group except Domain Users. Domain Users is the account's
+        # PRIMARY group, which AD does not list in MemberOf and refuses to
+        # remove, so clearing MemberOf leaves it in place on its own. The name
+        # is still skipped explicitly in case a site has it added as a normal
+        # group too. Done in its own try so a group failure does not report the
+        # disable itself as failed.
+        try {
+            $groups = @((Get-ADUser -Identity $p.Sam -Properties MemberOf -ErrorAction Stop).MemberOf)
+            $toRemove = @($groups | Where-Object { $_ -notmatch '^CN=Domain Users,' })
+            foreach ($g in $toRemove) {
+                try {
+                    Remove-ADPrincipalGroupMembership -Identity $p.Sam -MemberOf $g -Confirm:$false -ErrorAction Stop
+                }
+                catch {
+                    Write-Host "    Could not remove from $($g -replace '^CN=([^,]+).*','$1'): $($_.Exception.Message)" -ForegroundColor Yellow
+                    Write-ActionLog -Action 'Offboard: Remove Groups' -Target $p.Sam -Result 'Failed' -Details "$g - $($_.Exception.Message)"
+                }
+            }
+            if ($toRemove.Count -gt 0) {
+                Write-Host "    Removed from $($toRemove.Count) group(s); Domain Users kept." -ForegroundColor Green
+                Write-ActionLog -Action 'Offboard: Remove Groups' -Target $p.Sam -Details "$($toRemove.Count) removed: $(($toRemove | ForEach-Object { $_ -replace '^CN=([^,]+).*','$1' }) -join ', ')"
+            }
+            else { Write-Host "    No extra groups to remove." -ForegroundColor DarkGray }
+        }
+        catch {
+            Write-Host "    Could not read group membership: $($_.Exception.Message)" -ForegroundColor Yellow
+            Write-ActionLog -Action 'Offboard: Remove Groups' -Target $p.Sam -Result 'Failed' -Details $_.Exception.Message
+        }
     }
     catch {
         Write-Host "  Could not disable $($p.Sam): $($_.Exception.Message)" -ForegroundColor Red
