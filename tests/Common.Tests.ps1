@@ -1212,32 +1212,6 @@ Describe 'Select-FromList' {
 }
 
 
-Describe 'Test-DeskSideShareNewer (auto-update version compare)' {
-
-    BeforeAll {
-        # The comparer lives in the bootstrap; -NoRun defines its functions
-        # without launching anything.
-        . "$PSScriptRoot\..\Start-DeskSide.ps1" -NoRun
-    }
-
-    It 'sees a later stamp as newer' {
-        Test-DeskSideShareNewer -ShareVersion '20260724204705' -LocalVersion '20250101000000' | Should -BeTrue
-    }
-
-    It 'does not update for an older or equal stamp' {
-        Test-DeskSideShareNewer -ShareVersion '20250101000000' -LocalVersion '20260724204705' | Should -BeFalse
-        Test-DeskSideShareNewer -ShareVersion '20260724204705' -LocalVersion '20260724204705' | Should -BeFalse
-    }
-
-    It 'treats a missing local version as "pull it"' {
-        Test-DeskSideShareNewer -ShareVersion '20260724204705' -LocalVersion '' | Should -BeTrue
-    }
-
-    It 'never claims an update when the share has no version' {
-        Test-DeskSideShareNewer -ShareVersion '' -LocalVersion '20250101000000' | Should -BeFalse
-    }
-}
-
 Describe 'Test-DeskSideProtectedAccount (org-agnostic profile protection)' {
 
     AfterEach { $env:PROTECTED_ACCOUNTS = $null }

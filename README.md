@@ -9,6 +9,13 @@ issue tracking, and remote machine maintenance.
 
 ## Quick start
 
+**Double-click `Start-DeskSide.cmd`.** That is the whole thing - it handles the
+execution policy, clears the "downloaded from another computer" mark that
+Windows puts on files out of a zip, and opens the menu. Nothing to install and
+no PowerShell knowledge needed.
+
+If you prefer a terminal:
+
 ```powershell
 .\AD-Toolkit.ps1
 ```
@@ -17,11 +24,15 @@ Two-level menu: pick a category, then an option. Scripts also run directly (see
 Examples). Most user scripts take a **SAM** (`alex.amog`) or **UPN**
 (`alex.amog@contoso.local`).
 
+> Some options are greyed out unless the toolkit is run as **SYSTEM** - see
+> [Admin credentials](#admin-credentials). That is a Windows permission rule,
+> not something the launcher can change.
+
 ## Folder layout
 
 | Folder | Contents |
 | ------ | -------- |
-| `.\` | `AD-Toolkit.ps1` launcher, `Start-DeskSide.ps1`/`.cmd`, `Run-Tests.ps1` |
+| `.\` | `Start-DeskSide.cmd` (double-click), `AD-Toolkit.ps1` menu, `Run-Tests.ps1` |
 | `setup\` | `Set-ToolConfig`, `Set-SnipeCredentials`, `Set-TacticalCredentials` |
 | `lib\` | `Common.ps1` - shared config + helpers |
 | `scripts\` | Task scripts, grouped by category (below) |

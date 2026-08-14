@@ -1,3 +1,4 @@
+#Requires -Version 5.1
 <#
 .SYNOPSIS
     Desk Side Toolkit - an auto-discovering menu launcher.
@@ -19,7 +20,7 @@
     RSAT is missing.
 
     ---------------------------------------------------------------------------
-    HOW TO ADD A NEW FEATURE  (full walkthrough: documentation\DEVELOPER-GUIDE.md)
+    HOW TO ADD A NEW FEATURE  (full walkthrough: README.md, "Adding a feature")
       1. Write the script in a category subfolder under scripts\
          (e.g. scripts\reporting\Get-StaleAccounts.ps1). If it needs the shared
          config/helpers, start it with:
