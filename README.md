@@ -1,11 +1,11 @@
 # Desk Side Toolkit
 
 Menu-driven PowerShell tools for AD, Snipe-IT, Jira, and Tactical RMM: password
-resets, lockouts, account state, lookups, OU moves, reporting, asset management,
+resets, lockouts, account state, lookups, OU moves, asset management,
 issue tracking, and remote machine maintenance.
 
-> **Taking this over?** Read `documentation\DEVELOPER-GUIDE.md` (how it fits together, how
-> to extend).
+> **Taking this over?** Everything is in this file. Each script also carries its
+> own comment-based help - run `Get-Help .\scripts\<folder>\<Script>.ps1 -Full`.
 
 ## Quick start
 
@@ -21,13 +21,13 @@ Examples). Most user scripts take a **SAM** (`alex.amog`) or **UPN**
 
 | Folder | Contents |
 | ------ | -------- |
-| `.\` | `AD-Toolkit.ps1` launcher, `Start-DeskSide.ps1`/`.cmd` (auto-updating launcher), `Launch-AdminToolkit.ps1`, `Publish-ToShare.ps1`, `Build-SharePackage.ps1`, `Publish-Standalone.ps1`, `VERSION` |
+| `.\` | `AD-Toolkit.ps1` launcher, `Start-DeskSide.ps1`/`.cmd`, `Run-Tests.ps1` |
 | `setup\` | `Set-ToolConfig`, `Set-SnipeCredentials`, `Set-TacticalCredentials` |
 | `lib\` | `Common.ps1` - shared config + helpers |
 | `scripts\` | Task scripts, grouped by category (below) |
 | `data\` | Reference data (e.g. `UsersOU-Paths.json`) |
-| `output\` | Reports, audit logs, `archive\` |
-| `documentation\` | All written material: `DEVELOPER-GUIDE.md`, `DEPLOYMENT.md`, `API-Examples\` (REST/AD skeletons) |
+| `output\` | Everything generated: `Logs\`, `Reports\`, `Audits\`, `Packages\` |
+| `tests\` | Pester checks, run by `Run-Tests.ps1` |
 
 ### scripts\ subfolders
 
@@ -35,28 +35,29 @@ Examples). Most user scripts take a **SAM** (`alex.amog`) or **UPN**
 | --------- | ------- |
 | `accounts\` | Reset-UserPassword, Set-UserAccountState, Get-LockoutSource |
 | `users\` | Get-UserDetails, Get-UserOUPath, Manage-UserGroups, Move-UserByOUPath |
-| `assets\` | Get-SnipeAsset, New-SnipeAssetFromClone |
-| `onboarding\` | New-UserOnboarding |
-| `reporting\` | Get-DisabledUnmatchedUsers, Get-LockedOutUsers, Group-UnmatchedUsersByOffice |
-| `maintenance\` | Get-UsersOUPaths, Convert-UsersOUToReadable, Remove-UnlistedProfiles |
-| `remote\` | Start-TrmmConsole (hub), Invoke-RemoteProfileCleanup, Send-TrmmFile, Enter-TrmmShell, Invoke-FleetDiskCleanup |
+| `assets\` | Get-SnipeAsset, Search-SnipeAssets, New-SnipeAssetFromClone |
+| `exchange\` | Manage-SharedMailbox, Convert-MailboxToShared, Manage-DistributionGroup, Set-MailboxForwarding, Set-MailboxAutoReply |
+| `sharepoint\` | Manage-SharePointSite |
+| `onboarding\` | New-UserOnboarding, Start-BatchOnboarding |
+| `offboarding\` | Start-Offboarding |
+| `maintenance\` | Remove-UnlistedProfiles (run directly; not on the menu) |
+| `remote\` | Start-TrmmConsole (hub), profile + printer + fleet tools, Snipe-IT audits |
 
-Launcher auto-discovers features from `*.tool.psd1` manifests (see "Adding a
-feature"). **Jira** is a self-contained console in `Jira Scripts\` (own launcher,
-`lib\`, docs); its manifest puts it on the menu. **`documentation\API-Examples\`**
-holds copy-paste REST/AD skeletons for building new scripts.
+Launcher auto-discovers features from `*.tool.psd1` manifests - see
+[Adding a feature](#adding-a-feature). **Jira** is a self-contained console in
+`Jira Scripts\` (own launcher, `lib\`, docs); its manifest puts it on the menu.
 
 ## Menu options
 
 ### Jira
 | Option | Script |
 | ------ | ------ |
-| Jira Service Console (my/unassigned tickets, find/search, fix/undo orgs) | `Jira Scripts\Start-JiraConsole.ps1` |
+| Jira Service Console (my/unassigned tickets, find/search, monthly reports) | `Jira Scripts\Start-JiraConsole.ps1` |
 
 ### Assets (Snipe-IT)
 | Option | Script |
 | ------ | ------ |
-| Find asset (view, edit, label; press **R** on a multi-result search for a JSON+HTML report to `output\SnipeReports\`) | `Get-SnipeAsset.ps1` |
+| Find asset (view, edit, label; press **R** on a multi-result search for a JSON+HTML report to `output\Audits\SnipeReports\`) | `Get-SnipeAsset.ps1` |
 | Search assets by filters - keyword + status + location + category + model + company | `Search-SnipeAssets.ps1` |
 | Add asset (clone a model) | `New-SnipeAssetFromClone.ps1` |
 
@@ -132,12 +133,14 @@ Roles are recognised by shape - `Cas SRW`, `Cas PEER`, position codes like
 so a role line is never mistaken for a person and looked up in AD. A line that
 looks like a role but has no name above it is reported rather than dropped.
 
-A worked example is in [`documentation\sample-staff-list.txt`](documentation/sample-staff-list.txt).
+Both examples above are complete files - copy either shape into a `.txt` and go.
 
 Neither script changes anything until you have seen the plan and agreed to it.
 People whose name is not in AD, whose name matches more than one account, or
 (onboarding only) whose role disagrees with AD are never handled automatically -
-they go to an exceptions CSV in `output\` for you to do by hand.
+they go to an exceptions CSV for you to do by hand. Each run writes its files
+into its own dated folder: `output\Reports\Onboarding\<date>\Exceptions.csv` (and
+`Messages.txt`), or `output\Reports\Offboarding\<date>\`.
 
 ### How the role check works
 
@@ -174,6 +177,7 @@ Force one with `-RoleField Title`; ignore roles entirely with `-SkipRoleCheck`.
 | Convert a mailbox to shared (offboarding) | `Convert-MailboxToShared.ps1` |
 | Distribution lists (add/remove/list members) | `Manage-DistributionGroup.ps1` |
 | Mailbox forwarding (set/clear) | `Set-MailboxForwarding.ps1` |
+| Out of Office (set/schedule/clear) | `Set-MailboxAutoReply.ps1` |
 
 These use the **ExchangeOnlineManagement** module. First run installs nothing
 for you but tells you how (`Install-Module ExchangeOnlineManagement -Scope
@@ -191,6 +195,23 @@ leaver's) plus a matching remove - your address defaults to `EXO_ADMIN_UPN`.
 Converting a leaver's mailbox to shared keeps the mail and frees the licence; it
 does **not** touch AD or the 365 licence (disable the account in Offboarding,
 remove the licence in the 365 admin centre).
+
+**Out of Office** sets someone's automatic reply for them, either running until
+you turn it off or over a date range that switches itself off. It also shows the
+current setting in plain English and clears it again.
+
+### Printers
+| Option | Script |
+| ------ | ------ |
+| Scan subnet(s) for IP printers | `Find-NetworkPrinters.ps1` |
+| Map printers to offices (recent print jobs + AD) | `Map-PrintersToOffices.ps1` |
+| Check toner/status, queue + history, cancel a job, restart | `Monitor-CanonPrinter.ps1` |
+
+These reach printers directly over the network, so they do not need Tactical
+RMM: the scan probes the ports printers listen on, and the monitor uses SNMP
+(toner, status) and IPP (job queue, cancel). Mapping works the other way round -
+it infers each printer's office from where its recent users sit in AD. To add or
+remove a printer **on a computer**, use `Manage-TrmmPrinters.ps1` under Remote.
 
 ### SharePoint
 | Option | Script |
@@ -233,30 +254,6 @@ group-backed sites from the M365 admin centre or Teams.
 | Current OU path | `Get-UserOUPath.ps1` |
 | View / manage group membership | `Manage-UserGroups.ps1` |
 | Move to an OU path | `Move-UserByOUPath.ps1` |
-
-### Reporting
-| Option | Script |
-| ------ | ------ |
-| AD security events (lockouts, resets, changes) over a time range | `Get-ADAuditEvents.ps1` |
-| Disabled users (Unmatched Accounts OU) | `Get-DisabledUnmatchedUsers.ps1` |
-| Locked-out accounts | `Get-LockedOutUsers.ps1` |
-| Group unmatched users by Office | `Group-UnmatchedUsersByOffice.ps1` |
-
-`Get-ADAuditEvents.ps1` turns the DC Security log into a plain "who did what to
-whom, and when" table over a time range you pick (last 24h/7d/30d or a custom
-window like `48h`, `14d`, or a start date). It covers lockouts, admin password
-resets, user password changes, account enable/disable/create/delete/rename, and
-group add/remove.
-
-For a **"keeps locking out"** complaint, 4740 (locked out) alone isn't enough -
-it's written once per lock and only on the PDC. The events that show every bad
-attempt *and where it came from* are the failed sign-ins (4625/4771/4776), each
-carrying the source IP or computer. Those are included automatically when you
-name a person (`Get-ADAuditEvents.ps1 brittany.harris -Days 7 -AllDcs`), or add
-`-IncludeSignInFailures` for the whole domain. They land on whichever DC handled
-the attempt, so pair with `-AllDcs`. Password resets likewise can be on any DC -
-`-AllDcs` sweeps them too. Read-only; `-Csv` saves the table to `output\`. Needs
-rights to read the DC Security log (domain admin, or a SYSTEM run on a DC).
 
 ### Remote (Tactical RMM)
 | Option | Script |
@@ -306,14 +303,12 @@ folder-permissions kind.
 
 Action scripts also run standalone (`.\scripts\remote\Enter-TrmmShell.ps1 ITLAPSPARE-11`).
 All need `.\setup\Set-TacticalCredentials.ps1` once; the two Snipe-IT audits also
-need `SNIPEIT_TOKEN` (they write JSON+HTML to `output\SnipeAudit\` and log any
+need `SNIPEIT_TOKEN` (they write JSON+HTML to `output\Audits\SnipeAudit\` and log any
 Snipe-IT change to `Snipe-Asset-Changes.json`).
 
 ### Setup / Maintenance
 | Option | Script |
 | ------ | ------ |
-| Scan regions for "Users" OUs to JSON | `Get-UsersOUPaths.ps1` |
-| Build readable navigation reference | `Convert-UsersOUToReadable.ps1` |
 | Clean up profiles on THIS computer | `Remove-UnlistedProfiles.ps1` |
 
 ## Examples
@@ -332,7 +327,6 @@ Snipe-IT change to `Snipe-Asset-Changes.json`).
 .\scripts\assets\New-SnipeAssetFromClone.ps1
 
 .\"Jira Scripts"\Start-JiraConsole.ps1
-.\scripts\reporting\Get-DisabledUnmatchedUsers.ps1
 
 # Local profile cleanup (preview first; add -Cleanup / -HealthCheck)
 .\scripts\maintenance\Remove-UnlistedProfiles.ps1 -Keep alex.amog, john.smith -WhatIf
@@ -352,7 +346,7 @@ Snipe-IT change to `Snipe-Asset-Changes.json`).
    press **R** to report all matches.
 3. From an asset: **Edit** (Name/Status/Assigned to/Notes) or **Print label**.
 4. **R** writes JSON + HTML (tag, name, model, status, assignee, location,
-   serial, dates, notes) to `output\SnipeReports\`.
+   serial, dates, notes) to `output\Audits\SnipeReports\`.
 
 ## Configuration (environment variables)
 
@@ -383,7 +377,6 @@ to the individual `Set-*` scripts below, so you can still run those directly.
 | `SNIPEIT_TOKEN` | Snipe-IT API token (no "Bearer ") | Yes |
 | `TRMM_URL` | TRMM API URL (the `api.` address, NOT the `rmm.` UI) | No |
 | `TRMM_APIKEY` | TRMM API key (Settings > Global Settings > API Keys) | Yes |
-| `AD_DOMAIN_DN` | AD domain DN. **Blank = auto-detected** from the current domain | No |
 | `AD_SOURCE_OU` | "Unmatched Accounts" OU (for the reports) | No |
 | `AD_REGIONS` | Region OUs, semicolon-separated | No |
 | `ONBOARDING_GROUP` | Group new users join. Blank = skip the group step | No |
@@ -409,140 +402,127 @@ Defaults live in the `$ADTool` block in `lib\Common.ps1`. **Jira** has its own
 settings (`JIRA_BASEURL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`) via
 `.\"Jira Scripts"\Set-JiraCredentials.ps1`.
 
-## Adding a feature
-
-Launcher auto-discovers - you never edit `AD-Toolkit.ps1`. Two files in the
-feature's own folder:
-
-1. Script in a `scripts\<category>\` subfolder. If it needs shared helpers:
-   ```powershell
-   . "$PSScriptRoot\..\..\lib\Common.ps1"
-   ```
-2. Manifest beside it, same base name + `.tool.psd1`:
-   ```powershell
-   @{ Category = 'Reporting'; Label = 'Show stale accounts'; Order = 63 }
-   ```
-
-Existing `Category` adds to that section; new one makes a section. `Order` sets
-position (lower first) and section order. Delete/rename = edit the two files.
-The script still runs standalone; the manifest is only read by the launcher.
-
-New external system: add settings to `$ADTool` in `lib\Common.ps1` + a request
-wrapper next to `Invoke-SnipeRequest`. Reuse `Select-FromList` and
-`Format-Table -AutoSize` to match the look.
-
-## Shared library (`lib\Common.ps1`)
-
-- `Resolve-ADToolUser` - look up by SAM or UPN
-- `ConvertTo-LdapEscapedString` - make typed text safe for an LDAP search
-- `Get-ADToolDC` - PDC emulator unless `-Server` given
-- `Select-FromList` - numbered picker
-- `Invoke-SnipeRequest` - Snipe-IT REST wrapper (auth, TLS)
-- `Test-TrmmConfigured` / `Invoke-TrmmRequest` / `Invoke-TrmmAgentCommand` - Tactical RMM
-- `Get-ADToolOutputDir` / `Get-ADToolDataDir` - file locations
-- `Write-ActionLog` (AD + TRMM, CSV) / `Write-SnipeAssetLog` (Snipe, JSON)
-
 ## Tests
 
 ```powershell
 .\Run-Tests.ps1
 ```
 
-Runs the checks in `tests\` against the shared library, then reads every script
-looking for common mistakes. Nothing here touches AD, Snipe-IT, Tactical RMM, or
-the network, and no credentials are needed - it is safe to run any time.
+Runs the checks in `tests\`, then reads every script looking for common mistakes.
+Nothing touches AD, Snipe-IT, Tactical RMM, or the network, and no credentials
+are needed - safe to run any time. Run it after changing `lib\Common.ps1`. Needs
+Pester 5 or newer; the script prints the install command if the PC only has the
+old built-in version.
 
-Run it after changing `lib\Common.ps1`: if it stays green, the shared parts other
-scripts depend on still work. The tests need Pester 5 or newer; the script prints
-the one-line install command if the PC only has the old built-in version.
+## Adding a feature
+
+The launcher auto-discovers features, so you never edit `AD-Toolkit.ps1`. Two
+files in the feature's own folder:
+
+1. `scripts\<category>\Verb-Noun.ps1`. If it needs shared helpers, first line:
+   ```powershell
+   . "$PSScriptRoot\..\..\lib\Common.ps1"
+   ```
+   Using AD cmdlets? Add `#Requires -Modules ActiveDirectory`.
+2. `scripts\<category>\Verb-Noun.tool.psd1` beside it:
+   ```powershell
+   @{ Category = 'Lookups & Info'; Label = 'Show stale accounts'; Order = 63 }
+   ```
+
+An existing `Category` adds to that section; a new one makes a section. `Order`
+sets position (lower first). Deleting or renaming a feature means touching only
+those two files. The script still runs directly - the manifest is only read by
+the launcher.
+
+For a new external system, add its settings to `$ADTool` in `lib\Common.ps1`
+(environment variable + default) and a request wrapper next to
+`Invoke-SnipeRequest`.
+
+### Shared library (`lib\Common.ps1`)
+
+- `Resolve-ADToolUser` / `Resolve-ADToolUserByName` - look up by SAM, UPN or full name
+- `ConvertTo-LdapEscapedString` - make typed text safe for an LDAP search
+- `Get-ADToolDC` - PDC emulator unless `-Server` is given
+- `Select-FromList` - numbered picker
+- `Confirm-DeskSideAction` - the standard confirmation prompt
+- `Invoke-SnipeRequest` - Snipe-IT REST wrapper (auth, TLS)
+- `Test-TrmmConfigured` / `Invoke-TrmmRequest` / `Invoke-TrmmAgentCommand` - Tactical RMM
+- `Connect-ExoSession` / `Connect-MgGraphSession` / `Connect-SpoSession` - cloud sign-ins
+- `Get-ADToolOutputDir -Category` / `Get-ADToolDataDir` - file locations
+- `Write-ActionLog` (CSV) / `Write-SnipeAssetLog` (JSON) / `Write-DeskSideFailure`
+- `Write-DeskSideHtmlReport` / `ConvertTo-HtmlEncodedText` - report output
+
+### Two PowerShell 5.1 traps this codebase has already hit
+
+- **`@(Invoke-RestMethod ...)`** nests the array the call already returns inside
+  a second one, so 20 results become 1. Capture first, then wrap:
+  `$r = Invoke-RestMethod ...; @($r)`. A test guards the whole source tree.
+- **A non-ASCII character in a `.ps1`** read as ANSI becomes three characters,
+  the last a curly quote, which silently ends a string and breaks parsing far
+  from the real line. Write hyphens, not dashes. A test checks the raw bytes of
+  every `.ps1`, `.psd1` and `.md`.
 
 ## Audit logs
 
+Everything the toolkit generates is sorted under `output\` by **what the file
+is**, so the folder stays readable as it fills up:
+
+```
+output\
+  Logs\                    appended to forever
+    AD-Toolkit-Actions.csv
+    Snipe-Asset-Changes.json
+    RemoteSessions\        one transcript per remote session
+  Reports\                 things you produce, read, and send on
+    Monthly\2026-07\       (Jira console writes its own under Jira Scripts\output\)
+    Onboarding\<date>\     one folder per run
+    Offboarding\<date>\
+    AD-Security-Events\  Users-ByOffice\  InstalledApps\  AD-Structure\
+  Audits\                  comparisons between two systems
+    SnipeReports\  SnipeAudit\
+  Packages\                built share packages
+```
+
 | File | Contents |
 | ---- | -------- |
-| `output\AD-Toolkit-Actions.csv` | AD changes + TRMM actions (cleanups, transfers) |
-| `output\Snipe-Asset-Changes.json` | Asset create/update/checkout/checkin (old/new) |
-| `output\RemoteCleanup-<pc>-<date>.log` | Remote profile-cleanup console (preview + run) |
-| `output\RemoteShell-<pc>-<date>.log` | Remote PowerShell session transcript |
-| `output\SnipeReports\Asset Report - <date>.json`/`.html` | Snipe asset search reports |
-| `output\SnipeAudit\TRMM-Snipe Audit - <date>.*` / `Serial Audit - <date>.*` | TRMM-vs-Snipe audits (by hostname / by serial) |
-| `output\Installed Apps - <pc> - <date>.txt` | Saved installed-app list from the hub |
+| `output\Logs\AD-Toolkit-Actions.csv` | AD changes + TRMM actions (cleanups, transfers) |
+| `output\Logs\Snipe-Asset-Changes.json` | Asset create/update/checkout/checkin (old/new) |
+| `output\Logs\RemoteSessions\RemoteCleanup-<pc>-<date>.log` | Remote profile-cleanup console (preview + run) |
+| `output\Logs\RemoteSessions\RemoteShell-<pc>-<date>.log` | Remote PowerShell session transcript |
+| `output\Audits\SnipeReports\Asset Report - <date>.json`/`.html` | Snipe asset search reports |
+| `output\Audits\SnipeAudit\TRMM-Snipe Audit - <date>.*` / `Serial Audit - <date>.*` | TRMM-vs-Snipe audits (by hostname / by serial) |
+| `output\Reports\InstalledApps\<pc> - <date>.txt` | Saved installed-app list from the hub |
+| `output\Reports\Onboarding\<date>\` | Per-run onboarding exceptions + messages |
+| `output\Reports\Offboarding\<date>\` | Per-run offboarding exceptions + report |
 | `C:\ProgramData\DeskSideToolkit\ProfileCleanup.log` | On the cleaned machine: profiles deleted, keep-names not found, GB freed, health-check |
-| `output\archive\` | Old dated reports |
 
 All record timestamp + operator. Failures logged with the error.
 
+Scripts never build these paths by hand - they call
+`Get-ADToolOutputDir -Category 'Logs'` (or `'Reports\...'`), which creates the
+folder on demand. Adding a new output means picking a category, not inventing a
+new place.
+
 ## Admin credentials
 
-`Launch-AdminToolkit.ps1` (and the shortcut) prompt for your AD admin account and
-run the toolkit as it.
+The AD and Microsoft 365 features are tagged `Admin` and only appear when the
+toolkit runs as the local SYSTEM account (see `Test-RunningAsSystem` in
+`AD-Toolkit.ps1`); everything else is available to a normal login. To use the
+AD features, start the toolkit from a session that already has the rights it
+needs. Each step reports plainly if the account lacks permission.
 
-## Standalone editions and Core
+## Sharing the toolkit
 
-Standalone tools live in `..\Standalone Editions\` - self-contained, same
-auto-discovering launcher (`Start-Toolkit.ps1`), only their features + setup.
+Copy the folder. There is no packaging step: give someone the project folder and
+they run `AD-Toolkit.ps1`, or `Start-DeskSide.cmd` if they want the launcher.
 
-**Generated - don't edit by hand.** `Publish-Standalone.ps1` builds them from
-this project (no drift): change a feature here, re-run.
-
-```powershell
-.\Publish-Standalone.ps1                       # all + Core
-.\Publish-Standalone.ps1 -Edition TacticalRMM  # one
-.\Publish-Standalone.ps1 -Edition Core
-```
-
-- `..\Standalone Editions\Snipe-IT Tool\` - assets. No AD.
-- `..\Standalone Editions\Tactical RMM Tool\` - remote cleanup, send, shell, fleet, local cleanup. No AD.
-- `..\Desk Side Tool - Core\` - whole runnable project, docs stripped. One folder.
-
-Edit the `$editions` list (or Core exclude list) atop `Publish-Standalone.ps1` to
-change. **Jira Console** is in the collection too but has its own `lib\` and is
-**not** publisher-generated - sync by hand.
-
-## Sharing & auto-update
-
-Two ways to get the toolkit to other people. Full walkthrough (for a non-coder)
-in [`documentation\DEPLOYMENT.md`](documentation/DEPLOYMENT.md).
-
-**A one-off zip.** `Build-SharePackage.ps1` writes a clean
-`output\DeskSideToolkit-<version>.zip`. It leaves out everything private or
-machine-local (live `output\`, exported Jira tickets, `data\`, `.git`, `.claude`)
-and **refuses to build** if any of that reaches the package - so a zip can never
-carry staff names, hostnames, or ticket PII. The zip includes the auto-updating
-launcher, so whoever unzips it is set up for updates too.
-
-```powershell
-.\Build-SharePackage.ps1
-```
-
-**Auto-update from a shared drive (recommended).** Put a master copy on a shared
-drive; everyone runs `Start-DeskSide.cmd`, which pulls the newest version down to
-their own machine before launching:
-
-1. Once, on the master: `.\Publish-ToShare.ps1 -ShareRoot \\server\share\DeskSideToolkit`.
-   This stamps a fresh `VERSION` and copies the project up (same privacy rules as
-   the zip).
-2. Each person runs `Start-DeskSide.cmd`. It finds the share (from the
-   `DESKSIDE_SHARE` env var, a `share.txt` beside it, or by asking once), and if
-   the share's `VERSION` is newer than their local copy it mirrors the new files
-   to `%LOCALAPPDATA%\DeskSideToolkit` (leaving their own logs alone), clears the
-   "from another computer" mark, and runs from there.
-3. If the share is unreachable it just runs the last local copy - nobody is ever
-   stuck offline.
-
-To release a change: run `Publish-ToShare.ps1` again. Everyone picks it up on
-their next launch - no re-sending zips.
-
-`VERSION` is a UTC stamp (`yyyyMMddHHmmss`); a bigger stamp means newer.
-`Publish-ToShare.ps1` writes it for you - don't hand-edit it.
-
-> Admin (AD / Microsoft) tools are gated to a **SYSTEM** run. A normal login sees
-> Jira / Snipe-IT / RMM; the AD/365/SharePoint tools show greyed out. A SYSTEM run
-> under RMM reads a different `%LOCALAPPDATA%` and needs the machine account to
-> reach the share - for SYSTEM use, deploy via RMM or a machine-readable share.
+Before copying, **leave out `output\` and `data\`** - those hold real hostnames,
+staff names and ticket exports from your machine. Everything else is safe to
+share.
 
 ## Requirements
 
+- Windows PowerShell 5.1
 - RSAT ActiveDirectory module (AD features)
 - Rights for the action (password reset, group edit, PDC Security log for lockouts)
-- `SNIPEIT_TOKEN` for asset options; `TRMM_*` for remote
+- `SNIPEIT_TOKEN` for asset options; `TRMM_*` for remote; `JIRA_*` for Jira

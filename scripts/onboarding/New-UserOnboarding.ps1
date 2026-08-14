@@ -27,8 +27,8 @@ param([string]$Identity)
 
 # --- Show which account is running -------------------------------------------
 # Onboarding makes AD changes, so it must run as an account with the right
-# permissions - e.g. via Launch-AdminToolkit.ps1 (runas /savecred). We show the
-# account so you can confirm; if it lacks rights, each step below reports why.
+# permissions. We show the account so you can confirm before anything happens;
+# if it lacks rights, each step below reports why rather than failing silently.
 Write-Host ("Running as: {0}\{1}" -f $env:USERDOMAIN, $env:USERNAME) -ForegroundColor DarkGray
 
 # --- Settings (all configurable - see lib\Common.ps1 / setup\Set-ToolConfig.ps1)
@@ -74,7 +74,8 @@ Write-Host ("  {0,-34} : {1}" -f 'User logon name (pre-Windows 2000)', $sam)
 Write-Host ("  {0,-34} :" -f 'Member of')
 if ($groups) { $groups | ForEach-Object { Write-Host "      - $_" } } else { Write-Host "      (none)" }
 
-if ((Read-Host "`nDoes this look correct? Proceed with onboarding? (Y/N)") -notmatch '^[Yy]') {
+Write-Host ""
+if (-not (Confirm-DeskSideAction 'Does this look correct? Proceed with onboarding?' -Quiet)) {
     Write-Host "Cancelled - no changes made." -ForegroundColor Yellow
     return
 }
@@ -90,8 +91,7 @@ try {
     Write-ActionLog -Action 'Onboard: Group Add' -Target $sam -Details "Added to $GroupName"
 }
 catch {
-    Write-Host "Could not add to '$GroupName': $($_.Exception.Message)" -ForegroundColor Red
-    Write-ActionLog -Action 'Onboard: Group Add' -Target $sam -Result 'Failed' -Details "$GroupName - $($_.Exception.Message)"
+    Write-DeskSideFailure "Could not add to '$GroupName'" 'Onboard: Group Add' $sam $_ -Context "$GroupName"
 }
 }
 
@@ -103,8 +103,7 @@ try {
     Write-ActionLog -Action 'Onboard: Reset Password' -Target $sam
 }
 catch {
-    Write-Host "Password reset failed: $($_.Exception.Message)" -ForegroundColor Red
-    Write-ActionLog -Action 'Onboard: Reset Password' -Target $sam -Result 'Failed' -Details $_.Exception.Message
+    Write-DeskSideFailure "Password reset failed" 'Onboard: Reset Password' $sam $_
 }
 
 # --- 3. Force a password change at next logon --------------------------------
@@ -121,7 +120,10 @@ catch {
 # Licences live in the M365 admin centre (Microsoft Graph), not AD, so this is a
 # separate, optional step. Signs in interactively the first time.
 $upn = $user.UserPrincipalName
-if ($upn -and (Read-Host "`nAssign the Office 365 E1 licence to $upn? (Y/n)").Trim().ToUpper() -ne 'N') {
+# -DefaultYes: assigning the licence is the normal path for a new starter, so a
+# bare ENTER goes ahead with it. Type N to skip.
+Write-Host ""
+if ($upn -and (Confirm-DeskSideAction "Assign the Office 365 E1 licence to $upn?" -DefaultYes -Quiet)) {
     if (Connect-MgGraphSession) {
         $sku = Get-M365LicenseSku
         if ($sku) {

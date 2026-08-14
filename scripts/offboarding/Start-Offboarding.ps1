@@ -230,7 +230,7 @@ if ($stillEnabled.Count -gt 0) {
         $stillEnabled | ForEach-Object { Show-Leaver $_ }
         Write-Host ""
         Write-Host "Disabling an account signs the person out of the domain and blocks new logins." -ForegroundColor Yellow
-        if ((Read-Host "Disable all $($stillEnabled.Count) account(s) listed above? (Y/N)") -match '^[Yy]') {
+        if (Confirm-DeskSideAction "Disable all $($stillEnabled.Count) account(s) listed above?" -Quiet) {
             $approved = $stillEnabled
         }
         else {
@@ -266,6 +266,35 @@ foreach ($p in $approved) {
             -Details "$source - $($p.Name)$(if ($p.Role) { " ($($p.Role))" })"
         $disabled++
         $justDisabled += $p
+
+        # Strip every group except Domain Users. Domain Users is the account's
+        # PRIMARY group, which AD does not list in MemberOf and refuses to
+        # remove, so clearing MemberOf leaves it in place on its own. The name
+        # is still skipped explicitly in case a site has it added as a normal
+        # group too. Done in its own try so a group failure does not report the
+        # disable itself as failed.
+        try {
+            $groups = @((Get-ADUser -Identity $p.Sam -Properties MemberOf -ErrorAction Stop).MemberOf)
+            $toRemove = @($groups | Where-Object { $_ -notmatch '^CN=Domain Users,' })
+            foreach ($g in $toRemove) {
+                try {
+                    Remove-ADPrincipalGroupMembership -Identity $p.Sam -MemberOf $g -Confirm:$false -ErrorAction Stop
+                }
+                catch {
+                    Write-Host "    Could not remove from $($g -replace '^CN=([^,]+).*','$1'): $($_.Exception.Message)" -ForegroundColor Yellow
+                    Write-ActionLog -Action 'Offboard: Remove Groups' -Target $p.Sam -Result 'Failed' -Details "$g - $($_.Exception.Message)"
+                }
+            }
+            if ($toRemove.Count -gt 0) {
+                Write-Host "    Removed from $($toRemove.Count) group(s); Domain Users kept." -ForegroundColor Green
+                Write-ActionLog -Action 'Offboard: Remove Groups' -Target $p.Sam -Details "$($toRemove.Count) removed: $(($toRemove | ForEach-Object { $_ -replace '^CN=([^,]+).*','$1' }) -join ', ')"
+            }
+            else { Write-Host "    No extra groups to remove." -ForegroundColor DarkGray }
+        }
+        catch {
+            Write-Host "    Could not read group membership: $($_.Exception.Message)" -ForegroundColor Yellow
+            Write-ActionLog -Action 'Offboard: Remove Groups' -Target $p.Sam -Result 'Failed' -Details $_.Exception.Message
+        }
     }
     catch {
         Write-Host "  Could not disable $($p.Sam): $($_.Exception.Message)" -ForegroundColor Red
@@ -283,7 +312,7 @@ foreach ($p in $approved) {
 # and skips cleanly (no mailbox / not licensed / could not connect).
 $cloudTargets = @(@($alreadyDisabled) + @($justDisabled) | Where-Object { $_.Upn })
 if ($cloudTargets.Count -gt 0 -and
-    (Read-Host "`nAlso convert the mailbox to shared and remove the Office 365 E1 licence for $($cloudTargets.Count) account(s)? (Y/N)").Trim().ToUpper() -eq 'Y') {
+    (Confirm-DeskSideAction "Also convert the mailbox to shared and remove the Office 365 E1 licence for $($cloudTargets.Count) account(s)?" -Quiet)) {
 
     $exoOk   = Connect-ExoSession
     $mgOk    = Connect-MgGraphSession
@@ -313,15 +342,30 @@ if ($cloudTargets.Count -gt 0 -and
         }
 
         # 2. Remove the E1 licence (only if the user actually has it).
+        # "We could not read the licences" is NOT the same as "there is no
+        # licence to remove". This used to swallow the error and print the
+        # reassuring line, which left a leaver still holding a paid licence
+        # with nothing in the audit log to show it.
         if ($e1Sku) {
-            $has = $false
-            try { $has = @(Get-MgUserLicenseDetail -UserId $upn -ErrorAction Stop | Where-Object { $_.SkuId -eq $e1Sku.SkuId }).Count -gt 0 } catch { }
-            if (-not $has) { Write-Host "    No Office 365 E1 licence to remove." -ForegroundColor DarkGray }
-            elseif (Set-M365UserLicense -UserId $upn -SkuId $e1Sku.SkuId -Action Remove) {
-                Write-Host "    Office 365 E1 licence removed." -ForegroundColor Green
-                Write-ActionLog -Action 'Offboard: Remove E1 Licence' -Target $upn
+            $licences   = $null
+            $couldCheck = $true
+            try { $licences = @(Get-MgUserLicenseDetail -UserId $upn -ErrorAction Stop) }
+            catch {
+                $couldCheck = $false
+                Write-Host "    Could not check the licences - the E1 licence has NOT been removed: $($_.Exception.Message)" -ForegroundColor Yellow
+                Write-ActionLog -Action 'Offboard: Remove E1 Licence' -Target $upn -Result 'Failed' -Details "Could not read licences - $($_.Exception.Message)"
             }
-            else { Write-ActionLog -Action 'Offboard: Remove E1 Licence' -Target $upn -Result 'Failed' }
+
+            if ($couldCheck) {
+                if (@($licences | Where-Object { $_.SkuId -eq $e1Sku.SkuId }).Count -eq 0) {
+                    Write-Host "    No Office 365 E1 licence to remove." -ForegroundColor DarkGray
+                }
+                elseif (Set-M365UserLicense -UserId $upn -SkuId $e1Sku.SkuId -Action Remove) {
+                    Write-Host "    Office 365 E1 licence removed." -ForegroundColor Green
+                    Write-ActionLog -Action 'Offboard: Remove E1 Licence' -Target $upn
+                }
+                else { Write-ActionLog -Action 'Offboard: Remove E1 Licence' -Target $upn -Result 'Failed' }
+            }
         }
     }
 }
@@ -329,12 +373,15 @@ if ($cloudTargets.Count -gt 0 -and
 # --- 5. Reports --------------------------------------------------------------
 # Only written when working from a list. For one person the console said it all
 # and the audit log has the record - a one-row CSV is just clutter in output\.
-$outputDir = Get-ADToolOutputDir
-$stamp     = Get-Date -Format 'yyyyMMdd-HHmmss'
+# Each run gets its own folder under output\Reports\Offboarding, so the two
+# files from one run stay together instead of interleaving with every other run.
+# The folder is only created if there is something to put in it - resolving it
+# lazily keeps single-person runs from leaving empty folders behind.
+$runFolder = "Reports\Offboarding\{0}" -f (Get-Date -Format 'yyyy-MM-dd HHmmss')
 
 $exceptions = @(@($notFound) + @($ambiguous) | Sort-Object LineNumber)
 if ($exceptions.Count -and $roster.Count -gt 1) {
-    $exPath = Join-Path $outputDir "Offboarding-Exceptions-$stamp.csv"
+    $exPath = Join-Path (Get-ADToolOutputDir -Category $runFolder) "Exceptions.csv"
     $exceptions |
         Select-Object LineNumber, Name, Role,
                       @{ n = 'Status'; e = { $_.Outcome } },
@@ -346,7 +393,7 @@ if ($exceptions.Count -and $roster.Count -gt 1) {
 # Full record of the run, including the ones that needed no action. Only worth
 # writing for a list - for one person the console and the audit log say it all.
 if ($roster.Count -gt 1) {
-    $runPath = Join-Path $outputDir "Offboarding-Report-$stamp.csv"
+    $runPath = Join-Path (Get-ADToolOutputDir -Category $runFolder) "Report.csv"
     $plan |
         Select-Object LineNumber, Name, Role, Outcome,
                       @{ n = 'ADAccount';   e = { $_.Sam } },

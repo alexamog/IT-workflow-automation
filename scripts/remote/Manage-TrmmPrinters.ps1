@@ -63,19 +63,8 @@ if (-not $ComputerName) { Write-Host "No computer name - cancelled." -Foreground
 $ComputerName = $ComputerName.Trim()
 
 Write-Host "Looking up '$ComputerName' in Tactical RMM..."
-try { $agents = @(Invoke-TrmmRequest GET 'agents/') }
-catch { Write-Host "TRMM lookup failed: $($_.Exception.Message)" -ForegroundColor Red; return }
-
-$agent = @($agents | Where-Object { $_.hostname -eq $ComputerName })
-if ($agent.Count -ne 1) {
-    Write-Host "ERROR: found $($agent.Count) agent(s) named '$ComputerName' (need exactly 1)." -ForegroundColor Red
-    if ($agent.Count -eq 0) {
-        @($agents | Where-Object { $_.hostname -match [regex]::Escape($ComputerName) }) |
-            ForEach-Object { Write-Host "  Did you mean: $($_.hostname)" -ForegroundColor Yellow }
-    }
-    return
-}
-$agent = $agent[0]
+$agent = Find-TrmmAgentByName -Hostname $ComputerName
+if (-not $agent) { return }        # the reason was already printed
 
 if ($agent.status -ne 'online') {
     Write-Host "$($agent.hostname) is $($agent.status). It must be online to change printers." -ForegroundColor Yellow
@@ -198,7 +187,7 @@ function Add-RemotePrinter ($state) {
     $parsed = [ref]$null
     if (-not [System.Net.IPAddress]::TryParse($ip, $parsed)) {
         Write-Host "  '$ip' is not an IP address. It will be used as a host name instead." -ForegroundColor Yellow
-        if ((Read-Host "  Continue? (y/n)").Trim().ToUpper() -ne 'Y') { return $false }
+        if (-not (Confirm-DeskSideAction 'Continue?' -Indent '  ')) { return $false }
     }
 
     $name = (Read-Host "  Name for the printer (what users will see)").Trim()
@@ -234,7 +223,7 @@ function Add-RemotePrinter ($state) {
     Write-Host ("    printer : {0}" -f $name)
     Write-Host ("    driver  : {0}" -f $driver)
     Write-Host ("    port    : {0}  ->  {1}" -f $portName, $ip)
-    if ((Read-Host "  Go ahead? (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled." -ForegroundColor DarkGray; return $false }
+    if (-not (Confirm-DeskSideAction 'Go ahead?' -Indent '  ')) { return $false }
 
     Write-Host "  Adding..." -ForegroundColor DarkGray
     $r = Add-PrinterOnAgent -Agent $agent -Name $name -Driver $driver -Ip $ip
@@ -274,9 +263,9 @@ function Remove-RemotePrinter ($state) {
     Write-Host "  These printers will be REMOVED from $($agent.hostname):" -ForegroundColor Yellow
     $chosen | ForEach-Object { Write-Host ("    - {0}   (port {1})" -f $_.Name, $_.Port) }
     Write-Host "  Anyone printing to them will need them added back." -ForegroundColor Yellow
-    if ((Read-Host "  Type YES to remove").Trim() -cne 'YES') { Write-Host "  Cancelled - nothing removed." -ForegroundColor DarkGray; return $false }
+    if (-not (Confirm-DeskSideWord 'remove' -CancelNote 'nothing removed' -Indent '  ')) { return $false }
 
-    $alsoPort = (Read-Host "  Also remove each printer's port? (y/n)").Trim().ToUpper() -eq 'Y'
+    $alsoPort = Confirm-DeskSideAction "Also remove each printer's port?" -Indent '  ' -Quiet
 
     $any = $false
     foreach ($p in $chosen) {
@@ -396,9 +385,8 @@ function Copy-RemotePrinter ($SourceAgent, $SourceState) {
     Write-Host ""
     Write-Host "  Copying to $($target.hostname):" -ForegroundColor Cyan
     $chosen | ForEach-Object { Write-Host ("    - {0}   driver '{1}'   -> {2}" -f $_.Name, $_.Driver, $_.Ip) }
-    if ((Read-Host "  Go ahead? (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled." -ForegroundColor DarkGray; return $false }
+    if (-not (Confirm-DeskSideAction 'Go ahead?' -Indent '  ')) { return $false }
 
-    $any = $false
     foreach ($p in $chosen) {
         Write-Host "`n  $($p.Name)..." -ForegroundColor DarkGray
         if ($targetState.Printers | Where-Object { $_.Name -eq $p.Name }) {
@@ -418,7 +406,6 @@ function Copy-RemotePrinter ($SourceAgent, $SourceState) {
             Write-Host "    Copied ($($r.Note))." -ForegroundColor Green
             Write-ActionLog -Action 'Printer: Copy' -Target $target.hostname `
                 -Details "$($p.Name) from $($SourceAgent.hostname) -> $($p.Ip), driver '$($p.Driver)' ($($r.Note))"
-            $any = $true
         }
         else {
             Write-Host "    Did not copy: $($r.Note)" -ForegroundColor Red

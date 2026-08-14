@@ -38,14 +38,21 @@ try {
     Write-ActionLog -Action 'Reset Password' -Target $user.SamAccountName
 }
 catch {
-    Write-Host "Failed to reset password: $($_.Exception.Message)" -ForegroundColor Red
-    Write-ActionLog -Action 'Reset Password' -Target $user.SamAccountName -Result 'Failed' -Details $_.Exception.Message
+    Write-DeskSideFailure "Failed to reset password" 'Reset Password' $user.SamAccountName $_
     return
 }
 
 # Optional: require change at next logon.
-if ((Read-Host "Force the user to change password at next logon? (Y/N)") -match '^[Yy]') {
-    Set-ADUser -Identity $user.SamAccountName -ChangePasswordAtLogon $true
-    Write-Host "User must change password at next logon." -ForegroundColor Green
-    Write-ActionLog -Action 'Force Password Change' -Target $user.SamAccountName
+# -ErrorAction Stop matters here: without it Set-ADUser reports a failure
+# without stopping, so the green line and the 'Success' audit row below would
+# both be written for a change that never happened.
+if (Confirm-DeskSideAction 'Force the user to change password at next logon?' -Quiet) {
+    try {
+        Set-ADUser -Identity $user.SamAccountName -ChangePasswordAtLogon $true -ErrorAction Stop
+        Write-Host "User must change password at next logon." -ForegroundColor Green
+        Write-ActionLog -Action 'Force Password Change' -Target $user.SamAccountName
+    }
+    catch {
+        Write-DeskSideFailure "Could not set the change-at-next-logon flag" 'Force Password Change' $user.SamAccountName $_
+    }
 }

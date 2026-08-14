@@ -57,7 +57,7 @@ $areas = @(
         Label = 'General settings'
         Extra = 'URLs, domain/OUs, onboarding, time-zone (all optional)'
         Script = Join-Path $PSScriptRoot 'Set-ToolConfig.ps1'
-        Vars = @('SNIPEIT_URL','AD_DOMAIN_DN','AD_SOURCE_OU','AD_REGIONS','ONBOARDING_GROUP','EMAIL_DOMAIN','SPO_TIMEZONE')
+        Vars = @('SNIPEIT_URL','AD_SOURCE_OU','AD_REGIONS','ONBOARDING_GROUP','EMAIL_DOMAIN','SPO_TIMEZONE')
         NeedsModule = $null
     }
     [ordered]@{

@@ -35,11 +35,6 @@ param()
 
 if (-not (Connect-ExoSession)) { return }
 
-# Split a typed list of people (commas, semicolons or spaces) into addresses.
-function Split-People ($text) {
-    @($text -split '[;,\s]+' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
-}
-
 # --- Create a shared mailbox -------------------------------------------------
 function New-SharedMailbox {
     $name = (Read-Host "  Display name for the mailbox (e.g. CSW Powell Horizons SRP)").Trim()
@@ -51,7 +46,7 @@ function New-SharedMailbox {
     Write-Host "  About to create a shared mailbox:" -ForegroundColor Cyan
     Write-Host ("    Name    : {0}" -f $name)
     Write-Host ("    Address : {0}" -f $addr)
-    if ((Read-Host "  Create it? (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled." -ForegroundColor Yellow; return }
+    if (-not (Confirm-DeskSideAction 'Create it?' -Indent '  ')) { return }
 
     try {
         New-Mailbox -Shared -Name $name -DisplayName $name -PrimarySmtpAddress $addr -ErrorAction Stop | Out-Null
@@ -59,26 +54,11 @@ function New-SharedMailbox {
         Write-ActionLog -Action 'Exchange: Create Shared Mailbox' -Target $addr -Details "name=$name"
     }
     catch {
-        Write-Host "  Create failed: $($_.Exception.Message)" -ForegroundColor Red
-        Write-ActionLog -Action 'Exchange: Create Shared Mailbox' -Target $addr -Result 'Failed' -Details $_.Exception.Message
+        Write-DeskSideFailure "  Create failed" 'Exchange: Create Shared Mailbox' $addr $_
         return
     }
 
-    if ((Read-Host "  Add people to it now? (y/n)").Trim().ToUpper() -eq 'Y') { Grant-Access -Mailbox $addr }
-}
-
-# The signed-in admin's email, for "add me". Defaults to EXO_ADMIN_UPN if set,
-# asked once and then remembered for the rest of this run.
-$script:MyAdminUpn = $null
-function Get-MyAdminUpn {
-    if ($script:MyAdminUpn) { return $script:MyAdminUpn }
-    $default = $env:EXO_ADMIN_UPN
-    $prompt  = if ($default) { "  Your admin email (ENTER for $default)" } else { "  Your admin email" }
-    $in = (Read-Host $prompt).Trim()
-    if (-not $in -and $default) { $in = $default }
-    if (-not $in) { Write-Host "  No email given." -ForegroundColor Yellow; return $null }
-    $script:MyAdminUpn = $in
-    $in
+    if (Confirm-DeskSideAction 'Add people to it now?' -Indent '  ' -Quiet) { Grant-Access -Mailbox $addr }
 }
 
 # Apply ONE permission kind (Full / SendAs / SendOnBehalf) to a batch of people.
@@ -108,8 +88,7 @@ function Set-MailboxPermKind ($Mailbox, $Kind, [bool]$Add, $People) {
             }
         }
         catch {
-            Write-Host "    $p - failed: $($_.Exception.Message)" -ForegroundColor Red
-            Write-ActionLog -Action ("Exchange: {0} {1}" -f $(if ($Add) { 'Grant' } else { 'Remove' }), $label) -Target $Mailbox -Result 'Failed' -Details "$p - $($_.Exception.Message)"
+            Write-DeskSideFailure "    $p - failed" ("Exchange: {0} {1}" -f $(if ($Add) { 'Grant' } else { 'Remove' }), $label) $Mailbox $_ -Context "$p"
         }
     }
 }
@@ -135,7 +114,7 @@ function Select-MailboxPermission ([switch]$ForRemoval) {
 
 # The common combo (Full + Send As), used right after creating a mailbox.
 function Grant-Access ($Mailbox) {
-    $people = Split-People (Read-Host "  People to grant access (Full Access + Send As)")
+    $people = ConvertFrom-PeopleList (Read-Host "  People to grant access (Full Access + Send As)")
     if ($people.Count -eq 0) { Write-Host "  Nobody entered." -ForegroundColor Yellow; return }
     Set-MailboxPermKind $Mailbox 'Full'   $true $people
     Set-MailboxPermKind $Mailbox 'SendAs' $true $people
@@ -147,7 +126,7 @@ function Add-MailboxAccess {
     if (-not $mbx) { return }
     $kinds = Select-MailboxPermission
     if (-not $kinds) { Write-Host "  Cancelled." -ForegroundColor Yellow; return }
-    $people = Split-People (Read-Host "  People to ADD (emails, comma-separated)")
+    $people = ConvertFrom-PeopleList (Read-Host "  People to ADD (emails, comma-separated)")
     if ($people.Count -eq 0) { Write-Host "  Nobody entered." -ForegroundColor Yellow; return }
     foreach ($k in $kinds) { Set-MailboxPermKind $mbx.PrimarySmtpAddress $k $true $people }
 }
@@ -157,8 +136,17 @@ function Remove-MailboxAccess {
     if (-not $mbx) { return }
     $kinds = Select-MailboxPermission -ForRemoval
     if (-not $kinds) { Write-Host "  Cancelled." -ForegroundColor Yellow; return }
-    $people = Split-People (Read-Host "  People to REMOVE (emails, comma-separated)")
+    $people = ConvertFrom-PeopleList (Read-Host "  People to REMOVE (emails, comma-separated)")
     if ($people.Count -eq 0) { Write-Host "  Nobody entered." -ForegroundColor Yellow; return }
+
+    # Taking access away is the one path here that can lock somebody out of a
+    # mailbox they are working in, so show exactly what is about to happen and
+    # make the operator agree to it. Every other remove in the toolkit asks.
+    Write-Host ""
+    Write-Host ("  Remove {0} from {1} <{2}>" -f ($kinds -join ' + '), $mbx.DisplayName, $mbx.PrimarySmtpAddress) -ForegroundColor Cyan
+    Write-Host ("  For: {0}" -f ($people -join ', ')) -ForegroundColor Cyan
+    if (-not (Confirm-DeskSideAction 'Proceed?' -Indent '  ')) { return }
+
     foreach ($k in $kinds) { Set-MailboxPermKind $mbx.PrimarySmtpAddress $k $false $people }
 }
 
@@ -166,11 +154,11 @@ function Remove-MailboxAccess {
 function Add-MeToMailbox {
     $mbx = Find-ExoRecipient -Prompt 'Mailbox to investigate (name or email)' -Types 'SharedMailbox', 'UserMailbox'
     if (-not $mbx) { return }
-    $me = Get-MyAdminUpn
+    $me = Get-DeskSideAdminUpn
     if (-not $me) { return }
     $addr = $mbx.PrimarySmtpAddress
     Write-Host ("  Grant {0} Full Access to {1} <{2}>?" -f $me, $mbx.DisplayName, $addr) -ForegroundColor Cyan
-    if ((Read-Host "  (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled." -ForegroundColor Yellow; return }
+    if (-not (Confirm-DeskSideAction 'Go ahead?' -Indent '  ')) { return }
     Set-MailboxPermKind $addr 'Full' $true @($me)
     Write-Host "  In Outlook it may take a while to auto-appear; you can also use" -ForegroundColor DarkGray
     Write-Host "  File > Open & Export > Other User's Folder, or open the mailbox in OWA." -ForegroundColor DarkGray
@@ -179,9 +167,14 @@ function Add-MeToMailbox {
 function Remove-MeFromMailbox {
     $mbx = Find-ExoRecipient -Prompt 'Mailbox to step out of (name or email)' -Types 'SharedMailbox', 'UserMailbox'
     if (-not $mbx) { return }
-    $me = Get-MyAdminUpn
+    $me = Get-DeskSideAdminUpn
     if (-not $me) { return }
-    Set-MailboxPermKind $mbx.PrimarySmtpAddress 'Full' $false @($me)
+    $addr = $mbx.PrimarySmtpAddress
+    # Mirrors the confirmation in Add-MeToMailbox: say what is about to change
+    # before changing it, so stepping out of the wrong mailbox takes two steps.
+    Write-Host ("  Remove {0}'s Full Access to {1} <{2}>?" -f $me, $mbx.DisplayName, $addr) -ForegroundColor Cyan
+    if (-not (Confirm-DeskSideAction 'Go ahead?' -Indent '  ')) { return }
+    Set-MailboxPermKind $addr 'Full' $false @($me)
 }
 
 # --- List access -------------------------------------------------------------

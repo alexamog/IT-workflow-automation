@@ -23,10 +23,10 @@
         # suits people who run these from a menu rather than a script.
         'PSUseShouldProcessForStateChangingFunctions'
 
-        # Wants Get-UsersOUPath rather than Get-UsersOUPaths. The plural names
-        # are already baked into the feature manifests and the documentation,
-        # and renaming a feature script means renaming its .tool.psd1 too. Not
-        # worth breaking working menu entries over a naming preference.
+        # Wants singular nouns (Get-MyTicket rather than Get-MyTickets). Plural
+        # names are baked into feature manifests and documentation, and renaming
+        # a feature script means renaming its .tool.psd1 too. Not worth breaking
+        # working menu entries over a naming preference.
         'PSUseSingularNouns'
 
         # Flags Invoke-TrmmRequest GET 'agents/' and asks for

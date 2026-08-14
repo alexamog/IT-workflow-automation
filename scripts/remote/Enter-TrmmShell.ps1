@@ -26,6 +26,11 @@
     .\Enter-TrmmShell.ps1 ITLAPSPARE-11 -TimeoutSec 300
 #>
 
+# NOT ON THE MAIN MENU, and that is deliberate - there is no .tool.psd1
+# manifest beside this file, so the launcher never lists it. It is opened
+# from Start-TrmmConsole.ps1, which collects the answers it needs first.
+# It still runs on its own if you want to use it directly.
+
 [CmdletBinding()]
 param(
     # The remote computer's hostname as it appears in Tactical RMM.
@@ -49,25 +54,16 @@ if (-not $ComputerName) { Write-Host "No computer name - cancelled." -Foreground
 $ComputerName = $ComputerName.Trim()
 
 Write-Host "Looking up '$ComputerName' in Tactical RMM..."
-$agents = @(Invoke-TrmmRequest GET 'agents/')
-$agent  = @($agents | Where-Object { $_.hostname -eq $ComputerName })
-if ($agent.Count -ne 1) {
-    Write-Host "ERROR: found $($agent.Count) agent(s) named '$ComputerName' (need exactly 1)." -ForegroundColor Red
-    if ($agent.Count -eq 0) {
-        @($agents | Where-Object { $_.hostname -match [regex]::Escape($ComputerName) }) |
-            ForEach-Object { Write-Host "  Did you mean: $($_.hostname)" -ForegroundColor Yellow }
-    }
-    return
-}
-$agent = $agent[0]
+$agent = Find-TrmmAgentByName -Hostname $ComputerName
+if (-not $agent) { return }        # the reason was already printed
 if ($agent.status -ne 'online') {
     Write-Host "'$ComputerName' is $($agent.status) - it must be online." -ForegroundColor Red
     return
 }
 
 # --- Session log -------------------------------------------------------------
-$outputDir = Get-ADToolOutputDir
-$shellLog = Join-Path -Path $outputDir -ChildPath ("RemoteShell-{0}-{1}.log" -f $ComputerName, (Get-Date -Format 'yyyyMMdd-HHmmss'))
+$outputDir = Get-ADToolOutputDir -Category 'Logs\RemoteSessions'
+$shellLog = Join-Path -Path $outputDir -ChildPath ("RemoteShell-{0}-{1}.log" -f $ComputerName, (Get-Date -Format 'yyyy-MM-dd HHmmss'))
 
 # --- The shell loop ----------------------------------------------------------
 Write-Host ""

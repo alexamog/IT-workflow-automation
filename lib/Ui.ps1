@@ -15,6 +15,7 @@ $Global:ADToolTheme = @{
     Key     = 'White'      # the number/letter you press
     Label   = 'Gray'       # the menu text
     Hint    = 'DarkGray'   # secondary notes and prompts
+    Warn    = 'Yellow'     # a cancel, or "the thing you asked for did not happen"
     Width   = 54           # default banner width
 }
 
@@ -122,6 +123,84 @@ function Write-ToolMenuItem {
     Write-Host $Label -ForegroundColor $Global:ADToolTheme.Label -NoNewline
     if ($Note) { Write-Host "   $Note" -ForegroundColor $Global:ADToolTheme.Hint -NoNewline }
     Write-Host ''
+}
+
+# --- Asking "are you sure" ---------------------------------------------------
+# ONE spelling of the confirmation prompt, so a prompt can never quietly mean
+# the opposite of what it looks like. Before these existed the toolkit asked in
+# eight different ways, and they did not agree on what pressing ENTER meant.
+#
+# There are TWO functions on purpose:
+#   Confirm-DeskSideAction - the ordinary yes/no gate. ENTER means no.
+#   Confirm-DeskSideWord   - the type-the-word gate, for destructive actions.
+#
+# They are separate rather than one function with a -Word parameter because
+# FORGETTING that parameter would silently downgrade "type DELETE LIST to erase
+# 40 profiles" into a single keypress. Split like this, that mistake is not
+# possible: Confirm-DeskSideWord has no yes/no path at all, and no argument that
+# weakens it. Nothing here can be turned into a one-key destructive prompt.
+
+# The one cancel line, so every tool says the same thing the same way.
+#   $Note  tail of the sentence: 'nothing was deleted' prints
+#          "Cancelled - nothing was deleted."   Empty prints "Cancelled."
+function Write-DeskSideCancelled {
+    param([string]$Note = '', [string]$Indent = '')
+    $text = if ($Note) { "Cancelled - $Note." } else { 'Cancelled.' }
+    Write-Host ($Indent + $text) -ForegroundColor $Global:ADToolTheme.Warn
+}
+
+# A yes/no question. Returns $true only for a clear yes.
+#   $Question    the question WITHOUT a (y/N) suffix - this adds the right one
+#   -DefaultYes  ENTER means yes. Only for harmless convenience questions
+#   $CancelNote  passed to Write-DeskSideCancelled above
+#   -Quiet       say nothing when the answer is no (for questions that are
+#                choosing a setting rather than guarding an action)
+#   $Indent      leading spaces, to line up with the surrounding block
+#
+# WHAT PRESSING ENTER DOES:  no.  Unless -DefaultYes is given, and then yes.
+function Confirm-DeskSideAction {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory, Position = 0)][string]$Question,
+        [switch]$DefaultYes,
+        [string]$CancelNote = '',
+        [switch]$Quiet,
+        [string]$Indent = ''
+    )
+    # The suffix is derived from the switch, so what is shown always matches
+    # what ENTER actually does. They cannot drift apart.
+    $suffix = if ($DefaultYes) { '(Y/n)' } else { '(y/N)' }
+    $answer = "$(Read-Host ("{0}{1} {2}" -f $Indent, $Question, $suffix))".Trim().ToUpper()
+
+    $yes = if ($DefaultYes) { $answer -notin @('N', 'NO') }
+           else             { $answer -in    @('Y', 'YES') }
+
+    if (-not $yes -and -not $Quiet) { Write-DeskSideCancelled -Note $CancelNote -Indent $Indent }
+    return $yes
+}
+
+# A destructive gate: the operator must type an exact word, in capitals.
+# The prompt is BUILT from $Word, so what is asked for and what is accepted can
+# never disagree. The comparison is always case-sensitive, and ENTER is always
+# no. There is no switch that relaxes either of those.
+#   $Action  a verb phrase completing "to ...", e.g. 'delete these 3 profiles'
+#
+# WHAT PRESSING ENTER DOES:  no.  Always, in every mode.
+function Confirm-DeskSideWord {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory, Position = 0)][string]$Action,
+        [string]$Word = 'YES',
+        [string]$CancelNote = '',
+        [switch]$Quiet,
+        [string]$Indent = ''
+    )
+    # -ceq, not -eq: typing "yes" must not pass a gate that asked for "YES".
+    # That is the whole point of this prompt - it has to be deliberate.
+    $answer = "$(Read-Host ("{0}Type {1} (in capitals) to {2}" -f $Indent, $Word, $Action))".Trim()
+    $ok = ($answer -ceq $Word)
+    if (-not $ok -and -not $Quiet) { Write-DeskSideCancelled -Note $CancelNote -Indent $Indent }
+    return $ok
 }
 
 # Wrap text onto lines no wider than $Width, breaking on spaces.

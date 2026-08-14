@@ -23,7 +23,11 @@ if (-not (Test-TrmmConfigured)) { return }
 
 $here = $PSScriptRoot
 
-while ($true) {
+# The :menu label lets the default branch below skip the "press ENTER" pause.
+# A bare 'continue' inside a switch does NOT do that - it leaves the switch and
+# carries straight on, so a mistyped option used to print "Unknown option." and
+# then still make you press ENTER for a menu you never left.
+:menu while ($true) {
     Write-ToolHeader 'TRMM Profiles'
     Write-ToolMenuItem -Key 1 -Label "Find a user's profile across computers"
     Write-ToolMenuItem -Key 2 -Label 'Scan computers for corrupt profiles'
@@ -36,7 +40,7 @@ while ($true) {
         '2'     { & (Join-Path $here 'Find-TrmmCorruptProfile.ps1') }
         '3'     { & (Join-Path $here 'Repair-TrmmCorruptProfile.ps1') }
         '0'     { return }
-        default { Write-Host 'Unknown option.' -ForegroundColor DarkGray; continue }
+        default { Write-Host 'Unknown option.' -ForegroundColor DarkGray; continue menu }
     }
     Write-Host ''
     Read-Host '  Press ENTER to return to the profile menu' | Out-Null

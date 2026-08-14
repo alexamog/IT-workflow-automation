@@ -264,7 +264,7 @@ else {
     Write-Host ""
     $groupPart = if ($GroupName) { "add to '$GroupName', " } else { '' }
     Write-Host "About to onboard $($targets.Count) account(s): ${groupPart}reset the password, and force a change at next logon." -ForegroundColor Cyan
-    if ((Read-Host "Proceed? (Y/N)") -notmatch '^[Yy]') {
+    if (-not (Confirm-DeskSideAction 'Proceed?' -Quiet)) {
         Write-Host "Cancelled - no changes made." -ForegroundColor Yellow
         $targets = @()
     }
@@ -274,7 +274,10 @@ else {
 # Connect once up front; if it can't connect or the SKU isn't found, the licence
 # step is skipped for everyone (the rest of the onboarding still runs).
 $e1Sku = $null
-if ($targets.Count -gt 0 -and (Read-Host "`nAlso assign the Office 365 E1 licence to each? (Y/n)").Trim().ToUpper() -ne 'N') {
+# -DefaultYes: matches New-UserOnboarding - licensing a new starter is the
+# normal path, so a bare ENTER goes ahead. Type N to skip.
+Write-Host ""
+if ($targets.Count -gt 0 -and (Confirm-DeskSideAction 'Also assign the Office 365 E1 licence to each?' -DefaultYes -Quiet)) {
     if (Connect-MgGraphSession) { $e1Sku = Get-M365LicenseSku }
     if (-not $e1Sku) { Write-Host "Skipping the licence step - onboarding the accounts without it." -ForegroundColor Yellow }
 }
@@ -306,8 +309,7 @@ foreach ($t in $targets) {
             Write-Host "    Already in '$GroupName' - left alone." -ForegroundColor DarkGray
         }
         else {
-            Write-Host "    Group add failed: $($_.Exception.Message)" -ForegroundColor Red
-            Write-ActionLog -Action 'Batch Onboard: Group Add' -Target $sam -Result 'Failed' -Details "$GroupName - $($_.Exception.Message)"
+            Write-DeskSideFailure "    Group add failed" 'Batch Onboard: Group Add' $sam $_ -Context "$GroupName"
             $trouble = $true
         }
     }
@@ -321,8 +323,7 @@ foreach ($t in $targets) {
         Write-ActionLog -Action 'Batch Onboard: Reset Password' -Target $sam
     }
     catch {
-        Write-Host "    Password reset failed: $($_.Exception.Message)" -ForegroundColor Red
-        Write-ActionLog -Action 'Batch Onboard: Reset Password' -Target $sam -Result 'Failed' -Details $_.Exception.Message
+        Write-DeskSideFailure "    Password reset failed" 'Batch Onboard: Reset Password' $sam $_
         $trouble = $true
     }
 
@@ -366,15 +367,17 @@ Note: the user will be prompted to change the password on first login.
 }
 
 # --- 6. Reports --------------------------------------------------------------
-$outputDir = Get-ADToolOutputDir
-$stamp     = Get-Date -Format 'yyyyMMdd-HHmmss'
+# Each run gets its own folder under output\Reports\Onboarding, so one run's
+# files stay together. Resolved lazily below so a clean run with nothing to
+# report does not leave an empty folder behind.
+$runFolder = "Reports\Onboarding\{0}" -f (Get-Date -Format 'yyyy-MM-dd HHmmss')
 
 # Exceptions: everyone a human still has to deal with.
 $exceptions = @($notFound) + @($ambiguous) + $(if ($IncludeRoleMismatch) { @() } else { @($roleMismatch) })
 $exceptions = @($exceptions | Sort-Object LineNumber)
 
 if ($exceptions.Count) {
-    $exPath = Join-Path $outputDir "Onboarding-Exceptions-$stamp.csv"
+    $exPath = Join-Path (Get-ADToolOutputDir -Category $runFolder) "Exceptions.csv"
     $exceptions |
         Select-Object LineNumber, Name, Role, Location, Status,
                       @{ n = 'ADAccount'; e = { $_.Sam } },
@@ -385,7 +388,7 @@ if ($exceptions.Count) {
 }
 
 if ($messages.Count) {
-    $msgPath = Join-Path $outputDir "Onboarding-Messages-$stamp.txt"
+    $msgPath = Join-Path (Get-ADToolOutputDir -Category $runFolder) "Messages.txt"
     ($messages -join "`r`n") | Out-File -FilePath $msgPath -Encoding UTF8
     Write-Host "Confirmation details for the requester: $msgPath" -ForegroundColor Cyan
 }

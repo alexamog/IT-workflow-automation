@@ -28,6 +28,11 @@
     .\Invoke-RemoteProfileCleanup.ps1 ITLAPSPARE-11 -Cleanup -HealthCheck
 #>
 
+# NOT ON THE MAIN MENU, and that is deliberate - there is no .tool.psd1
+# manifest beside this file, so the launcher never lists it. It is opened
+# from Start-TrmmConsole.ps1, which collects the answers it needs first.
+# It still runs on its own if you want to use it directly.
+
 [CmdletBinding()]
 param(
     # The remote computer's hostname as it appears in Tactical RMM.
@@ -79,8 +84,8 @@ if (-not $Keep -and -not $KeepFile -and -not $DeleteOnly -and -not $Cleanup -and
         if ($answer) { $DeleteOnly = @($answer -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' }) }
     }
 
-    if ((Read-Host "  Also run disk cleanup? (y/N)") -eq 'y')                         { $Cleanup = $true }
-    if ((Read-Host "  Also run health check (DISM + sfc, 15-30 min)? (y/N)") -eq 'y') { $HealthCheck = $true }
+    if (Confirm-DeskSideAction 'Also run disk cleanup?' -Indent '  ' -Quiet)                         { $Cleanup = $true }
+    if (Confirm-DeskSideAction 'Also run health check (DISM + sfc, 15-30 min)?' -Indent '  ' -Quiet) { $HealthCheck = $true }
 }
 
 # --- Tactical RMM plumbing -------------------------------------------------
@@ -163,8 +168,7 @@ if ($Keep) {
     if ($guessed.Count -gt 0) {
         Write-Host "`n$($guessed.Count) name(s) were GUESSED from 3+ words - verify before continuing:" -ForegroundColor Yellow
         foreach ($g in $guessed) { Write-Host "   $g" -ForegroundColor Yellow }
-        $ok = Read-Host "Are these guessed usernames correct? (y/n)"
-        if ($ok.Trim().ToUpper() -ne 'Y') {
+        if (-not (Confirm-DeskSideAction 'Are these guessed usernames correct?' -Quiet)) {
             Write-Host "Stopped. Fix the exact username(s) in the keep file, then re-run." -ForegroundColor Yellow
             return
         }
@@ -226,10 +230,10 @@ if (-not $scriptId) {
 Write-Host "Script library entry ready (id $scriptId)." -ForegroundColor Green
 
 # --- Logging -----------------------------------------------------------------
-# One row per action in output\AD-Toolkit-Actions.csv (the toolkit's shared
+# One row per action in output\Logs\AD-Toolkit-Actions.csv (the toolkit's shared
 # audit log) + a full transcript of the remote output for each run.
-$outputDir = Get-ADToolOutputDir
-$runLog    = Join-Path -Path $outputDir -ChildPath ("RemoteCleanup-{0}-{1}.log" -f $ComputerName, (Get-Date -Format 'yyyyMMdd-HHmmss'))
+$outputDir = Get-ADToolOutputDir -Category 'Logs\RemoteSessions'
+$runLog    = Join-Path -Path $outputDir -ChildPath ("RemoteCleanup-{0}-{1}.log" -f $ComputerName, (Get-Date -Format 'yyyy-MM-dd HHmmss'))
 
 # Audit rows go through Write-ActionLog in the shared library, so every feature
 # writes the same columns to the same file. This wrapper just saves repeating
@@ -275,9 +279,8 @@ if ($Keep -or $DeleteOnly) {
     # --- Phase 2: confirm locally, then run for real -------------------------
     # Different confirmation word per mode so they can't be confused.
     $word = if ($DeleteOnly) { 'DELETE LIST' } else { 'YES' }
-    $answer = Read-Host "`nType '$word' (in capitals) to run this FOR REAL on $ComputerName, or anything else to cancel"
-    if ($answer -cne $word) {
-        Write-Host "Cancelled - nothing was changed on $ComputerName." -ForegroundColor Yellow
+    Write-Host ""
+    if (-not (Confirm-DeskSideWord "run this FOR REAL on $ComputerName" -Word $word -CancelNote "nothing was changed on $ComputerName")) {
         Write-RemoteActionLog 'Cancelled' "$optionSummary log=$(Split-Path $runLog -Leaf)"
         return
     }

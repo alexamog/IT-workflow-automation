@@ -92,10 +92,49 @@ function Initialize-JiraContext {
 
     # Resolve the "Organizations" field id once (it's an instance-specific custom
     # field). Used to show a ticket's organization in the single-ticket view.
+    # The full field list is cached in $script:AllFields so other layers (the
+    # monthly reports) can resolve their own custom fields by NAME without
+    # making a second call and without hard-coding customfield_ numbers - those
+    # ids differ between Jira sites.
     try {
-        $allFields = Invoke-RestMethod -Uri "$script:BaseUrl/rest/api/3/field" -Headers $script:Headers -Method Get
-        $script:OrgFieldId = ($allFields | Where-Object { $_.name -eq 'Organizations' } | Select-Object -First 1).id
-    } catch { $script:OrgFieldId = $null }
+        $fetched = Invoke-RestMethod -Uri "$script:BaseUrl/rest/api/3/field" -Headers $script:Headers -Method Get
+        # Do NOT write @(Invoke-RestMethod ...) here. Under PowerShell 5.1 that
+        # wraps the object[] the call already returns inside a second array, so
+        # you end up with one element holding all 170 fields, and every lookup
+        # below silently returns every field id at once.
+        $script:AllFields = @()
+        foreach ($f in $fetched) { $script:AllFields += $f }
+        $script:OrgFieldId = ($script:AllFields | Where-Object { $_.name -eq 'Organizations' } | Select-Object -First 1).id
+    } catch { $script:AllFields = @(); $script:OrgFieldId = $null }
 
     return $true
+}
+
+function Get-JiraFieldId {
+    <#
+    .SYNOPSIS
+        Looks up a custom field's id from its display name.
+    .DESCRIPTION
+        Jira custom field ids (customfield_10025 and friends) are assigned per
+        site, so the same field has a different id in a different Jira. Reports
+        therefore look fields up by the name shown in the UI. Returns $null when
+        this site has no such field, which callers treat as "skip that metric"
+        rather than an error.
+    .PARAMETER Name
+        The field name exactly as it appears in Jira, e.g. 'Satisfaction'.
+    .OUTPUTS
+        System.String - the field id, or $null when not present.
+    .EXAMPLE
+        Get-JiraFieldId -Name 'Time to first response'
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param([Parameter(Mandatory)][string]$Name)
+
+    if (-not $script:AllFields) { return $null }
+    $match = $script:AllFields | Where-Object { $_.name -eq $Name } | Select-Object -First 1
+    if (-not $match) { return $null }
+    # Cast to a scalar string: a field id must never come back as a collection,
+    # or it gets pasted into a JQL "fields=" list and silently breaks the query.
+    return [string]$match.id
 }

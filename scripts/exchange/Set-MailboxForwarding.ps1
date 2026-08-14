@@ -28,6 +28,12 @@ $id = $mbx.PrimarySmtpAddress
 try { $box = Get-Mailbox -Identity $id -ErrorAction Stop }
 catch { Write-Host "Could not read the mailbox: $($_.Exception.Message)" -ForegroundColor Red; return }
 
+# Exchange stores forwarding in TWO different places and a mailbox may use
+# either, so both have to be read to show the truth:
+#   ForwardingSmtpAddress - any address, inside or outside the organisation.
+#                           This is the one this tool writes.
+#   ForwardingAddress     - a recipient that already exists in the directory.
+#                           Set by other tools and by the admin centre.
 $current = if ($box.ForwardingSmtpAddress) { "$($box.ForwardingSmtpAddress)" }
            elseif ($box.ForwardingAddress) { "$($box.ForwardingAddress)" }
            else { '(none)' }
@@ -45,11 +51,13 @@ switch ((Read-Host '  Select').Trim()) {
     '1' {
         $dest = (Read-Host "  Forward to (email address)").Trim()
         if (-not $dest) { Write-Host "  Cancelled." -ForegroundColor Yellow; return }
-        $keep = (Read-Host "  Keep a copy in the original mailbox too? (Y/n)").Trim().ToUpper() -ne 'N'
+        # -DefaultYes: keeping a copy is the safe, usual answer, so a bare ENTER
+        # keeps it. This is choosing a setting, not guarding an action.
+        $keep = Confirm-DeskSideAction 'Keep a copy in the original mailbox too?' -DefaultYes -Quiet -Indent '  '
 
         Write-Host ""
         Write-Host ("  Forward {0}  ->  {1}   (keep copy: {2})" -f $id, $dest, $keep) -ForegroundColor Cyan
-        if ((Read-Host "  Proceed? (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled." -ForegroundColor Yellow; return }
+        if (-not (Confirm-DeskSideAction 'Proceed?' -Indent '  ')) { return }
         try {
             # ForwardingSmtpAddress works for any address (inside or outside the org).
             Set-Mailbox -Identity $id -ForwardingSmtpAddress $dest -DeliverToMailboxAndForward $keep -ErrorAction Stop
@@ -57,20 +65,20 @@ switch ((Read-Host '  Select').Trim()) {
             Write-ActionLog -Action 'Exchange: Set Forwarding' -Target $id -Details "-> $dest; keepCopy=$keep"
         }
         catch {
-            Write-Host "  Failed: $($_.Exception.Message)" -ForegroundColor Red
-            Write-ActionLog -Action 'Exchange: Set Forwarding' -Target $id -Result 'Failed' -Details $_.Exception.Message
+            Write-DeskSideFailure "  Failed" 'Exchange: Set Forwarding' $id $_
         }
     }
     '2' {
-        if ((Read-Host "  Turn forwarding OFF for $id? (y/n)").Trim().ToUpper() -ne 'Y') { Write-Host "  Cancelled." -ForegroundColor Yellow; return }
+        if (-not (Confirm-DeskSideAction "Turn forwarding OFF for $id?" -Indent '  ')) { return }
         try {
+            # Clear BOTH properties, not just the one this tool sets. Forwarding
+            # left in the other place would keep working and look like a bug.
             Set-Mailbox -Identity $id -ForwardingSmtpAddress $null -ForwardingAddress $null -DeliverToMailboxAndForward $false -ErrorAction Stop
             Write-Host "  Forwarding removed." -ForegroundColor Green
             Write-ActionLog -Action 'Exchange: Remove Forwarding' -Target $id
         }
         catch {
-            Write-Host "  Failed: $($_.Exception.Message)" -ForegroundColor Red
-            Write-ActionLog -Action 'Exchange: Remove Forwarding' -Target $id -Result 'Failed' -Details $_.Exception.Message
+            Write-DeskSideFailure "  Failed" 'Exchange: Remove Forwarding' $id $_
         }
     }
     default { return }

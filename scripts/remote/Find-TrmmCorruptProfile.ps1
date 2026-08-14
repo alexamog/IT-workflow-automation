@@ -24,6 +24,11 @@
     .\Find-TrmmCorruptProfile.ps1
 #>
 
+# NOT ON THE MAIN MENU, and that is deliberate - there is no .tool.psd1
+# manifest beside this file, so the launcher never lists it. It is opened
+# from Manage-TrmmProfiles.ps1, which collects the answers it needs first.
+# It still runs on its own if you want to use it directly.
+
 [CmdletBinding()]
 param()
 
@@ -31,18 +36,12 @@ param()
 
 if (-not (Test-TrmmConfigured)) { return }
 
-# Thin wrapper over the shared helper: this script compares command output as
-# text, so the result is flattened to a string here rather than at every call.
-function Invoke-AgentCmd ($agentId, $command, [int]$TimeoutSec = 90) {
-    "$(Invoke-TrmmAgentCommand -AgentId $agentId -Command $command -TimeoutSec $TimeoutSec)"
-}
-
 $kw = (Read-Host "Hostname keyword to scan (e.g. ITDESSPARE), or * for ALL computers").Trim()
 
 Write-Host "Getting the agent list from Tactical RMM..."
-try { $agents = @(Invoke-TrmmRequest GET 'agents/') }
-catch { Write-Host "TRMM lookup failed: $($_.Exception.Message)" -ForegroundColor Red; return }
-if ($kw -and $kw -ne '*') { $agents = @($agents | Where-Object { $_.hostname -match [regex]::Escape($kw) }) }
+$lookup = Get-TrmmAgent -HostnameLike $kw
+if (-not $lookup.Ok) { return }        # the message was already printed
+$agents = $lookup.Agents
 $targets = @($agents | Where-Object { $_.status -eq 'online' })
 $offline = @($agents).Count - $targets.Count
 Write-Host "Scanning $($targets.Count) online computer(s) ($offline offline skipped)..." -ForegroundColor Cyan
@@ -81,7 +80,7 @@ $i = 0
 foreach ($a in $targets) {
     $i++
     Write-Progress -Activity 'Scanning for corrupt profiles' -Status "$i of $($targets.Count): $($a.hostname)" -PercentComplete (100 * $i / $targets.Count)
-    try { $out = Invoke-AgentCmd $a.agent_id $scanCmd } catch { continue }
+    try { $out = Invoke-TrmmAgentText -AgentId $a.agent_id -Command $scanCmd } catch { continue }
     foreach ($line in ($out -split "`r?`n")) {
         if ($line -notmatch '^PROFILE\|') { continue }
         $p = $line -split '\|'
@@ -140,13 +139,11 @@ else {
 }
 if ($toDelete.Count -eq 0) { Write-Host "Nothing in that group." -ForegroundColor Yellow; return }
 
-if ((Read-Host "Type YES to permanently remove $($toDelete.Count) profile(s)/entry(ies)").Trim() -cne 'YES') {
-    Write-Host "Cancelled." -ForegroundColor Yellow; return
-}
+if (-not (Confirm-DeskSideWord "permanently remove $($toDelete.Count) profile(s)/entry(ies)")) { return }
 
-$outputDir = Join-Path -Path $PSScriptRoot -ChildPath '..\..\output'
-if (-not (Test-Path $outputDir)) { New-Item -ItemType Directory -Path $outputDir -Force | Out-Null }
-$csv = Join-Path $outputDir 'AD-Toolkit-Actions.csv'
+# Use the shared helper, not a hand-built path: the audit log has one home, and
+# building it here would quietly split it across two files.
+$csv = Join-Path (Get-ADToolOutputDir -Category 'Logs') 'AD-Toolkit-Actions.csv'
 
 foreach ($d in $toDelete) {
     # Double any apostrophe so a name like caitlin.o'sullivan cannot break out of
@@ -167,19 +164,20 @@ if (`$p) {
     }
     if (`$removed) { 'DELETED-REG' } else { 'NOTFOUND' }
 }
-`$logd = 'C:\ProgramData\DeskSideToolkit'; if (-not (Test-Path `$logd)) { New-Item -ItemType Directory -Path `$logd -Force | Out-Null }
+$(Get-DeskSideRemoteProgramDataLine)
+`$logd = `$DeskSideData; if (-not (Test-Path `$logd)) { New-Item -ItemType Directory -Path `$logd -Force | Out-Null }
 Add-Content (Join-Path `$logd 'ProfileCleanup.log') ('{0}  [corrupt-scan]  removed corrupt profile {1}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), `$u)
 "@
-    try { $res = (Invoke-AgentCmd $d.AgentId $delCmd).Trim() } catch { $res = "ERROR $($_.Exception.Message)" }
+    try { $res = (Invoke-TrmmAgentText -AgentId $d.AgentId -Command $delCmd).Trim() } catch { $res = "ERROR $($_.Exception.Message)" }
     # The last line of output is the log Add-Content (no return) - take the first token line.
     $status = (@($res -split "`r?`n") | Where-Object { $_ -match '^(DELETED|DELETED-REG|SKIP-LOADED|NOTFOUND|FAIL|ERROR)' } | Select-Object -First 1)
     if (-not $status) { $status = $res }
     $colour = if ($status -match '^DELETED') { 'Green' } else { 'Red' }
     Write-Host ("  {0} @ {1}: {2}" -f $d.Profile, $d.Hostname, $status) -ForegroundColor $colour
     $result = if ($status -match '^DELETED') { 'Success' } else { 'Failed' }
-    [PSCustomObject]@{ Timestamp = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'); Operator = $env:USERNAME
-        Action = 'Delete Corrupt Profile (TRMM)'; Target = $d.Hostname; Result = $result
-        Details = "profile=$($d.Profile); type=$($d.Type); reason=$($d.Reason); remote=$status"
-    } | Export-Csv -Path $csv -NoTypeInformation -Encoding UTF8 -Append
+    # Through the shared writer, so this feature cannot drift from the column
+    # set every other feature writes into the same file.
+    Write-ActionLog -Action 'Delete Corrupt Profile (TRMM)' -Target $d.Hostname -Result $result `
+        -Details "profile=$($d.Profile); type=$($d.Type); reason=$($d.Reason); remote=$status"
 }
 Write-Host "`nDone. Logged to $csv" -ForegroundColor Green
