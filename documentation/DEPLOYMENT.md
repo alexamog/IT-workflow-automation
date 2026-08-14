@@ -67,8 +67,8 @@ make it. So you can share without worrying that you are handing out private data
    .\Build-SharePackage.ps1
    ```
 
-3. It creates a file like `output\DeskSideToolkit-20260724204705.zip` and tells
-   you where it is.
+3. It creates a file like `output\Packages\DeskSideToolkit-20260724204705.zip`
+   and tells you where it is.
 4. Send that zip to the person. When they unzip it, tell them to run
    `Start-DeskSide.cmd` (double-click). The first time, it asks where the shared
    drive is (see Option 2) - after that it updates itself.

@@ -1,4 +1,4 @@
-﻿# Developer Guide
+# Developer Guide
 
 For whoever maintains or extends Desk Side Toolkit. Plain `.ps1`, no build step,
 Windows PowerShell 5.1.
@@ -390,5 +390,3 @@ User-facing steps: `documentation\DEPLOYMENT.md`. Internals:
   `custom_field`, `save_all_output`, `email`, `emailMode`) or 500. Long runs must
   use `output:'forget'` + poll the machine's log (proxy 502s on held waits).
 ```
-
-

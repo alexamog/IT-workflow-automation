@@ -7,7 +7,7 @@ It explains how the pieces fit together so you can change things safely.
 
 A single-user, menu-driven PowerShell console for Jira Service Management (JSM).
 It runs in a terminal and talks to Jira's Cloud REST APIs over HTTPS. There is no
-database, no server, and no build step — it's plain `.ps1` files you run directly.
+database, no server, and no build step - it's plain `.ps1` files you run directly.
 
 ## Layered design
 
@@ -28,22 +28,22 @@ Start-JiraConsole.ps1        (entry point: loads lib/, shows the main menu)
    lib/Context.ps1                         (config + auth; sets the shared context)
 ```
 
-- **Context** — configuration (`$script:AttentionStatus`, `$script:ProjectKey`)
+- **Context** - configuration (`$script:AttentionStatus`, `$script:ProjectKey`)
   and `Initialize-JiraContext`, which authenticates and stores the shared
   `$script:BaseUrl`, `$script:Headers`, `$script:MyAccountId`.
-- **Helpers** — pure functions with no API calls: `Get-TimeAgo`,
+- **Helpers** - pure functions with no API calls: `Get-TimeAgo`,
   `ConvertTo-TicketJql`, `Sort-TicketForDisplay`, `Format-Cell`,
   `Read-MultiLine`, `Convert-HtmlToText`, `Get-AdfText`,
   `Get-TicketKeywordOrg`, and the two Jira error readers. Easiest place to test.
-- **Data** — read-only: `Get-IssueByJql`, `Get-MyTicket`, `Get-UnassignedTicket`,
+- **Data** - read-only: `Get-IssueByJql`, `Get-MyTicket`, `Get-UnassignedTicket`,
   `Get-Ticket`. Never modifies a ticket.
-- **Display** — console rendering: `Show-TicketList` (the aligned table) and
+- **Display** - console rendering: `Show-TicketList` (the aligned table) and
   `Show-TicketComment` (the activity log).
-- **Actions** — writes: `Add-JiraComment`, `Set-TicketAssignedToMe`,
+- **Actions** - writes: `Add-JiraComment`, `Set-TicketAssignedToMe`,
   `Add-TicketWorklog`, `Complete-Ticket`.
-- **Interaction** — the interactive glue: `Enter-Ticket` (single-ticket menu),
+- **Interaction** - the interactive glue: `Enter-Ticket` (single-ticket menu),
   `Invoke-TicketLookup`, `Invoke-TicketBrowser` (list browser).
-- **Reports** — the monthly reporting pack (`Invoke-MonthlyReports`). Sits beside
+- **Reports** - the monthly reporting pack (`Invoke-MonthlyReports`). Sits beside
   Interaction rather than under it: it is its own menu, and it only ever reads.
   Splits into `Get-*Report` functions that return plain objects, `Show-*Report`
   functions that print them, and `Export-MonthlyReport` which writes the files.

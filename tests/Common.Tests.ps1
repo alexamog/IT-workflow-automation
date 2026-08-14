@@ -1414,7 +1414,13 @@ Describe 'Source files are plain ASCII' {
     # It looks perfectly fine in an editor, which is exactly why a person cannot
     # be trusted to catch it. Write hyphens, not dashes; straight quotes, not
     # curly ones. This test checks BYTES, so it cannot be fooled.
-    It 'has no byte above 127 in any .ps1 or .psd1 file' {
+    # Markdown is covered too. An em dash in a .md file cannot break a parser,
+    # but editing one of these files with a tool that assumes ANSI rewrites the
+    # dash as three mojibake characters, and that HAS happened here twice. Same
+    # rule everywhere is easier to follow than "ASCII, except in documentation".
+    # KB-Drafts is not checked: it is gitignored end-user HTML, not part of the
+    # toolkit.
+    It 'has no byte above 127 in any .ps1, .psd1 or .md file' {
         $root = Split-Path $PSScriptRoot -Parent
 
         # Code page 28591 (Latin-1) maps byte n to character n exactly, for all
@@ -1424,8 +1430,8 @@ Describe 'Source files are plain ASCII' {
 
         $bad = @(Get-ChildItem -Path $root -Recurse -File -ErrorAction SilentlyContinue |
             Where-Object {
-                $_.Extension -in '.ps1', '.psd1' -and
-                $_.FullName -notmatch '\\(\.git|output)\\'
+                $_.Extension -in '.ps1', '.psd1', '.md' -and
+                $_.FullName -notmatch '\\(\.git|output|KB-Drafts)\\'
             } |
             Where-Object { [IO.File]::ReadAllText($_.FullName, $latin1) -match '[^\x00-\x7F]' } |
             ForEach-Object { $_.FullName.Substring($root.Length) })

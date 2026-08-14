@@ -1,4 +1,4 @@
-﻿# Desk Side Toolkit
+# Desk Side Toolkit
 
 Menu-driven PowerShell tools for AD, Snipe-IT, Jira, and Tactical RMM: password
 resets, lockouts, account state, lookups, OU moves, asset management,
@@ -35,15 +35,19 @@ Examples). Most user scripts take a **SAM** (`alex.amog`) or **UPN**
 | --------- | ------- |
 | `accounts\` | Reset-UserPassword, Set-UserAccountState, Get-LockoutSource |
 | `users\` | Get-UserDetails, Get-UserOUPath, Manage-UserGroups, Move-UserByOUPath |
-| `assets\` | Get-SnipeAsset, New-SnipeAssetFromClone |
-| `onboarding\` | New-UserOnboarding |
+| `assets\` | Get-SnipeAsset, Search-SnipeAssets, New-SnipeAssetFromClone |
+| `exchange\` | Manage-SharedMailbox, Convert-MailboxToShared, Manage-DistributionGroup, Set-MailboxForwarding, Set-MailboxAutoReply |
+| `sharepoint\` | Manage-SharePointSite |
+| `onboarding\` | New-UserOnboarding, Start-BatchOnboarding |
+| `offboarding\` | Start-Offboarding |
 | `maintenance\` | Remove-UnlistedProfiles (run directly or via the Tactical RMM standalone edition) |
-| `remote\` | Start-TrmmConsole (hub), Invoke-RemoteProfileCleanup, Send-TrmmFile, Enter-TrmmShell, Invoke-FleetDiskCleanup |
+| `remote\` | Start-TrmmConsole (hub), profile + printer + fleet tools, Snipe-IT audits |
 
-Launcher auto-discovers features from `*.tool.psd1` manifests (see "Adding a
-feature"). **Jira** is a self-contained console in `Jira Scripts\` (own launcher,
-`lib\`, docs); its manifest puts it on the menu. **`documentation\API-Examples\`**
-holds copy-paste REST/AD skeletons for building new scripts.
+Launcher auto-discovers features from `*.tool.psd1` manifests - see
+[`documentation\DEVELOPER-GUIDE.md`](documentation/DEVELOPER-GUIDE.md). **Jira**
+is a self-contained console in `Jira Scripts\` (own launcher, `lib\`, docs); its
+manifest puts it on the menu. **`documentation\API-Examples\`** holds copy-paste
+REST/AD skeletons for building new scripts.
 
 ## Menu options
 
@@ -175,6 +179,7 @@ Force one with `-RoleField Title`; ignore roles entirely with `-SkipRoleCheck`.
 | Convert a mailbox to shared (offboarding) | `Convert-MailboxToShared.ps1` |
 | Distribution lists (add/remove/list members) | `Manage-DistributionGroup.ps1` |
 | Mailbox forwarding (set/clear) | `Set-MailboxForwarding.ps1` |
+| Out of Office (set/schedule/clear) | `Set-MailboxAutoReply.ps1` |
 
 These use the **ExchangeOnlineManagement** module. First run installs nothing
 for you but tells you how (`Install-Module ExchangeOnlineManagement -Scope
@@ -192,6 +197,23 @@ leaver's) plus a matching remove - your address defaults to `EXO_ADMIN_UPN`.
 Converting a leaver's mailbox to shared keeps the mail and frees the licence; it
 does **not** touch AD or the 365 licence (disable the account in Offboarding,
 remove the licence in the 365 admin centre).
+
+**Out of Office** sets someone's automatic reply for them, either running until
+you turn it off or over a date range that switches itself off. It also shows the
+current setting in plain English and clears it again.
+
+### Printers
+| Option | Script |
+| ------ | ------ |
+| Scan subnet(s) for IP printers | `Find-NetworkPrinters.ps1` |
+| Map printers to offices (recent print jobs + AD) | `Map-PrintersToOffices.ps1` |
+| Check toner/status, queue + history, cancel a job, restart | `Monitor-CanonPrinter.ps1` |
+
+These reach printers directly over the network, so they do not need Tactical
+RMM: the scan probes the ports printers listen on, and the monitor uses SNMP
+(toner, status) and IPP (job queue, cancel). Mapping works the other way round -
+it infers each printer's office from where its recent users sit in AD. To add or
+remove a printer **on a computer**, use `Manage-TrmmPrinters.ps1` under Remote.
 
 ### SharePoint
 | Option | Script |
@@ -382,52 +404,23 @@ Defaults live in the `$ADTool` block in `lib\Common.ps1`. **Jira** has its own
 settings (`JIRA_BASEURL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`) via
 `.\"Jira Scripts"\Set-JiraCredentials.ps1`.
 
-## Adding a feature
-
-Launcher auto-discovers - you never edit `AD-Toolkit.ps1`. Two files in the
-feature's own folder:
-
-1. Script in a `scripts\<category>\` subfolder. If it needs shared helpers:
-   ```powershell
-   . "$PSScriptRoot\..\..\lib\Common.ps1"
-   ```
-2. Manifest beside it, same base name + `.tool.psd1`:
-   ```powershell
-   @{ Category = 'Reporting'; Label = 'Show stale accounts'; Order = 63 }
-   ```
-
-Existing `Category` adds to that section; new one makes a section. `Order` sets
-position (lower first) and section order. Delete/rename = edit the two files.
-The script still runs standalone; the manifest is only read by the launcher.
-
-New external system: add settings to `$ADTool` in `lib\Common.ps1` + a request
-wrapper next to `Invoke-SnipeRequest`. Reuse `Select-FromList` and
-`Format-Table -AutoSize` to match the look.
-
-## Shared library (`lib\Common.ps1`)
-
-- `Resolve-ADToolUser` - look up by SAM or UPN
-- `ConvertTo-LdapEscapedString` - make typed text safe for an LDAP search
-- `Get-ADToolDC` - PDC emulator unless `-Server` given
-- `Select-FromList` - numbered picker
-- `Invoke-SnipeRequest` - Snipe-IT REST wrapper (auth, TLS)
-- `Test-TrmmConfigured` / `Invoke-TrmmRequest` / `Invoke-TrmmAgentCommand` - Tactical RMM
-- `Get-ADToolOutputDir` / `Get-ADToolDataDir` - file locations
-- `Write-ActionLog` (AD + TRMM, CSV) / `Write-SnipeAssetLog` (Snipe, JSON)
-
 ## Tests
 
 ```powershell
 .\Run-Tests.ps1
 ```
 
-Runs the checks in `tests\` against the shared library, then reads every script
-looking for common mistakes. Nothing here touches AD, Snipe-IT, Tactical RMM, or
-the network, and no credentials are needed - it is safe to run any time.
+Runs the checks in `tests\`, then reads every script looking for common mistakes.
+Nothing touches AD, Snipe-IT, Tactical RMM, or the network, and no credentials
+are needed - safe to run any time. Run it after changing `lib\Common.ps1`. Needs
+Pester 5 or newer; the script prints the install command if the PC only has the
+old built-in version.
 
-Run it after changing `lib\Common.ps1`: if it stays green, the shared parts other
-scripts depend on still work. The tests need Pester 5 or newer; the script prints
-the one-line install command if the PC only has the old built-in version.
+## Changing the toolkit
+
+Adding a feature, the shared library, conventions, and the PowerShell traps this
+codebase has already hit are all in
+[`documentation\DEVELOPER-GUIDE.md`](documentation/DEVELOPER-GUIDE.md).
 
 ## Audit logs
 
@@ -500,55 +493,26 @@ Edit the `$editions` list (or Core exclude list) atop `Publish-Standalone.ps1` t
 change. **Jira Console** is in the collection too but has its own `lib\` and is
 **not** publisher-generated - sync by hand.
 
-## Sharing & auto-update
+## Sharing and auto-update
 
-Two ways to get the toolkit to other people. Full walkthrough (for a non-coder)
-in [`documentation\DEPLOYMENT.md`](documentation/DEPLOYMENT.md).
-
-**A one-off zip.** `Build-SharePackage.ps1` writes a clean
-`output\DeskSideToolkit-<version>.zip`. It leaves out everything private or
-machine-local (live `output\`, exported Jira tickets, `data\`, `.git`, `.claude`)
-and **refuses to build** if any of that reaches the package - so a zip can never
-carry staff names, hostnames, or ticket PII. The zip includes the auto-updating
-launcher, so whoever unzips it is set up for updates too.
+Two ways to get the toolkit to other people:
 
 ```powershell
-.\Build-SharePackage.ps1
+.\Build-SharePackage.ps1                                        # a one-off zip
+.\Publish-ToShare.ps1 -ShareRoot \\server\share\DeskSideToolkit  # shared drive
 ```
 
-**Auto-update from a shared drive (recommended).** Put a master copy on a shared
-drive; everyone runs `Start-DeskSide.cmd`, which pulls the newest version down to
-their own machine before launching:
+Both refuse to build if anything private (live `output\`, `data\`, exported Jira
+tickets) would reach the package, so a share can never carry staff names,
+hostnames, or ticket PII. With the shared drive, everyone runs
+`Start-DeskSide.cmd` and picks up the newest version automatically.
 
-1. Once, on the master: `.\Publish-ToShare.ps1 -ShareRoot \\server\share\DeskSideToolkit`.
-   This stamps a fresh `VERSION` and copies the project up (same privacy rules as
-   the zip).
-2. Each person runs `Start-DeskSide.cmd`. It finds the share (from the
-   `DESKSIDE_SHARE` env var, a `share.txt` beside it, or by asking once), and if
-   the share's `VERSION` is newer than their local copy it mirrors the new files
-   to `%LOCALAPPDATA%\DeskSideToolkit` (leaving their own logs alone), clears the
-   "from another computer" mark, and runs from there.
-3. If the share is unreachable it just runs the last local copy - nobody is ever
-   stuck offline.
-
-To release a change: run `Publish-ToShare.ps1` again. Everyone picks it up on
-their next launch - no re-sending zips.
-
-`VERSION` is a UTC stamp (`yyyyMMddHHmmss`); a bigger stamp means newer.
-`Publish-ToShare.ps1` writes it for you - don't hand-edit it.
-
-> Admin (AD / Microsoft) tools are gated to a **SYSTEM** run. A normal login sees
-> Jira / Snipe-IT / RMM; the AD/365/SharePoint tools show greyed out. A SYSTEM run
-> under RMM reads a different `%LOCALAPPDATA%` and needs the machine account to
-> reach the share - for SYSTEM use, deploy via RMM or a machine-readable share.
+Step-by-step walkthrough, written for a non-coder:
+[`documentation\DEPLOYMENT.md`](documentation/DEPLOYMENT.md).
 
 ## Requirements
 
+- Windows PowerShell 5.1
 - RSAT ActiveDirectory module (AD features)
 - Rights for the action (password reset, group edit, PDC Security log for lockouts)
-- `SNIPEIT_TOKEN` for asset options; `TRMM_*` for remote
-
-
-
-
-
+- `SNIPEIT_TOKEN` for asset options; `TRMM_*` for remote; `JIRA_*` for Jira
